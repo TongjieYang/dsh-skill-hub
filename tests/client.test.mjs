@@ -137,15 +137,17 @@ test('注册一个能直接跳到技能中枢的全局快捷键', () => {
   assert.equal(command.id, 'skill-hub.open')
   assert.match(String(command.label()), /技能中枢/)
   assert.ok(command.aliases.includes('skills'))
-  // 默认键位：Mod+Alt+K，桌面与 Web 的 macOS/Windows 都绑上（Linux Web 由服务端限制，故意不绑）
-  for (const profile of ['desktop:macos', 'desktop:windows', 'desktop:linux', 'web:macos', 'web:windows']) {
+  // 默认键位只给桌面：Web 端 Mod+Alt+<字母> 已被会话搜索等占用，跨 profile 冲突会让整条注册失败
+  for (const profile of ['desktop:macos', 'desktop:windows', 'desktop:linux']) {
     const binding = command.defaults[profile]
     assert.ok(binding, `${profile} 应当有默认键位`)
     assert.equal(binding.code, 'KeyK', profile)
     assert.equal(binding.modifiers.length, 2, profile)
     assert.equal(binding.modifiers[0], 'primary', profile)
-    assert.equal(binding.modifiers[1], 'alt', profile)
+    assert.equal(binding.modifiers[1], 'shift', profile)
   }
+  assert.equal(command.defaults['web:macos'], undefined)
+  assert.equal(command.defaults['web:windows'], undefined)
   assert.equal(command.defaults['web:linux'], undefined)
   // 在输入框里也能用，但不能在别的弹窗上抢键
   assert.equal(command.regions.join(','), 'page,editable,terminal')
@@ -161,10 +163,23 @@ test('注册一个能直接跳到技能中枢的全局快捷键', () => {
   assert.equal(blocked.status, 'blocked')
 })
 
-test('快捷键默认值和别的插件冲突时退化为无键位，而不是拖死整个界面', () => {
-  const { commands } = mountPlugin({ conflict: (command) => command.id === 'skill-hub.open' && Object.keys(command.defaults).length > 0 })
-  assert.equal(commands.length, 1)
-  assert.equal(Object.keys(commands[0].defaults).length, 0, '冲突后应当改注册无默认键位，用户仍可在快捷键面板里分配')
+test('首选键位被占时换下一个候选，全都占了才退化为无键位', () => {
+  // K 和 J 都被别的功能占了 → 应该落到 H
+  const taken = new Set(['KeyK', 'KeyJ'])
+  const { commands } = mountPlugin({
+    conflict: (command) => {
+      const first = Object.values(command.defaults)[0]
+      return !!first && taken.has(first.code)
+    },
+  })
+  assert.ok(commands.length >= 1)
+  const accepted = commands[commands.length - 1]
+  assert.equal(Object.values(accepted.defaults)[0].code, 'KeyH')
+
+  // 全都被占 → 仍注册命令，只是没有默认键位
+  const all = mountPlugin({ conflict: (command) => Object.keys(command.defaults).length > 0 })
+  const last = all.commands[all.commands.length - 1]
+  assert.equal(Object.keys(last.defaults).length, 0)
 })
 
 test('style tag is injected once and removed by the effect disposer', () => {

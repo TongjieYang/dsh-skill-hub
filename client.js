@@ -1258,7 +1258,10 @@ window.__ModuleLoader__.load({
                   ? state.skills.length + ' 个 skill · ' + state.teams.length + ' 个专家团 · ' + state.keys.length + ' 个已登记 key'
                   : '正在读取本机 skill 库',
               ),
-              h('p', { className: 'sh-sub' }, '快捷键 ' + shortcutLabel() + ' 在任意界面直接打开这里'),
+              h('p', { className: 'sh-sub' },
+                ACTIVE_SHORTCUT
+                  ? '快捷键 ' + ACTIVE_SHORTCUT + ' 在任意界面直接打开这里'
+                  : '还没绑定快捷键：设置 → 通用设置 → 快捷键 里可以指定'),
             ),
             h(
               'div',
@@ -1360,11 +1363,24 @@ window.__ModuleLoader__.load({
     // than importing another plugin's modules.
     // -------------------------------------------------------------------------
 
-    function shortcutLabel() {
-      var nav = typeof navigator !== 'undefined' && navigator ? String(navigator.platform || '') : ''
-      var mac = /mac/i.test(nav)
-      return mac ? '\u2318\u2325K' : 'Ctrl+Alt+K'
+    // Which keys did we actually get? Decided at registration time so the
+    // panel can print the truth instead of a hardcoded guess.
+    var ACTIVE_SHORTCUT = ''
+    var ACTIVE_CODE = ''
+
+    function keyLabel(code, mac) {
+      var letter = String(code || '').replace(/^Key/, '')
+      return mac ? '\u21e7\u2318' + letter : 'Ctrl+Shift+' + letter
     }
+
+    function isMac() {
+      var nav = typeof navigator !== 'undefined' && navigator ? String(navigator.platform || '') : ''
+      return /mac/i.test(nav)
+    }
+
+    // Candidate keys, most memorable first. The first one that is free on this
+    // device wins; a taken combination must not cost us the shortcut entirely.
+    var CANDIDATE_CODES = ['KeyK', 'KeyJ', 'KeyH', 'KeyU', 'KeyI', 'KeyY', 'KeyP', 'KeyL']
 
     function openSection(slots) {
       try {
@@ -1390,38 +1406,75 @@ window.__ModuleLoader__.load({
 
     function registerShortcut(ctx, slots) {
       if (!ctx || !ctx.shortcuts || typeof ctx.shortcuts.register !== 'function') return null
-      var bind = { code: 'KeyK', modifiers: ['primary', 'alt'] }
-      var command = {
-        id: 'skill-hub.open',
-        label: shortcutLabelLine,
-        aliases: ['skills', 'skill hub', '\u6280\u80fd\u4e2d\u67a2'],
-        defaults: {
-          'desktop:macos': bind,
-          'desktop:windows': bind,
-          'desktop:linux': bind,
-          'web:macos': bind,
-          'web:windows': bind,
-        },
-        regions: ['page', 'editable', 'terminal'],
-        modals: ['settings'],
-        resolve: function (context) {
-          var modal = context ? context.modal : null
-          if (modal !== null && modal !== 'settings') return { status: 'blocked', reason: 'modal' }
-          return { status: 'handled', run: function () { openSection(slots) } }
-        },
+      var mac = isMac()
+
+      function command(defaults) {
+        return {
+          id: 'skill-hub.open',
+          label: function () {
+            return '打开技能中枢' + (ACTIVE_SHORTCUT ? '\uff08' + ACTIVE_SHORTCUT + '\uff09' : '')
+          },
+          aliases: ['skills', 'skill hub', '\u6280\u80fd\u4e2d\u67a2'],
+          defaults: defaults,
+          regions: ['page', 'editable', 'terminal'],
+          modals: ['settings'],
+          resolve: function (context) {
+            var modal = context ? context.modal : null
+            if (modal !== null && modal !== 'settings') return { status: 'blocked', reason: 'modal' }
+            return { status: 'handled', run: function () { openSection(slots) } }
+          },
+        }
       }
-      try {
-        return ctx.shortcuts.register(command)
-      } catch (error) {
-        // A default that collides with another plugin must not take the whole
-        // client half down: fall back to an unbound command the user can assign.
-        console.error('[skill-hub] 快捷键默认值冲突，改为无默认键位: ' + error)
-        return ctx.shortcuts.register(Object.assign({}, command, { defaults: {} }))
+
+      // Only desktop profiles get a default: web already uses Mod+Alt+<letter>
+      // for session search and friends, and a cross-profile conflict rejects
+      // the whole registration.
+      var profiles = ['desktop:macos', 'desktop:windows', 'desktop:linux']
+      for (var i = 0; i < CANDIDATE_CODES.length; i += 1) {
+        var code = CANDIDATE_CODES[i]
+        // Shift instead of Alt on purpose: Option+<letter> is an IME dead key on
+        // macOS, and dead keys are passed through instead of dispatching commands.
+        var binding = { code: code, modifiers: ['primary', 'shift'] }
+        var defaults = {}
+        for (var p = 0; p < profiles.length; p += 1) defaults[profiles[p]] = binding
+        try {
+          var dispose = ctx.shortcuts.register(command(defaults))
+          ACTIVE_SHORTCUT = keyLabel(code, mac)
+          ACTIVE_CODE = code
+          return dispose
+        } catch (error) {
+          // taken by another feature — try the next candidate
+        }
       }
+
+      // The desktop build can swallow a plugin's chord in its native bridge
+      // before the renderer sees it, so keep a DOM listener as a second way in.
+      // Both paths call openSection, which is idempotent.
+      // Nothing free: still register the command unbound so it shows up in the
+      // shortcut panel and the user can assign it.
+      console.error('[skill-hub] 没有空闲的 Mod+Shift+字母 组合，改为无默认键位')
+      ACTIVE_SHORTCUT = ''
+      return ctx.shortcuts.register(command({}))
     }
 
-    function shortcutLabelLine() {
-      return '\u6253\u5f00\u6280\u80fd\u4e2d\u67a2\uff08' + shortcutLabel() + '\uff09'
+    function listenLocally(scope, slots) {
+      try {
+        if (typeof document === 'undefined' || !document.addEventListener) return
+        var onKeyDown = function (event) {
+          if (!event || event.defaultPrevented) return
+          if (!(event.metaKey || event.ctrlKey) || !event.shiftKey || event.altKey) return
+          if (ACTIVE_CODE === '' || event.code !== ACTIVE_CODE) return
+          var modal = document.querySelector('[data-shortcut-modal]')
+          if (modal !== null && modal.getAttribute('data-shortcut-modal') !== 'settings') return
+          openSection(slots)
+        }
+        document.addEventListener('keydown', onKeyDown, true)
+        if (scope && typeof scope.effect === 'function') {
+          scope.effect(function () { return function () { document.removeEventListener('keydown', onKeyDown, true) } })
+        }
+      } catch (error) {
+        console.error('[skill-hub] 本地快捷键监听失败: ' + error)
+      }
     }
 
     function apply(ctx) {
@@ -1464,6 +1517,7 @@ window.__ModuleLoader__.load({
         // absent the settings UI must still mount.
         if (typeof scope.inject === 'function') {
           scope.inject(['shortcuts'], function (keys) {
+            listenLocally(keys, scope.slots)
             if (typeof keys.effect === 'function') {
               keys.effect(function () { return registerShortcut(keys, scope.slots) }, 'skill-hub: shortcut')
             } else {
