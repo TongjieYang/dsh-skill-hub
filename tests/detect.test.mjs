@@ -63,7 +63,22 @@ test('detectEnvVars: 没有 SKILL.md 报错而不是瞎猜', async () => {
   }
 })
 
-test('suggestService 取短名', () => {
+test('suggestService：变量名里带服务商时优先用变量名', () => {
   assert.equal(suggestService('weread-skills', 'WEREAD_API_KEY'), 'weread')
-  assert.equal(suggestService('amap', 'AMAP_KEY'), 'amap')
+  assert.equal(suggestService('baoyu-image-gen', 'OPENAI_API_KEY'), 'openai')
+  assert.equal(suggestService('baoyu-image-gen', 'GEMINI_API_KEY'), 'gemini')
+  assert.equal(suggestService('baoyu-image-gen', 'JIMENG_ACCESS_KEY_ID'), 'jimeng')
+  assert.equal(suggestService('amap', 'AMAP_MAPS_API_KEY'), 'amap-maps')
+  assert.equal(suggestService('baoyu-image-gen', 'ARK_API_KEY'), 'ark')
+})
+
+test('extract: 端点/配置项不算密钥', () => {
+  const names = extractEnvNames([
+    'AMAP_API_BASE_URL=https://x',
+    'AMAP_API_KEY_ENV=OTHER',
+    'API_BUSINESS=b2c',
+    'OPENAI_IMAGE_API_DIALECT=openai',
+    'API_KEY_MODEL=gpt',
+  ].join('\n')).map((item) => item.env)
+  assert.deepEqual(names, [])
 })
