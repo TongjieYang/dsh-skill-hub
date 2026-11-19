@@ -681,7 +681,12 @@ window.__ModuleLoader__.load({
           setNotice('')
           try {
             var result = await api('team/export', { id: working.id, replace: replace === true })
-            setNotice('已导出 ' + result.skill + ' → ' + result.path + (result.replaced ? '（旧版在 ' + result.backup + '）' : ''))
+            setNotice(
+              '已导出 ' + result.skill + ' → ' + result.path +
+                (result.replaced ? '（旧版在 ' + result.backup + '）' : '') +
+                '｜Codex、DSH 直接可用；WorkBuddy / Claude 加一条软链：ln -s ' + result.path +
+                ' ~/.workbuddy/skills/' + result.skill,
+            )
           } catch (failure) {
             if (/已存在/.test(failure.message) && !replace) {
               setError('已存在同名 skill，再点一次「覆盖导出」就会把旧版移到 _trash')
