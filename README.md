@@ -37,7 +37,7 @@ skill 目录是分裂的：`~/.dsh/skills`、`~/.agents/skills`、`~/.claude/ski
 
 做一条带货视频的链路是：选题 → 口播稿 → 分镜 → 素材/成片 → 复盘。每一步该加载哪个 skill、交给哪个「角色」、交付物是什么、哪几条红线不能碰 —— 这些知识每次会话都要重新组织一遍，还经常漏步骤。
 
-**这个插件**：把这类链路固化成**专家团**（团队 = 目标 + 角色 + 阶段 + 铁律 + 每角色绑定的 skill）。内置七个：
+**这个插件**：把这类链路固化成**专家团**（团队 = 目标 + 角色 + 阶段 + 铁律 + 每角色绑定的 skill）。内置九个：
 
 | 专家团 | 链路 |
 |---|---|
@@ -53,6 +53,8 @@ skill 目录是分裂的：`~/.dsh/skills`、`~/.agents/skills`、`~/.claude/ski
 | 📰 `baoyu-wechat-article` 长文与公众号团 | 选题素材（url-to-markdown / youtube-transcript / wechat-summary）→ 写作（copywriting / format-markdown）→ 配图（cover-image / article-illustrator / infographic）→ 排版发布（markdown-to-html / post-to-wechat） |
 | 🧠 `baoyu-visual-explain` 图解与知识漫画团 | 概念拆解（diagram）→ 知识漫画（comic）/ 信息图（infographic）→ 幻灯片（slide-deck） |
 | 📡 `baoyu-multichannel` 一稿多平台分发团 | 母稿（url-to-markdown / x-to-markdown / youtube-transcript）→ 平台改写（copywriting / translate）+ 图文卡片（xhs-images / cover-image）→ 分发（post-to-wechat / post-to-weibo / post-to-x） |
+| 🎬 `baoyu-video-cover` 视频封面团 | 定基调（读书号 / vlog + 平台画幅）→ 5 维 brief（type / palette / rendering / text / mood）→ 出图（cover-image 16:9 + image-gen 竖版）→ 320px 缩略自检与命名 |
+| 🎞 `short-video` 短视频团 | 钩子（baokuan-video / dbs-hook）→ 分镜（rea-video / infographic）→ 成片（onetake / adu-motion-video / tts）→ 封面与发布（cover-image / xhs-images / qihao） |
 
 agent 侧一句话 `skill_hub_team({team:"daohuo-video"})` 就拿到完整 SOP，然后按阶段装载绑定的 skill。绑定的 skill 本机没有，界面和 agent 两侧都会标 ⚠️。
 

@@ -186,3 +186,13 @@ MIT
 2. **分类整理可收缩**：11 个分类默认全部收起，只显示「类别 + 条数 + ▸」；点开某一类才展开成卡片网格（占满整行，内部再分列），一屏就能看完全部分类分布。
 3. **入匙命令一键跑**：结果卡顶部多一个 `在终端里执行（推荐）`——插件用 osascript 打开 Terminal 并把命令填好，你只需按回车；有密钥时可选择 `带密钥执行`（会进 shell history，默认不选）。命令永远由服务端从校验过的字段重新生成，浏览器不能塞任意 shell 进来。
 4. **输入口弹层扩成三页签**：`技能`（全部 341 个，滚到底随便挑）/ `专家团`（一次插入整本任务书）/ `安装`（owner/repo → 预览 → 勾选 → 装，严格走技能中枢规则：真实目录、同名替换进 `_trash`）。按钮旁边新增一个 **`装`** 小按钮，直接落到安装页签。
+
+## 0.3.5 — 弹层自适应、两套封面 preset、短视频团
+
+**弹层跟着窗口走**：打开时按 `window.innerWidth/Height` 算尺寸与位置——宽度 `min(560, vw-24)`，高度 `min(560, 可用空间)`，先试「在按钮上方」展开，上方不够就翻到「按钮下方」；窗口 resize 时重算（`computeLayout()` + `resize` 监听）。不再写死 `left`，也不会被窗口边缘裁掉。
+
+**视频封面团（读书号 / vlog 两套 preset）**：
+- 读书号：`type=typography|metaphor`，`palette=warm|earth|elegant`，`rendering=painterly|flat-vector`，主标题 ≤8 字、最多 2 行，画面主体是「书 + 一只手 / 一扇窗 / 一杯茶」这类可读意象。
+- vlog：`type=scene|hero`，`palette=vivid|earth|cool`，`rendering=digital|painterly`，标题压在画面上三分之一，右下角留出时长/平台角标的位置。
+
+**短视频团**：把本机 `baokuan-video` / `onetake` / `adu-motion-video` / `qihao` 串成一条线；`baoyu-*` 在这个团里只负责封面（cover-image / xhs-images）与数据信息图——**baoyu-skills 本身没有视频类 skill**，这点不要误传。

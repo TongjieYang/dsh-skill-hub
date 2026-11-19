@@ -6,11 +6,11 @@ import {
 } from '../lib/teams.js'
 import { buildKeyScript, buildLoadAll, PLACEHOLDER, ENV_RE } from '../lib/keygen.js'
 
-test('builtin teams: seven, unique ids, roles bound to skills', () => {
-  assert.equal(BUILTIN_TEAMS.length, 7)
+test('builtin teams: nine, unique ids, roles bound to skills', () => {
+  assert.equal(BUILTIN_TEAMS.length, 9)
   const ids = BUILTIN_TEAMS.map((t) => t.id)
-  assert.equal(new Set(ids).size, 7)
-  for (const id of ['baoyu-wechat-article', 'baoyu-visual-explain', 'baoyu-multichannel']) {
+  assert.equal(new Set(ids).size, 9)
+  for (const id of ['baoyu-wechat-article', 'baoyu-visual-explain', 'baoyu-multichannel', 'baoyu-video-cover', 'short-video']) {
     assert.ok(ids.includes(id), id)
   }
   for (const team of BUILTIN_TEAMS) {
@@ -35,7 +35,7 @@ test('user team overrides builtin by id; others append', () => {
   const custom = { id: 'daohuo-video', title: '我的带货团', roles: [], stages: [] }
   const extra = { id: 'my-team', title: '自建团', roles: [], stages: [] }
   const merged = mergeTeams([custom, extra])
-  assert.equal(merged.length, 8)
+  assert.equal(merged.length, 10)
   assert.equal(merged.find((t) => t.id === 'daohuo-video').title, '我的带货团')
   assert.equal(merged.find((t) => t.id === 'daohuo-video').builtin, true)
   assert.equal(merged.find((t) => t.id === 'my-team').builtin, false)
@@ -43,7 +43,7 @@ test('user team overrides builtin by id; others append', () => {
 
 test('mergeTeams tolerates garbage', () => {
   const merged = mergeTeams([null, 'x', {}, { id: 'ok', title: 'T', roles: [{ skills: ['a', 1, ''] }] }])
-  assert.equal(merged.length, 8)
+  assert.equal(merged.length, 10)
   const team = merged.find((t) => t.id === 'ok')
   assert.deepEqual(team.roles[0].skills, ['a'])
 })

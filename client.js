@@ -44,7 +44,7 @@ window.__ModuleLoader__.load({
       '.sh-input:focus,.sh-area:focus,.sh-select:focus{outline:none;border-color:var(--dsw-alias-brand-primary,#2563eb)}',
       '.sh-area{min-height:300px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.5;resize:vertical}',
       '.sh-chips{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}',
-      '.sh-chip{appearance:none;display:inline-flex;align-items:center;gap:4px;font-family:inherit;font-size:12px;padding:4px 9px;border-radius:999px;cursor:pointer;border:1px solid var(--dsw-alias-border-l1,#e6e8eb);background:var(--dsw-alias-bg-layer-1,#fff);color:var(--dsw-alias-label-secondary,#6b7280)}',
+      '.sh-chip{appearance:none;display:inline-flex;align-items:center;gap:4px;min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:inherit;font-size:12px;padding:4px 9px;border-radius:999px;cursor:pointer;border:1px solid var(--dsw-alias-border-l1,#e6e8eb);background:var(--dsw-alias-bg-layer-1,#fff);color:var(--dsw-alias-label-secondary,#6b7280)}',
       '.sh-chip.on{background:var(--dsw-alias-brand-primary,#2563eb);border-color:transparent;color:#fff}',
       '.sh-chip .n{opacity:.7;margin-left:4px;font-variant-numeric:tabular-nums}',
       '.sh-list{display:flex;flex-direction:column;gap:1px}',
@@ -208,7 +208,7 @@ window.__ModuleLoader__.load({
       '.sh-node-add:hover{border-color:var(--dsw-alias-brand-primary,#2563eb);color:var(--dsw-alias-brand-primary,#2563eb)}',
       '.sh-guardrow{display:flex;gap:8px;align-items:center}',
       '.sh-guardrow+.sh-guardrow{margin-top:6px}',
-      '.sh-menu{position:fixed;z-index:2147483000;width:560px;max-width:min(94vw,620px);border:1px solid var(--dsw-alias-border-l1,#e6e8eb);border-radius:14px;background:var(--dsw-alias-bg-overlay,#fff);box-shadow:0 18px 48px rgba(16,24,40,.18),0 2px 6px rgba(16,24,40,.06);overflow:hidden;display:flex;flex-direction:column;max-height:min(70vh,560px)}',
+      '.sh-menu{position:fixed;z-index:2147483000;box-sizing:border-box;border:1px solid var(--dsw-alias-border-l1,#e6e8eb);border-radius:14px;background:var(--dsw-alias-bg-overlay,#fff);box-shadow:0 18px 48px rgba(16,24,40,.18),0 2px 6px rgba(16,24,40,.06);overflow:hidden;display:flex;flex-direction:column;max-height:560px}',
       '.sh-menu-head{display:flex;align-items:center;gap:8px;padding:11px 12px;border-bottom:1px solid var(--dsw-alias-border-l1,#eef0f3)}',
       '.sh-menu-title{font-size:12.5px;font-weight:600;letter-spacing:.01em}',
       '.sh-menu-tabs{display:flex;gap:2px;padding:8px 12px 0}',
@@ -2287,6 +2287,13 @@ window.__ModuleLoader__.load({
         }, [open])
 
         useEffect(function () {
+          if (!open) return undefined
+          function relayout() { setPos(computeLayout()) }
+          window.addEventListener('resize', relayout)
+          return function () { window.removeEventListener('resize', relayout) }
+        }, [open])
+
+        useEffect(function () {
           if (!open || data !== null) return
           fetch(API + '/state')
             .then(function (response) { return response.json() })
@@ -2294,15 +2301,51 @@ window.__ModuleLoader__.load({
             .catch(function () {})
         }, [open, data])
 
-        function toggle() {
-          var next = !open
-          if (next && buttonRef.current) {
-            var rect = buttonRef.current.getBoundingClientRect()
-            setPos({ right: Math.max(12, window.innerWidth - rect.right), bottom: window.innerHeight - rect.top + 10 })
+        // 弹层尺寸与位置全部跟着「当前窗口」算：主面板变窄时收宽、变矮时缩高，
+        // 上下都放不下就贴到按钮下方，永远不出窗口。
+        var MENU_MAX_W = 560
+        var MENU_MIN_W = 360
+        var MENU_MAX_H = 560
+        var EDGE = 12
+
+        function computeLayout() {
+          var vw = window.innerWidth || document.documentElement.clientWidth || 1200
+          var vh = window.innerHeight || document.documentElement.clientHeight || 800
+          var rect = buttonRef.current ? buttonRef.current.getBoundingClientRect() : null
+          var width = Math.max(MENU_MIN_W, Math.min(MENU_MAX_W, vw - EDGE * 2))
+          if (width > vw - EDGE * 2) width = Math.max(280, vw - EDGE * 2)
+          var anchorLeft = rect ? rect.left : vw / 2 - width / 2
+          var left = Math.max(EDGE, Math.min(anchorLeft, vw - width - EDGE))
+          var maxHeight = Math.max(240, Math.min(MENU_MAX_H, vh - EDGE * 2))
+          var gap = 10
+          var layout = { width: width, left: left, maxHeight: maxHeight, mode: 'up', bottom: EDGE, top: null }
+          if (rect) {
+            var spaceAbove = rect.top - EDGE - gap
+            var spaceBelow = vh - rect.bottom - EDGE - gap
+            if (spaceAbove >= Math.min(maxHeight, 320) || spaceAbove >= spaceBelow) {
+              layout.mode = 'up'
+              layout.bottom = Math.max(EDGE, vh - rect.top + gap)
+              layout.maxHeight = Math.max(200, Math.min(maxHeight, spaceAbove))
+            } else {
+              layout.mode = 'down'
+              layout.top = rect.bottom + gap
+              layout.maxHeight = Math.max(200, Math.min(maxHeight, spaceBelow))
+            }
           }
-          setOpen(next)
+          return layout
+        }
+
+        function openMenu(nextTab) {
+          setPos(computeLayout())
+          if (nextTab) setTab(nextTab)
+          setOpen(true)
           setFlash('')
           setQuery('')
+        }
+
+        function toggle() {
+          if (open) { setOpen(false); return }
+          openMenu()
         }
 
         function useSkill(skill, withPrompt) {
@@ -2419,13 +2462,7 @@ window.__ModuleLoader__.load({
               event.preventDefault()
               event.stopPropagation()
               if (open && tab === 'install') { setOpen(false); return }
-              if (!open && buttonRef.current) {
-                var rect = buttonRef.current.getBoundingClientRect()
-                setPos({ right: Math.max(12, window.innerWidth - rect.right), bottom: window.innerHeight - rect.top + 10 })
-              }
-              setTab('install')
-              setOpen(true)
-              setFlash('')
+              openMenu('install')
             },
           },
           '装',
@@ -2437,7 +2474,17 @@ window.__ModuleLoader__.load({
 
         var panel = h(
           'div',
-          { id: 'skill-hub-menu', className: 'sh-menu sh-fade', style: { right: pos.right + 'px', bottom: pos.bottom + 'px' } },
+          {
+            id: 'skill-hub-menu',
+            className: 'sh-menu sh-fade',
+            style: {
+              width: pos.width + 'px',
+              left: pos.left + 'px',
+              top: pos.mode === 'down' ? pos.top + 'px' : 'auto',
+              bottom: pos.mode === 'up' ? pos.bottom + 'px' : 'auto',
+              maxHeight: pos.maxHeight + 'px',
+            },
+          },
           h(
             'div',
             { className: 'sh-menu-head' },
