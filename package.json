@@ -1,0 +1,56 @@
+{
+  "name": "dsh-skill-hub",
+  "version": "0.1.0",
+  "private": true,
+  "description": "技能中枢：本机 skill 清单与分类、专家团编排、系统钥匙串 Key 管理，全部在 DeepSeek Harness 设置页里完成。",
+  "type": "module",
+  "license": "MIT",
+  "author": "TongjieYang",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TongjieYang/dsh-skill-hub.git"
+  },
+  "homepage": "https://github.com/TongjieYang/dsh-skill-hub#readme",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "skills",
+    "keychain",
+    "agent"
+  ],
+  "icon": "icon.svg",
+  "files": [
+    "index.js",
+    "client.js",
+    "lib/",
+    "locale/",
+    "docs/",
+    "icon.svg",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": []
+    }
+  },
+  "scripts": {
+    "test": "node --test \"tests/*.test.mjs\""
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
