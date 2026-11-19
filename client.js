@@ -677,6 +677,7 @@ window.__ModuleLoader__.load({
         var [detected, setDetected] = useState(null)
         var [detecting, setDetecting] = useState(false)
         var [form, setForm] = useState({ env: '', service: '', account: '', note: '' })
+        var [shell, setShell] = useState(state.shell || 'zsh')
         var [secret, setSecret] = useState('')
         var [result, setResult] = useState(null)
         var [error, setError] = useState('')
@@ -733,6 +734,7 @@ window.__ModuleLoader__.load({
               account: form.account.trim(),
               note: form.note.trim(),
               platform: state.platform,
+              shell: shell,
             }
             var data = await api('keys/add', { key: payload })
             setResult({ script: data.script, key: data.key, hasSecret: secret.length > 0 })
@@ -905,6 +907,14 @@ window.__ModuleLoader__.load({
                 onChange: function (event) { update('account', event.target.value) },
               })),
               h('div', { className: 'sh-field' }, h('label', null, '平台（自动识别）'), h('div', { className: 'sh-fixed' }, platformLabel)),
+              h('div', { className: 'sh-field' }, h('label', null, 'shell（决定 export 怎么写、加进哪个文件）'),
+                h('select', {
+                  className: 'sh-input',
+                  value: shell,
+                  onChange: function (event) { setShell(event.target.value) },
+                }, (state.shells || []).map(function (item) {
+                  return h('option', { key: item.id, value: item.id }, item.label)
+                }))),
             ),
             h('div', { className: 'sh-field' }, h('label', null, '备注'), h('input', {
               className: 'sh-input', placeholder: '微信读书 / 高德 / …', value: form.note,
@@ -949,10 +959,17 @@ window.__ModuleLoader__.load({
                         : null,
                       block(result.script.addPrompt ? '1b. 或者一条命令带值（会留在 ~/.zsh_history，介意就用上面那条）' : '1. 存入钥匙串（你自己跑）', result.script.add),
                       block('2. 验证（不打印密钥）', result.script.verify),
-                      block('3. 用时取回（export）', result.script.export),
+                      block('3. 用时取回（只对当前 shell 会话有效）', result.script.export),
+                      result.script.persist
+                        ? block(
+                            (result.script.persist.fileLabel ? '4. 想一直带着就加进 ' + result.script.persist.fileLabel : '4. 想一直带着')
+                              + '（' + result.script.persist.label + '）',
+                            result.script.persist.line,
+                          )
+                        : null,
                       h('div', { className: 'sh-muted' },
-                        '想每个终端自动带上：把下面那行 export 加到 ~/.zshenv（不是 ~/.zshrc —— 非交互 shell 不读 .zshrc）。'
-                        + '不想改任何文件也行：skill 需要时用 $(security find-generic-password …) 现取。'),
+                        (result.script.persist && result.script.persist.note ? result.script.persist.note + ' ' : '')
+                        + '插件不写任何 dotfile，这一行你自己决定加不加；不想改文件也行，用的时候现取。'),
                     ),
               )
             : null,

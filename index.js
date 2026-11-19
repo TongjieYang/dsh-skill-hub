@@ -165,6 +165,11 @@ const TOOLS = [
           description: '目标平台，留空按当前系统。',
         },
         note: { type: 'string', description: '一句话备注，方便以后认出这是谁的 key。' },
+        shell: {
+          type: 'string',
+          enum: ['zsh', 'bash', 'posix', 'fish', 'powershell', 'cmd'],
+          description: '用户的 shell，留空按 $SHELL 自动判断。决定 export 那一行怎么写、以及该加进哪个配置文件。',
+        },
       },
       required: [],
     },
@@ -200,11 +205,17 @@ const TOOLS = [
         service,
         account: args?.account,
         platform: args?.platform,
+        shell: args?.shell,
         note,
       })
       if (!script.ok) return `无法生成脚本：${script.error}`
+      const fence =
+        script.shell === 'fish' ? 'fish' : script.shell === 'powershell' ? 'powershell' : script.shell === 'cmd' ? 'bat' : 'bash'
+      const persist = script.persist
       return [
         `## ${script.env} → ${script.service}`,
+        '',
+        `shell：${persist?.label ?? script.shell}（要改成别的 shell 就带 \`shell\` 参数：zsh / bash / posix / fish / powershell / cmd）`,
         '',
         '推荐这样存（`security` 会隐藏输入地向你要密钥，密钥不进 argv，也就不进 shell history）：',
         '```bash',
@@ -221,9 +232,16 @@ const TOOLS = [
         script.verify,
         '```',
         '',
-        '需要用时临时取回环境变量：',
-        '```bash',
+        '临时取回环境变量（只对当前 shell 会话有效）：',
+        '```' + fence,
         script.export,
+        '```',
+        '',
+        persist?.fileLabel
+          ? `要一直带着，就把同一行加进 ${persist.fileLabel}（${persist.note}）：`
+          : `要一直带着：${persist?.note ?? ''}`,
+        '```' + fence,
+        persist?.fileLabel ? persist.line : persist?.line ?? script.export,
         '```',
         '',
         script.note,

@@ -119,7 +119,9 @@ test('addKey records metadata and returns placeholder script; secret never store
   assert.equal(config.keys[0].env, 'WEREAD_API_KEY')
   assert.equal(config.keys[0].service, 'skill-hub:weread')
   assert.equal(JSON.stringify(config).includes('wrk-'), false)
-  assert.deepEqual(Object.keys(config.keys[0]).sort(), ['account', 'createdAt', 'env', 'note', 'platform', 'service'])
+  assert.deepEqual(Object.keys(config.keys[0]).sort(), ['account', 'createdAt', 'env', 'note', 'platform', 'service', 'shell'])
+  // the shell we generated for is remembered, so a later re-print stays correct
+  assert.equal(config.keys[0].shell, 'zsh')
 })
 
 test('addKey rejects invalid env and duplicates collapse to one', async () => {

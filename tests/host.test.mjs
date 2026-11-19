@@ -201,6 +201,37 @@ test('POST /keys/add 登记元数据并给出占位符脚本', async () => {
   assert.ok(!('secret' in response.body.key), '登记项里不能出现 secret 字段')
 })
 
+test('POST /keys/add 带上 shell 时按该 shell 生成 export 与持久化文件', async () => {
+  const { ctx, routes } = fakeCtx()
+  mod.apply(ctx)
+  const response = await callRoute(routes[0], {
+    method: 'POST',
+    path: '/skill-hub/api/keys/add',
+    headers: { 'content-type': 'application/json' },
+    body: { key: { env: 'WEREAD_API_KEY', service: 'weread', account: 'tester', platform: 'darwin', shell: 'fish' } },
+  })
+  assert.equal(response.status, 200)
+  assert.match(response.body.script.export, /^set -gx WEREAD_API_KEY /)
+  assert.equal(response.body.script.persist.fileLabel, '~/.config/fish/config.fish')
+  assert.equal(response.body.key.shell, 'fish')
+})
+
+test('POST /keys/script 接受 shell 且返回 persist 块', async () => {
+  const { ctx, routes } = fakeCtx()
+  mod.apply(ctx)
+  const response = await callRoute(routes[0], {
+    method: 'POST',
+    path: '/skill-hub/api/keys/script',
+    headers: { 'content-type': 'application/json' },
+    body: { env: 'ARK_API_KEY', service: 'ark', account: 'tester', platform: 'darwin', shell: 'zsh' },
+  })
+  assert.equal(response.status, 200)
+  assert.equal(response.body.ok, true)
+  // /keys/script flattens the script onto the response (ok + env + export + …)
+  assert.match(response.body.export, /^export ARK_API_KEY="\$\(security find-generic-password/)
+  assert.equal(response.body.persist.fileLabel, '~/.zshenv')
+})
+
 test('POST /classify 写入分类覆盖', async () => {
   const { ctx, routes } = fakeCtx()
   mod.apply(ctx)

@@ -129,3 +129,4 @@ MIT
 
 - 入匙命令分两条：默认可交互（`security add-generic-password … -U -w` 由 `security` 隐藏输入地向你要值，密钥不进 argv，也就不进 `~/.zsh_history`），另附一条带值的版本并写明它会留在 history 里。
 - 说明插件不碰任何 shell 配置文件；要自动导出就写进 `~/.zshenv`（`.zshrc` 只对交互 shell 生效，agent 跑的非交互 shell 读不到）。
+- **0.2.5 · 按 shell 出正确的命令**：新增 `lib/shell.js`，覆盖主流 shell（zsh / bash / posix sh / fish / PowerShell / cmd）。每种 shell 有自己的 `export` 语法与持久化文件——fish 用 `set -gx … (…)`、PowerShell 用 `$env:K = …`、cmd 只能 `for /f` 现读或用 `setx`；`~/.zshenv`、`~/.bashrc`、`~/.profile`、`~/.config/fish/config.fish`、`$PROFILE` 各自对应。shell 由 `$SHELL` 自动识别，界面上可切换；平台与 shell 不匹配时退回 POSIX，不生成跑不通的命令。

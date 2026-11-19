@@ -150,7 +150,21 @@ rank 小的先见者生效；同名的后来者记为「遮蔽」。可在 `conf
 
 **往钥匙串里存 key**：默认给两条命令 ——
 `security add-generic-password -s 'skill-hub:weread' -a 'ytj' -U -w`（推荐：`security` 隐藏输入地问你要值，密钥不进 argv、不进 `~/.zsh_history`），
-以及一条把值直接写进命令的版本（方便，但会留在 shell history）。插件**不写** `~/.zshrc` / `~/.zshenv`；想让每个终端自动带上变量，把 `export …$(security find-generic-password …)` 自己加到 `~/.zshenv`（非交互 shell 不读 `.zshrc`），不加也行 —— skill 用的时候现取。
+以及一条把值直接写进命令的版本（方便，但会留在 shell history）。
+
+插件**不写任何 dotfile**；要一直带着变量，自己把生成的 `export` 那一行加进对应文件（插件会按你的 shell 给对语法和文件名）：
+
+| shell | 一直生效要加进 | 取回变量写法 |
+|---|---|---|
+| zsh | `~/.zshenv`（非交互也读；`.zshrc` 只对交互 shell 生效） | `export K="$(security find-generic-password …)"` |
+| bash | `~/.bashrc`（仅交互；非交互可设 `BASH_ENV`） | `export K="$(…)"` |
+| sh / dash / ksh | `~/.profile`（登录 shell） | `export K="$(…)"` |
+| fish | `~/.config/fish/config.fish` | `set -gx K (security find-generic-password …)` |
+| PowerShell | `$PROFILE` | `$env:K = <读取表达式>` |
+| cmd.exe | 没有 profile 文件 | `for /f "usebackq delims=" %A in (`powershell …`) do set "K=%A"`，持久用 `setx` |
+
+shell 自动识别（看 `$SHELL`，Windows 默认 PowerShell），也可以在界面上手动切；平台与 shell 不匹配时（比如在 macOS 上选了 PowerShell）自动退回 POSIX 写法，不会生成跑不通的命令。
+不加文件也完全没问题 —— skill 用的时候现取，最不容易泄漏。
 
 **克隆走哪条路**：预览时先用 `git ls-remote` 分别给「按你的 git 配置」和「直连 GitHub（忽略 git 配置）」计时，取快的那条；一条失败自动换另一条，结果里会写 clone 用时和实际走的路。你的 git 若把 github 重写到镜像（`url.…insteadOf`），镜像慢时这条路会明显拖时间，插件会把另一个选项也试一遍。
 
