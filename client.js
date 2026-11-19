@@ -20,7 +20,7 @@ window.__ModuleLoader__.load({
     var STYLE_ID = 'dsh-skill-hub-styles'
 
     var CSS = [
-      '.sh-root{display:flex;flex-direction:column;height:100%;min-height:0;color:var(--dsw-alias-label-primary,#1a1a1a);font-size:13px;line-height:1.5}',
+      '.sh-root{--sh-ease:cubic-bezier(.16,1,.3,1);display:flex;flex-direction:column;height:100%;min-height:0;color:var(--dsw-alias-label-primary,#1a1a1a);font-size:13px;line-height:1.5}',
       '.sh-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:2px 0 10px}',
       '.sh-title{margin:0;font-size:17px;font-weight:600;letter-spacing:.2px}',
       '.sh-sub{margin:3px 0 0;color:var(--dsw-alias-label-secondary,#6b7280);font-size:12px}',
@@ -45,6 +45,8 @@ window.__ModuleLoader__.load({
       '.sh-chip.on{background:var(--dsw-alias-brand-primary,#2563eb);border-color:transparent;color:#fff}',
       '.sh-chip .n{opacity:.7;margin-left:4px;font-variant-numeric:tabular-nums}',
       '.sh-list{display:flex;flex-direction:column;gap:1px}',
+      '.sh-list-2{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:2px 12px;align-items:start}',
+      '.sh-list-2 .sh-item{padding:8px 10px}',
       '.sh-item{padding:7px 9px;border-radius:6px;border:1px solid transparent}',
       '.sh-item:hover{background:var(--dsw-alias-bg-layer-2,#f4f6f8)}',
       '.sh-item-top{display:flex;align-items:center;gap:8px;justify-content:space-between}',
@@ -60,7 +62,6 @@ window.__ModuleLoader__.load({
       '.sh-kv{display:grid;grid-template-columns:88px 1fr;gap:2px 10px;font-size:12px;margin-top:6px}',
       '.sh-kv dt{color:var(--dsw-alias-label-secondary,#6b7280)}',
       '.sh-kv dd{margin:0}',
-      '.sh-flow{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 0}',
       '.sh-step{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--dsw-alias-bg-layer-2,#f4f6f8);color:var(--dsw-alias-label-secondary,#6b7280)}',
       '.sh-sec-title{font-size:12px;font-weight:600;color:var(--dsw-alias-label-secondary,#6b7280);text-transform:none;letter-spacing:.4px;margin:14px 0 6px}',
       '.sh-note{font-size:12px;padding:8px 10px;border-radius:6px;margin:0 0 10px;border:1px solid var(--dsw-alias-border-l1,#e6e8eb);background:var(--dsw-alias-bg-layer-2,#f4f6f8);color:var(--dsw-alias-label-secondary,#6b7280)}',
@@ -103,6 +104,71 @@ window.__ModuleLoader__.load({
       '.sh-done-row{padding:5px 0;color:var(--dsw-alias-state-success-primary,#15803d)}',
       '.sh-skip-row{padding:5px 0;color:var(--dsw-alias-label-secondary,#6b7280)}',
       '.sh-scroll-x{overflow-x:auto}',
+      '.sh-toolbar{display:flex;align-items:center;gap:10px;margin:0 0 10px;flex-wrap:wrap}',
+      '.sh-savebar{position:sticky;top:-2px;z-index:4;display:flex;flex-wrap:nowrap;align-items:center;gap:8px;padding:8px 10px;margin:0 0 4px;border:1px solid var(--dsw-alias-border-l1,#e6e8eb);border-radius:12px;background:var(--dsw-alias-bg-layer-1,#fff);box-shadow:0 2px 8px rgba(16,24,40,.05)}',
+      '.sh-savebar .sh-btn{white-space:nowrap;flex:0 0 auto}',
+      '.sh-savebar .sh-hint{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}',
+      '.sh-chip-x{border:0;background:none;color:inherit;cursor:pointer;padding:0;font-size:12px;line-height:1}',
+      '.sh-empty{padding:28px 8px;text-align:center;color:var(--dsw-alias-label-secondary,#6b7280);font-size:12.5px}',
+      '.sh-board{display:grid;grid-template-columns:repeat(auto-fill,minmax(236px,1fr));gap:10px;align-items:start}',
+      '.sh-col{display:flex;flex-direction:column;min-width:0;border:1px solid var(--dsw-alias-border-l1,#e6e8eb);border-radius:14px;background:var(--dsw-alias-bg-layer-1,#fff);box-shadow:0 1px 2px rgba(16,24,40,.04)}',
+      '.sh-col-head{display:flex;align-items:center;gap:8px;padding:11px 12px 10px;border-bottom:1px solid var(--dsw-alias-border-l1,#eef0f3);position:sticky;top:0;z-index:2;background:var(--dsw-alias-bg-layer-1,#fff);border-radius:14px 14px 0 0}',
+      '.sh-col-emoji{font-size:15px;line-height:1}',
+      '.sh-col-name{font-size:13px;font-weight:600;letter-spacing:.01em}',
+      '.sh-col-count{margin-left:auto;font-size:11px;font-variant-numeric:tabular-nums;color:var(--dsw-alias-label-secondary,#6b7280);background:var(--dsw-alias-bg-layer-2,#f4f6f8);border-radius:999px;padding:1px 8px}',
+      '.sh-col-body{overflow:auto;max-height:min(58vh,540px);padding:6px;display:flex;flex-direction:column;gap:2px}',
+      '.sh-skillcard{padding:7px 9px;border-radius:10px;transition:background .16s var(--sh-ease,cubic-bezier(.16,1,.3,1))}',
+      '.sh-skillcard:hover{background:var(--dsw-alias-bg-layer-2,#f4f6f8)}',
+      '.sh-skillcard-top{display:flex;align-items:center;gap:6px;min-width:0}',
+      '.sh-skillcard-name{font-size:12.5px;font-weight:560;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+      '.sh-skillcard-desc{margin-top:2px;font-size:11.5px;line-height:1.45;color:var(--dsw-alias-label-secondary,#6b7280);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}',
+      '.sh-skillcard-foot{display:flex;align-items:center;gap:6px;margin-top:5px}',
+      '.sh-skillcard-foot .sh-select{max-width:112px;text-overflow:ellipsis}',
+      '.sh-src{font-family:var(--dsw-code-font-family,ui-monospace,Menlo,monospace);font-size:10.5px;color:var(--dsw-alias-label-secondary,#8b93a1)}',
+      '.sh-split{display:grid;grid-template-columns:152px minmax(0,1fr);gap:14px;align-items:start}',
+      '.sh-rail{display:flex;flex-direction:column;gap:3px;border-right:1px solid var(--dsw-alias-border-l1,#eef0f3);padding-right:12px}',
+      '.sh-rail-item{display:flex;align-items:center;gap:7px;padding:7px 9px;border:0;border-radius:9px;background:none;font:inherit;font-size:12.5px;color:inherit;cursor:pointer;text-align:left;transition:background .16s var(--sh-ease,cubic-bezier(.16,1,.3,1))}',
+      '.sh-rail-item:hover{background:var(--dsw-alias-bg-layer-2,#f4f6f8)}',
+      '.sh-rail-item.on{background:var(--dsw-alias-bg-layer-2,#eef2f7);font-weight:600}',
+      '.sh-editor{min-width:0;display:flex;flex-direction:column;gap:18px}',
+      '.sh-field{display:flex;flex-direction:column;gap:5px}',
+      '.sh-label{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--dsw-alias-label-secondary,#8b93a1);font-weight:600}',
+      '.sh-secthead{display:flex;align-items:center;gap:8px;margin:0 0 8px}',
+      '.sh-secthead h5{margin:0;font-size:13px;font-weight:600;white-space:nowrap}',
+      '.sh-secthead .sh-hint{margin:0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+      '.sh-rolecard{border:1px solid var(--dsw-alias-border-l1,#e6e8eb);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:7px;background:var(--dsw-alias-bg-layer-1,#fff)}',
+      '.sh-rolecard+.sh-rolecard{margin-top:8px}',
+      '.sh-rolecard-top{display:grid;grid-template-columns:1fr 1fr;gap:8px}',
+      '.sh-mini{font-size:12px;padding:5px 8px}',
+      '.sh-flow{display:flex;flex-direction:column;gap:10px;padding:2px 0 8px}',
+      '.sh-node{position:relative;width:100%;min-width:0;border:1px solid var(--dsw-alias-border-l1,#e6e8eb);border-radius:12px;padding:12px 12px 10px;background:var(--dsw-alias-bg-layer-1,#fff);display:flex;flex-direction:column;gap:6px}',
+      '.sh-node+.sh-node{margin-left:0}',
+      '.sh-node+.sh-node::before{content:"";position:absolute;left:20px;top:-10px;width:1px;height:10px;background:var(--dsw-alias-border-l2,#d5d9e0)}',
+      '.sh-node-dot{position:absolute;top:10px;right:10px;width:20px;height:20px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:600;background:var(--dsw-alias-brand-primary,#2563eb);color:#fff}',
+      '.sh-node-title{font-size:12.5px;font-weight:600;padding-right:22px}',
+      '.sh-node-roles{display:flex;flex-wrap:wrap;gap:4px}',
+      '.sh-rolechip{font:inherit;font-size:10.5px;padding:2px 7px;border-radius:999px;border:1px solid var(--dsw-alias-border-l1,#e6e8eb);background:none;color:var(--dsw-alias-label-secondary,#6b7280);cursor:pointer;transition:all .14s var(--sh-ease,cubic-bezier(.16,1,.3,1))}',
+      '.sh-rolechip.on{background:var(--dsw-alias-brand-primary,#2563eb);border-color:transparent;color:#fff}',
+      '.sh-node-add{width:100%;min-height:42px;border:1px dashed var(--dsw-alias-border-l2,#d5d9e0);border-radius:12px;background:none;color:var(--dsw-alias-label-secondary,#6b7280);font:inherit;font-size:12px;cursor:pointer}',
+      '.sh-node-add:hover{border-color:var(--dsw-alias-brand-primary,#2563eb);color:var(--dsw-alias-brand-primary,#2563eb)}',
+      '.sh-guardrow{display:flex;gap:8px;align-items:center}',
+      '.sh-guardrow+.sh-guardrow{margin-top:6px}',
+      '.sh-menu{position:fixed;z-index:2147483000;width:420px;max-width:min(92vw,460px);border:1px solid var(--dsw-alias-border-l1,#e6e8eb);border-radius:14px;background:var(--dsw-alias-bg-overlay,#fff);box-shadow:0 18px 48px rgba(16,24,40,.18),0 2px 6px rgba(16,24,40,.06);overflow:hidden;display:flex;flex-direction:column;max-height:min(70vh,560px)}',
+      '.sh-menu-head{display:flex;align-items:center;gap:8px;padding:11px 12px;border-bottom:1px solid var(--dsw-alias-border-l1,#eef0f3)}',
+      '.sh-menu-title{font-size:12.5px;font-weight:600;letter-spacing:.01em}',
+      '.sh-menu-tabs{display:flex;gap:2px;padding:8px 12px 0}',
+      '.sh-menu-tab{font:inherit;font-size:12px;padding:5px 10px;border:0;border-radius:999px;background:none;color:var(--dsw-alias-label-secondary,#6b7280);cursor:pointer}',
+      '.sh-menu-tab.on{background:var(--dsw-alias-bg-layer-2,#eef2f7);color:var(--dsw-alias-label-primary,#111827);font-weight:600}',
+      '.sh-menu-body{overflow:auto;padding:8px 10px 10px}',
+      '.sh-menu-row{display:flex;align-items:flex-start;gap:8px;padding:7px 8px;border-radius:9px;cursor:pointer}',
+      '.sh-menu-row:hover{background:var(--dsw-alias-bg-layer-2,#f4f6f8)}',
+      '.sh-menu-row-main{min-width:0;flex:1}',
+      '.sh-menu-row-name{font-size:12.5px;font-weight:560;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+      '.sh-menu-row-desc{margin-top:1px;font-size:11px;line-height:1.4;color:var(--dsw-alias-label-secondary,#6b7280);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}',
+      '.sh-menu-foot{display:flex;align-items:center;gap:8px;padding:9px 12px;border-top:1px solid var(--dsw-alias-border-l1,#eef0f3);background:var(--dsw-alias-bg-layer-1,#fbfcfd)}',
+      '.sh-flash{font-size:11.5px;color:var(--dsw-alias-state-success-primary,#15803d)}',
+      '.sh-fade{animation:sh-fade .22s var(--sh-ease,cubic-bezier(.16,1,.3,1))}',
+      '@keyframes sh-fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}',
     ].join('\n')
 
     function ensureStyles() {
@@ -224,22 +290,24 @@ window.__ModuleLoader__.load({
           null,
           h(
             'div',
-            { className: 'sh-card', style: { marginBottom: '12px' } },
+            { className: 'sh-card', style: { marginBottom: '12px', padding: audit ? '10px 12px' : '10px 12px' } },
             h(
               'div',
               { className: 'sh-row' },
-              h('div', { className: 'sh-label' }, '技能库体检'),
+              h('div', { className: 'sh-label', style: { letterSpacing: '.02em' } }, '技能库体检'),
               h(
                 'button',
                 { type: 'button', className: 'sh-btn', disabled: auditBusy, onClick: runAudit },
                 auditBusy ? '正在体检…' : '按本机约定体检',
               ),
             ),
-            h(
-              'div',
-              { className: 'sh-hint' },
-              '检查主库是否出现软链、DSH 端是否为空、端侧是否存了实体副本、目录名与 SKILL.md 是否一致。只读，不改任何文件。',
-            ),
+            audit
+              ? null
+              : h(
+                  'div',
+                  { className: 'sh-hint' },
+                  '只读检查主库软链、DSH 端遮蔽、端侧实体副本、name 一致性。',
+                ),
             auditError ? h('div', { className: 'sh-error' }, auditError) : null,
             audit
               ? h(
@@ -314,7 +382,7 @@ window.__ModuleLoader__.load({
           ),
           h(
             'div',
-            { className: 'sh-list' },
+            { className: 'sh-list sh-list-2' },
             shown.map(function (skill) {
               var cat = state.categories.find(function (c) { return c.id === skill.category })
               return h(
@@ -378,17 +446,20 @@ window.__ModuleLoader__.load({
         var state = props.state
         var [busy, setBusy] = useState('')
         var [error, setError] = useState('')
-        var [expanded, setExpanded] = useState('')
+        var [query, setQuery] = useState('')
         var groups = useMemo(function () {
+          var needle = query.trim().toLowerCase()
           return state.categories
             .map(function (cat) {
-              return {
-                cat: cat,
-                items: state.skills.filter(function (s) { return s.category === cat.id }),
-              }
+              var items = state.skills.filter(function (skill) {
+                if (skill.category !== cat.id) return false
+                if (needle === '') return true
+                return (skill.name + ' ' + (skill.description || '')).toLowerCase().indexOf(needle) >= 0
+              })
+              return { cat: cat, items: items }
             })
             .filter(function (group) { return group.items.length > 0 })
-        }, [state.skills, state.categories])
+        }, [state.skills, state.categories, query])
 
         async function move(skill, next) {
           setBusy(skill.name)
@@ -406,75 +477,87 @@ window.__ModuleLoader__.load({
         return h(
           'div',
           null,
-          h('div', { className: 'sh-note' }, '自动分类按「名前缀规则 + 描述关键词」打分；你手动改过的条目会写入 config.json，永远优先于自动结果。'),
+          h(
+            'div',
+            { className: 'sh-toolbar' },
+            h('input', {
+              className: 'sh-input',
+              placeholder: '在 ' + state.skills.length + ' 条里筛：输入名字或描述片段',
+              value: query,
+              onChange: function (event) { setQuery(event.target.value) },
+            }),
+            h('span', { className: 'sh-hint' }, groups.length + ' 列 / 拖动不动就用下面的下拉改类'),
+          ),
           error ? h('div', { className: 'sh-note err' }, error) : null,
-          groups.map(function (group) {
-            var open = expanded === '' || expanded === group.cat.id
-            return h(
-              'div',
-              { key: group.cat.id, style: { marginBottom: '6px' } },
-              h(
-                'button',
-                {
-                  type: 'button',
-                  className: 'sh-rowline',
-                  onClick: function () { setExpanded(open && expanded === group.cat.id ? 'none' : group.cat.id) },
-                  style: { background: 'none', border: 0, padding: '6px 0', cursor: 'pointer', width: '100%', font: 'inherit', color: 'inherit' },
-                },
-                h('span', { className: 'sh-name' }, group.cat.emoji + ' ' + group.cat.zh),
-                h('span', { className: 'sh-badge' }, String(group.items.length)),
-                h('span', { className: 'sh-spacer' }),
-                h('span', { className: 'sh-sub' }, open ? '收起' : '展开'),
-              ),
-              open
-                ? h(
-                    'div',
-                    { className: 'sh-list', style: { marginLeft: '8px' } },
-                    group.items.map(function (skill) {
-                      return h(
+          h(
+            'div',
+            { className: 'sh-board' },
+            groups.map(function (group) {
+              return h(
+                'section',
+                { key: group.cat.id, className: 'sh-col sh-fade' },
+                h(
+                  'header',
+                  { className: 'sh-col-head' },
+                  h('span', { className: 'sh-col-emoji' }, group.cat.emoji || '·'),
+                  h('span', { className: 'sh-col-name' }, group.cat.zh),
+                  h('span', { className: 'sh-col-count' }, String(group.items.length)),
+                ),
+                h(
+                  'div',
+                  { className: 'sh-col-body' },
+                  group.items.map(function (skill) {
+                    return h(
+                      'div',
+                      { key: skill.name, className: 'sh-skillcard' },
+                      h(
                         'div',
-                        { key: skill.name, className: 'sh-item' },
+                        { className: 'sh-skillcard-top' },
+                        h('span', { className: 'sh-skillcard-name', title: skill.name }, skill.name),
+                        skill.overridden ? h('span', { className: 'sh-badge auto' }, '手动') : null,
+                      ),
+                      skill.description
+                        ? h('div', { className: 'sh-skillcard-desc' }, short(skill.description, 96))
+                        : null,
+                      h(
+                        'div',
+                        { className: 'sh-skillcard-foot' },
+                        h('span', { className: 'sh-src' }, skill.source || ''),
+                        h('span', { className: 'sh-spacer', style: { flex: 1 } }),
                         h(
-                          'div',
-                          { className: 'sh-item-top' },
-                          h('span', { className: 'sh-name' }, skill.name),
-                          h(
-                            'span',
-                            { className: 'sh-badges' },
-                            skill.overridden ? h('span', { className: 'sh-badge auto' }, '手动') : null,
-                            h(
-                              'select',
-                              {
-                                className: 'sh-select',
-                                style: { width: 'auto', padding: '2px 6px', fontSize: '11px' },
-                                value: skill.category,
-                                disabled: busy === skill.name,
-                                onChange: function (event) { move(skill, event.target.value) },
-                              },
-                              state.categories.map(function (cat) {
-                                return h('option', { key: cat.id, value: cat.id }, cat.zh)
-                              }),
-                            ),
-                            skill.overridden
-                              ? h(
-                                  'button',
-                                  {
-                                    type: 'button',
-                                    className: 'sh-btn',
-                                    style: { padding: '1px 7px', fontSize: '11px' },
-                                    onClick: function () { move(skill, '') },
-                                  },
-                                  '恢复自动',
-                                )
-                              : null,
-                          ),
+                          'select',
+                          {
+                            className: 'sh-select sh-mini',
+                            style: { width: 'auto', padding: '2px 6px', fontSize: '10.5px' },
+                            value: skill.category,
+                            disabled: busy === skill.name,
+                            onChange: function (event) { move(skill, event.target.value) },
+                            title: '改分类',
+                          },
+                          state.categories.map(function (cat) {
+                            return h('option', { key: cat.id, value: cat.id }, cat.emoji + ' ' + cat.zh)
+                          }),
                         ),
-                      )
-                    }),
-                  )
-                : null,
-            )
-          }),
+                        skill.overridden
+                          ? h(
+                              'button',
+                              {
+                                type: 'button',
+                                className: 'sh-btn',
+                                style: { padding: '1px 6px', fontSize: '10.5px' },
+                                onClick: function () { move(skill, '') },
+                                title: '恢复自动分类',
+                              },
+                              '↺',
+                            )
+                          : null,
+                      ),
+                    )
+                  }),
+                ),
+              )
+            }),
+          ),
         )
       }
 
@@ -484,22 +567,43 @@ window.__ModuleLoader__.load({
         var [draft, setDraft] = useState(null)
         var [error, setError] = useState('')
         var [busy, setBusy] = useState(false)
-        var selected = state.teams.find(function (t) { return t.id === selectedId }) || state.teams[0]
+        var [pickerFor, setPickerFor] = useState('')
+        var [pickerQuery, setPickerQuery] = useState('')
+        var selected = state.teams.find(function (team) { return team.id === selectedId }) || state.teams[0] || null
+        var working = draft || selected
 
         useEffect(function () {
           setDraft(null)
           setError('')
+          setPickerFor('')
         }, [selectedId])
 
+        function clone(team) { return JSON.parse(JSON.stringify(team)) }
+
+        function edit(mutator) {
+          if (!working) return
+          var base = draft ? clone(draft) : clone(working)
+          mutator(base)
+          setDraft(base)
+        }
+
+        function patchRole(index, key, value) {
+          edit(function (team) { team.roles[index][key] = value })
+        }
+
+        function patchStage(index, key, value) {
+          edit(function (team) { team.stages[index][key] = value })
+        }
+
         async function save() {
+          if (!working) return
           setBusy(true)
           setError('')
           try {
-            var parsed = JSON.parse(draft)
-            var result = await api('team/save', { team: parsed })
+            var result = await api('team/save', { team: JSON.parse(JSON.stringify(working)) })
             setDraft(null)
-            setSelectedId(result.team.id)
             await props.reload()
+            if (result && result.team && result.team.id) setSelectedId(result.team.id)
           } catch (failure) {
             setError(failure.message)
           } finally {
@@ -507,12 +611,13 @@ window.__ModuleLoader__.load({
           }
         }
 
-        async function remove() {
-          if (!selected || selected.builtin) return
+        async function removeTeam() {
+          if (!working) return
           setBusy(true)
           setError('')
           try {
-            await api('team/delete', { id: selected.id })
+            await api('team/delete', { id: working.id })
+            setDraft(null)
             setSelectedId('')
             await props.reload()
           } catch (failure) {
@@ -522,11 +627,12 @@ window.__ModuleLoader__.load({
           }
         }
 
-        async function reset() {
+        async function resetTeam() {
+          if (!working) return
           setBusy(true)
           setError('')
           try {
-            await api('team/reset', { id: selected.id })
+            await api('team/reset', { id: working.id })
             setDraft(null)
             await props.reload()
           } catch (failure) {
@@ -536,134 +642,435 @@ window.__ModuleLoader__.load({
           }
         }
 
-        function createNew() {
-          var template = {
-            id: '',
+        async function createTeam() {
+          setBusy(true)
+          setError('')
+          var stamp = String(Date.now()).slice(-5)
+          var fresh = {
+            id: 'team-' + stamp,
             title: '新专家团',
             emoji: '🧩',
-            goal: '一句话说清这个团要交付什么',
-            roles: [{ id: 'role-1', title: '角色名', duty: '这个角色负责什么', skills: [], deliverable: '交付物' }],
-            stages: [{ id: 's1', title: '阶段一', deliverable: '交付物', roleIds: ['role-1'] }],
-            guardrails: ['一条不容违反的规则'],
+            goal: '写一句这个团要交付的结果。',
+            roles: [
+              { id: 'r1', title: '角色一', duty: '这个角色负责什么、按什么标准做。', skills: [], deliverable: '交付物' },
+            ],
+            stages: [{ id: 's1', title: '第一步', deliverable: '交付物', roleIds: ['r1'] }],
+            guardrails: ['先给结论，再给依据。'],
           }
-          setSelectedId('')
-          setDraft(JSON.stringify(template, null, 2))
+          try {
+            await api('team/save', { team: fresh })
+            await props.reload()
+            setSelectedId(fresh.id)
+          } catch (failure) {
+            setError(failure.message)
+          } finally {
+            setBusy(false)
+          }
         }
+
+        if (!working) {
+          return h(
+            'div',
+            null,
+            h('div', { className: 'sh-empty' }, '还没有专家团。新建一个，或从内置模板恢复。'),
+            h('button', { type: 'button', className: 'sh-btn primary', onClick: createTeam }, '新建专家团'),
+          )
+        }
+
+        var dirty = draft !== null
 
         return h(
           'div',
-          null,
+          { className: 'sh-split' },
           h(
-            'div',
-            { className: 'sh-chips' },
+            'aside',
+            { className: 'sh-rail' },
             state.teams.map(function (team) {
               return h(
                 'button',
                 {
                   key: team.id,
                   type: 'button',
-                  className: 'sh-chip' + (selected && selected.id === team.id ? ' on' : ''),
+                  className: 'sh-rail-item' + (team.id === working.id ? ' on' : ''),
                   onClick: function () { setSelectedId(team.id) },
                 },
-                team.emoji + ' ' + team.title,
-                team.builtin ? null : h('span', { className: 'n' }, '自建'),
-                team.missingSkills.length ? h('span', { className: 'n' }, '⚠️') : null,
+                h('span', null, team.emoji || '·'),
+                h('span', { style: { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, team.title),
               )
             }),
-            h('button', { type: 'button', className: 'sh-chip', onClick: createNew }, '+ 新建团'),
+            h('button', { type: 'button', className: 'sh-rail-item', onClick: createTeam }, '＋ 新建'),
           ),
-          error ? h('div', { className: 'sh-note err' }, error) : null,
-          draft !== null
-            ? h(
-                'div',
-                { className: 'sh-card' },
-                h('h4', null, '编辑团定义（JSON）'),
-                h('p', null, '结构化字段：id / title / goal / roles[{id,title,duty,skills,deliverable}] / stages[{id,title,deliverable,roleIds}] / guardrails。保存后写入 ~/.agents/skill-hub/teams/。'),
-                h('textarea', {
-                  className: 'sh-area',
-                  value: draft,
-                  onChange: function (event) { setDraft(event.target.value) },
-                  spellCheck: false,
+          h(
+            'div',
+            { className: 'sh-editor' },
+            error ? h('div', { className: 'sh-note err' }, error) : null,
+            h(
+              'div',
+              { style: { display: 'grid', gridTemplateColumns: '58px minmax(0,1fr)', gap: '8px' } },
+              h(
+                'label',
+                { className: 'sh-field' },
+                h('span', { className: 'sh-label' }, '图标'),
+                h('input', {
+                  className: 'sh-input',
+                  style: { textAlign: 'center', padding: '5px 4px' },
+                  value: working.emoji || '',
+                  onChange: function (event) { edit(function (t) { t.emoji = event.target.value }) },
                 }),
+              ),
+              h(
+                'label',
+                { className: 'sh-field' },
+                h('span', { className: 'sh-label' }, '名称'),
+                h('input', {
+                  className: 'sh-input',
+                  value: working.title,
+                  onChange: function (event) { edit(function (t) { t.title = event.target.value }) },
+                }),
+              ),
+            ),
+            h(
+              'div',
+              { className: 'sh-savebar' },
+              h('button', { type: 'button', className: 'sh-btn primary', disabled: busy || !dirty, onClick: save }, dirty ? '保存改动' : '已是最新'),
+              h('button', { type: 'button', className: 'sh-btn', disabled: busy, onClick: resetTeam }, '恢复内置'),
+              h('button', { type: 'button', className: 'sh-btn danger', disabled: busy, onClick: removeTeam }, '删除'),
+              h('span', { className: 'sh-spacer', style: { flex: 1 } }),
+              h('span', { className: 'sh-hint' }, working.builtin ? '内置模板 · 保存后成为本地版本' : '自定义团'),
+            ),
+            h(
+              'label',
+              { className: 'sh-field' },
+              h('span', { className: 'sh-label' }, '这个团要交付什么'),
+              h('input', {
+                className: 'sh-input',
+                value: working.goal,
+                onChange: function (event) { edit(function (t) { t.goal = event.target.value }) },
+              }),
+            ),
+            h(
+              'div',
+              null,
+              h(
+                'div',
+                { className: 'sh-secthead' },
+                h('h5', null, '角色'),
+                h('span', { className: 'sh-hint' }, '每个角色写清职责与交付物，绑上它能用的 skill'),
+                h('span', { className: 'sh-spacer', style: { flex: 1 } }),
                 h(
-                  'div',
-                  { className: 'sh-rowline', style: { marginTop: '8px' } },
-                  h('button', { type: 'button', className: 'sh-btn primary', onClick: save, disabled: busy }, busy ? '保存中…' : '保存'),
-                  h('button', { type: 'button', className: 'sh-btn', onClick: function () { setDraft(null); setError('') } }, '取消'),
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'sh-btn',
+                    onClick: function () {
+                      edit(function (t) {
+                        var n = t.roles.length + 1
+                        t.roles.push({ id: 'r' + n, title: '角色' + n, duty: '', skills: [], deliverable: '' })
+                      })
+                    },
+                  },
+                  '＋ 角色',
                 ),
-              )
-            : selected
-              ? h(
+              ),
+              working.roles.map(function (role, index) {
+                return h(
                   'div',
-                  null,
+                  { key: index, className: 'sh-rolecard sh-fade' },
                   h(
                     'div',
-                    { className: 'sh-card' },
-                    h(
-                      'div',
-                      { className: 'sh-rowline' },
-                      h('h4', { style: { margin: 0 } }, selected.emoji + ' ' + selected.title),
-                      h('span', { className: 'sh-badge' }, selected.id),
-                      selected.builtin ? h('span', { className: 'sh-badge auto' }, '内置') : h('span', { className: 'sh-badge' }, '自建'),
-                      h('span', { className: 'sh-spacer' }),
-                      h('button', { type: 'button', className: 'sh-btn', onClick: function () { setDraft(JSON.stringify(selected, null, 2)) } }, '编辑'),
-                      selected.builtin
-                        ? h('button', { type: 'button', className: 'sh-btn', onClick: reset, disabled: busy }, '恢复内置')
-                        : h('button', { type: 'button', className: 'sh-btn danger', onClick: remove, disabled: busy }, '删除'),
-                    ),
-                    h('p', { style: { marginTop: '6px' } }, selected.goal),
-                    selected.missingSkills.length
-                      ? h('div', { className: 'sh-note warn' }, '⚠️ 绑定了本机没有的 skill：' + selected.missingSkills.join('、'))
-                      : null,
-                  ),
-                  h('div', { className: 'sh-sec-title' }, '阶段'),
-                  h(
-                    'div',
-                    { className: 'sh-flow' },
-                    (selected.stages || []).map(function (stage) {
-                      return h('span', { key: stage.id, className: 'sh-step' }, stage.title + ' → ' + (stage.deliverable || '未定义'))
+                    { className: 'sh-rolecard-top' },
+                    h('input', {
+                      className: 'sh-input sh-mini',
+                      placeholder: '角色名，如 选品情报',
+                      value: role.title,
+                      onChange: function (event) { patchRole(index, 'title', event.target.value) },
+                    }),
+                    h('input', {
+                      className: 'sh-input sh-mini',
+                      placeholder: '交付物，如 卖点假设表',
+                      value: role.deliverable || '',
+                      onChange: function (event) { patchRole(index, 'deliverable', event.target.value) },
                     }),
                   ),
-                  h('div', { className: 'sh-sec-title' }, '角色（' + selected.roles.length + '）'),
-                  selected.roles.map(function (role) {
-                    return h(
-                      'div',
-                      { key: role.id, className: 'sh-card' },
-                      h('h4', null, role.title),
-                      h('p', null, role.duty || '（未填写职责）'),
-                      h(
-                        'div',
-                        { className: 'sh-chips', style: { margin: '6px 0 0' } },
-                        role.skills.length
-                          ? role.skills.map(function (name) {
-                              var missing = selected.missingSkills.indexOf(name) >= 0
-                              return h(
-                                'span',
-                                { key: name, className: 'sh-badge' + (missing ? ' warn' : '') },
-                                (missing ? '⚠️ ' : '') + name,
-                              )
-                            })
-                          : h('span', { className: 'sh-badge' }, '未绑定 skill'),
-                      ),
-                      h('dl', { className: 'sh-kv' }, h('dt', null, '交付物'), h('dd', null, role.deliverable || '（未填写）')),
-                    )
+                  h('textarea', {
+                    className: 'sh-input sh-mini',
+                    style: { minHeight: '52px', resize: 'vertical', lineHeight: 1.5 },
+                    placeholder: '职责：这个角色做什么、按什么标准验收',
+                    value: role.duty || '',
+                    onChange: function (event) { patchRole(index, 'duty', event.target.value) },
                   }),
-                  (selected.guardrails || []).length
+                  h(
+                    'div',
+                    { className: 'sh-chips', style: { margin: 0 } },
+                    (role.skills || []).map(function (name) {
+                      return h(
+                        'span',
+                        { key: name, className: 'sh-chip on', style: { cursor: 'default' } },
+                        name,
+                        h(
+                          'button',
+                          {
+                            type: 'button',
+                            className: 'sh-chip-x',
+                            style: { marginLeft: '5px', border: 0, background: 'none', color: 'inherit', cursor: 'pointer', padding: 0 },
+                            onClick: function () {
+                              edit(function (t) {
+                                t.roles[index].skills = t.roles[index].skills.filter(function (item) { return item !== name })
+                              })
+                            },
+                          },
+                          '×',
+                        ),
+                      )
+                    }),
+                    h(
+                      'button',
+                      {
+                        type: 'button',
+                        className: 'sh-chip',
+                        onClick: function () {
+                          setPickerFor(pickerFor === String(index) ? '' : String(index))
+                          setPickerQuery('')
+                        },
+                      },
+                      pickerFor === String(index) ? '收起' : '＋ skill',
+                    ),
+                    h(
+                      'span',
+                      { className: 'sh-spacer', style: { flex: 1 } },
+                    ),
+                    working.roles.length > 1
+                      ? h(
+                          'button',
+                          {
+                            type: 'button',
+                            className: 'sh-btn',
+                            style: { padding: '1px 7px', fontSize: '10.5px' },
+                            onClick: function () {
+                              edit(function (t) {
+                                var gone = t.roles[index].id
+                                t.roles.splice(index, 1)
+                                t.stages.forEach(function (stage) {
+                                  stage.roleIds = (stage.roleIds || []).filter(function (id) { return id !== gone })
+                                })
+                              })
+                            },
+                          },
+                          '删除角色',
+                        )
+                      : null,
+                  ),
+                  pickerFor === String(index)
                     ? h(
                         'div',
-                        null,
-                        h('div', { className: 'sh-sec-title' }, '铁律'),
+                        { style: { marginTop: '6px' } },
+                        h('input', {
+                          className: 'sh-input sh-mini',
+                          placeholder: '搜 skill 名',
+                          value: pickerQuery,
+                          onChange: function (event) { setPickerQuery(event.target.value) },
+                        }),
                         h(
-                          'ul',
-                          { style: { margin: 0, paddingLeft: '18px', fontSize: '12px', color: 'var(--dsw-alias-label-secondary,#6b7280)' } },
-                          selected.guardrails.map(function (rule, index) {
-                            return h('li', { key: index, style: { marginBottom: '3px' } }, rule)
-                          }),
+                          'div',
+                          { className: 'sh-col-body', style: { maxHeight: '180px', marginTop: '4px', padding: 0 } },
+                          state.skills
+                            .filter(function (skill) {
+                              if ((role.skills || []).indexOf(skill.name) >= 0) return false
+                              var needle = pickerQuery.trim().toLowerCase()
+                              if (needle === '') return true
+                              return (skill.name + ' ' + (skill.description || '')).toLowerCase().indexOf(needle) >= 0
+                            })
+                            .slice(0, 40)
+                            .map(function (skill) {
+                              return h(
+                                'button',
+                                {
+                                  key: skill.name,
+                                  type: 'button',
+                                  className: 'sh-menu-row',
+                                  style: { border: 0, background: 'none', width: '100%', textAlign: 'left', font: 'inherit' },
+                                  onClick: function () {
+                                    edit(function (t) {
+                                      if (!t.roles[index].skills) t.roles[index].skills = []
+                                      t.roles[index].skills.push(skill.name)
+                                    })
+                                    setPickerFor('')
+                                  },
+                                },
+                                h('span', { className: 'sh-menu-row-name' }, skill.name),
+                              )
+                            }),
                         ),
                       )
                     : null,
                 )
-              : h('div', { className: 'sh-empty' }, '选一个团，或新建一个'),
+              }),
+            ),
+            h(
+              'div',
+              null,
+              h(
+                'div',
+                { className: 'sh-secthead' },
+                h('h5', null, '流程'),
+                h('span', { className: 'sh-hint' }, '按顺序排步骤，点节点里的胶囊把角色挂上去'),
+              ),
+              h(
+                'div',
+                { className: 'sh-flow' },
+                working.stages.map(function (stage, index) {
+                  return h(
+                    'div',
+                    { key: index, className: 'sh-node sh-fade' },
+                    h('span', { className: 'sh-node-dot' }, String(index + 1)),
+                    h('input', {
+                      className: 'sh-input sh-mini sh-node-title',
+                      style: { padding: '3px 6px', fontSize: '12px' },
+                      value: stage.title,
+                      onChange: function (event) { patchStage(index, 'title', event.target.value) },
+                    }),
+                    h('input', {
+                      className: 'sh-input sh-mini',
+                      style: { padding: '3px 6px', fontSize: '11px' },
+                      placeholder: '这一步的交付物',
+                      value: stage.deliverable || '',
+                      onChange: function (event) { patchStage(index, 'deliverable', event.target.value) },
+                    }),
+                    h(
+                      'div',
+                      { className: 'sh-node-roles' },
+                      working.roles.map(function (role) {
+                        var on = (stage.roleIds || []).indexOf(role.id) >= 0
+                        return h(
+                          'button',
+                          {
+                            key: role.id,
+                            type: 'button',
+                            className: 'sh-rolechip' + (on ? ' on' : ''),
+                            onClick: function () {
+                              edit(function (t) {
+                                var list = t.stages[index].roleIds || []
+                                t.stages[index].roleIds = on
+                                  ? list.filter(function (id) { return id !== role.id })
+                                  : list.concat([role.id])
+                              })
+                            },
+                          },
+                          role.title,
+                        )
+                      }),
+                    ),
+                    h(
+                      'div',
+                      { style: { display: 'flex', gap: '4px', alignItems: 'center' } },
+                      h(
+                        'button',
+                        {
+                          type: 'button',
+                          className: 'sh-btn',
+                          style: { padding: '0 6px', fontSize: '10.5px' },
+                          disabled: index === 0,
+                          title: '上移',
+                          onClick: function () {
+                            edit(function (t) {
+                              var item = t.stages.splice(index, 1)[0]
+                              t.stages.splice(index - 1, 0, item)
+                            })
+                          },
+                        },
+                        '↑',
+                      ),
+                      h(
+                        'button',
+                        {
+                          type: 'button',
+                          className: 'sh-btn',
+                          style: { padding: '0 6px', fontSize: '10.5px' },
+                          disabled: index === working.stages.length - 1,
+                          title: '下移',
+                          onClick: function () {
+                            edit(function (t) {
+                              var item = t.stages.splice(index, 1)[0]
+                              t.stages.splice(index + 1, 0, item)
+                            })
+                          },
+                        },
+                        '↓',
+                      ),
+                      working.stages.length > 1
+                        ? h(
+                            'button',
+                            {
+                              type: 'button',
+                              className: 'sh-btn',
+                              style: { padding: '0 6px', fontSize: '10.5px' },
+                              onClick: function () { edit(function (t) { t.stages.splice(index, 1) }) },
+                            },
+                            '移除',
+                          )
+                        : null,
+                    ),
+                  )
+                }),
+                h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'sh-node-add',
+                    onClick: function () {
+                      edit(function (t) {
+                        t.stages.push({ id: 's' + (t.stages.length + 1), title: '新步骤', deliverable: '', roleIds: [] })
+                      })
+                    },
+                  },
+                  '＋ 阶段',
+                ),
+              ),
+            ),
+            h(
+              'div',
+              null,
+              h(
+                'div',
+                { className: 'sh-secthead' },
+                h('h5', null, '铁律'),
+                h('span', { className: 'sh-hint' }, '必须遵守的约束，会原样出现在 SOP 里'),
+              ),
+              (working.guardrails || []).map(function (line, index) {
+                return h(
+                  'div',
+                  { key: index, className: 'sh-guardrow' },
+                  h('input', {
+                    className: 'sh-input sh-mini',
+                    value: line,
+                    onChange: function (event) {
+                      edit(function (t) { t.guardrails[index] = event.target.value })
+                    },
+                  }),
+                  h(
+                    'button',
+                    {
+                      type: 'button',
+                      className: 'sh-btn',
+                      style: { padding: '1px 7px' },
+                      onClick: function () { edit(function (t) { t.guardrails.splice(index, 1) }) },
+                    },
+                    '×',
+                  ),
+                )
+              }),
+              h(
+                'button',
+                {
+                  type: 'button',
+                  className: 'sh-btn',
+                  style: { marginTop: '6px' },
+                  onClick: function () { edit(function (t) { t.guardrails.push('') }) },
+                },
+                '＋ 一条',
+              ),
+            ),
+          ),
         )
       }
 
@@ -1480,21 +1887,288 @@ window.__ModuleLoader__.load({
       }
     }
 
-    // The desktop keyboard bridge swallows plugin-registered chords before the
-    // renderer can see them, so the composer gets a visible way in too.
-    function makeHubButton(react, slots) {
-      return function HubButton() {
-        return react.createElement(
+    // The composer entry: search a skill and insert its invocation + prompt,
+    // pick a team role and insert that role's brief, or jump to the hub itself.
+    function makeHubMenu(react, slots) {
+      var h = react.createElement
+      var useState = react.useState
+      var useEffect = react.useEffect
+      var useRef = react.useRef
+
+      function composerEditable() {
+        var list = []
+        if (typeof document === 'undefined') return null
+        var nodes = document.querySelectorAll('[contenteditable="true"],[contenteditable=""]')
+        for (var i = 0; i < nodes.length; i += 1) {
+          var node = nodes[i]
+          var rect = node.getBoundingClientRect()
+          if (rect.width > 0 && rect.height > 0) list.push(node)
+        }
+        return list.length ? list[list.length - 1] : null
+      }
+
+      function insertText(text) {
+        var editable = composerEditable()
+        if (!editable) return 'none'
+        editable.focus()
+        try {
+          if (document.execCommand && document.execCommand('insertText', false, text)) return 'inserted'
+        } catch (error) {}
+        try {
+          editable.textContent = (editable.textContent || '') + text
+          editable.dispatchEvent(new Event('input', { bubbles: true }))
+          return 'inserted'
+        } catch (error) {}
+        return 'none'
+      }
+
+      function firstSentence(text, max) {
+        var one = String(text || '').replace(/\s+/g, ' ').trim()
+        var cut = one.split(/(?<=[。.!?！？])\s*/)[0] || one
+        return cut.length > max ? cut.slice(0, max - 1) + '…' : cut
+      }
+
+      return function HubMenu() {
+        var [open, setOpen] = useState(false)
+        var [tab, setTab] = useState('skill')
+        var [data, setData] = useState(null)
+        var [query, setQuery] = useState('')
+        var [flash, setFlash] = useState('')
+        var [pos, setPos] = useState(null)
+        var [teamId, setTeamId] = useState('')
+        var buttonRef = useRef(null)
+
+        useEffect(function () {
+          if (!open) return undefined
+          function onDocDown(event) {
+            var box = document.getElementById('skill-hub-menu')
+            if (box && box.contains(event.target)) return
+            if (buttonRef.current && buttonRef.current.contains(event.target)) return
+            setOpen(false)
+          }
+          document.addEventListener('mousedown', onDocDown)
+          return function () { document.removeEventListener('mousedown', onDocDown) }
+        }, [open])
+
+        useEffect(function () {
+          if (!open || data !== null) return
+          fetch(API + '/state')
+            .then(function (response) { return response.json() })
+            .then(function (payload) { if (payload && payload.ok !== false) setData(payload) })
+            .catch(function () {})
+        }, [open, data])
+
+        function toggle() {
+          var next = !open
+          if (next && buttonRef.current) {
+            var rect = buttonRef.current.getBoundingClientRect()
+            setPos({ left: Math.max(12, Math.min(rect.left, window.innerWidth - 440)), bottom: window.innerHeight - rect.top + 10 })
+          }
+          setOpen(next)
+          setFlash('')
+          setQuery('')
+        }
+
+        function useSkill(skill, withPrompt) {
+          var text = '/' + skill.name + ' '
+          if (withPrompt) {
+            var sentence = firstSentence(skill.description, 180)
+            if (sentence) text += sentence
+          }
+          var outcome = insertText(text)
+          if (outcome === 'inserted') {
+            setFlash('已插入 /' + skill.name)
+            setTimeout(function () { setOpen(false) }, 420)
+          } else {
+            setFlash('没找到输入框，手动输入 /' + skill.name)
+          }
+        }
+
+        function useRole(team, role) {
+          var skills = (role.skills || []).join('、')
+          var text = '按「' + team.title + '」里「' + role.title + '」这个角色来做。\n'
+            + (role.duty ? '职责：' + role.duty + '\n' : '')
+            + (role.deliverable ? '交付物：' + role.deliverable + '\n' : '')
+            + (skills ? '可用 skill：' + skills + '\n' : '')
+          var outcome = insertText(text)
+          if (outcome === 'inserted') {
+            setFlash('已插入「' + role.title + '」的任务书')
+            setTimeout(function () { setOpen(false) }, 520)
+          } else {
+            setFlash('没找到输入框')
+          }
+        }
+
+        var skills = data && Array.isArray(data.skills) ? data.skills : []
+        var teams = data && Array.isArray(data.teams) ? data.teams : []
+        var needle = query.trim().toLowerCase()
+        var matches = skills.filter(function (skill) {
+          if (needle === '') return true
+          return (skill.name + ' ' + (skill.description || '')).toLowerCase().indexOf(needle) >= 0
+        }).slice(0, 40)
+        var currentTeam = teams.filter(function (team) { return team.id === teamId })[0] || teams[0] || null
+
+        var button = h(
           'button',
           {
             type: 'button',
-            className: 'sh-dockbtn',
-            title: '\u6280\u80fd\u4e2d\u67a2\uff1a\u5217\u51fa\u672c\u673a skill\u3001\u5206\u7c7b\u3001\u4e13\u5bb6\u56e2\u3001Key',
+            ref: buttonRef,
+            className: 'sh-dockbtn' + (open ? ' on' : ''),
+            title: '技能中枢：插入 skill、选专家团角色、或打开设置',
             onMouseDown: function (event) { event.preventDefault() },
-            onClick: function (event) { event.preventDefault(); event.stopPropagation(); openSection(slots) },
+            onClick: function (event) { event.preventDefault(); event.stopPropagation(); toggle() },
           },
-          '\u6280\u80fd',
+          '技能',
+          h('span', { style: { opacity: 0.55, fontSize: '10px' } }, '▴'),
         )
+
+        if (!open) return button
+
+        var panel = h(
+          'div',
+          { id: 'skill-hub-menu', className: 'sh-menu sh-fade', style: { left: pos.left + 'px', bottom: pos.bottom + 'px' } },
+          h(
+            'div',
+            { className: 'sh-menu-head' },
+            h('span', { className: 'sh-menu-title' }, '技能中枢'),
+            h('span', { className: 'sh-spacer', style: { flex: 1 } }),
+            h(
+              'button',
+              {
+                type: 'button',
+                className: 'sh-btn',
+                style: { padding: '1px 7px' },
+                onClick: function () { setOpen(false) },
+              },
+              '×',
+            ),
+          ),
+          h(
+            'div',
+            { className: 'sh-menu-tabs' },
+            h(
+              'button',
+              { type: 'button', className: 'sh-menu-tab' + (tab === 'skill' ? ' on' : ''), onClick: function () { setTab('skill') } },
+              '技能',
+            ),
+            h(
+              'button',
+              { type: 'button', className: 'sh-menu-tab' + (tab === 'team' ? ' on' : ''), onClick: function () { setTab('team') } },
+              '专家团',
+            ),
+          ),
+          h(
+            'div',
+            { className: 'sh-menu-body' },
+            tab === 'skill'
+              ? h(
+                  'div',
+                  null,
+                  h('input', {
+                    className: 'sh-input sh-mini',
+                    placeholder: '搜 ' + skills.length + ' 个 skill，点一行就插入',
+                    value: query,
+                    autoFocus: true,
+                    onChange: function (event) { setQuery(event.target.value) },
+                  }),
+                  h(
+                    'div',
+                    { style: { marginTop: '6px' } },
+                    matches.map(function (skill) {
+                      return h(
+                        'div',
+                        { key: skill.name, className: 'sh-menu-row' },
+                        h(
+                          'div',
+                          { className: 'sh-menu-row-main', onClick: function () { useSkill(skill, false) } },
+                          h('div', { className: 'sh-menu-row-name' }, '/' + skill.name),
+                          skill.description
+                            ? h('div', { className: 'sh-menu-row-desc' }, firstSentence(skill.description, 90))
+                            : null,
+                        ),
+                        h(
+                          'button',
+                          {
+                            type: 'button',
+                            className: 'sh-btn',
+                            style: { padding: '1px 7px', fontSize: '10.5px', flexShrink: 0 },
+                            title: '连提示词一起插入',
+                            onClick: function (event) { event.stopPropagation(); useSkill(skill, true) },
+                          },
+                          '＋提示词',
+                        ),
+                      )
+                    }),
+                  ),
+                )
+              : h(
+                  'div',
+                  null,
+                  h(
+                    'div',
+                    { className: 'sh-chips', style: { marginBottom: '8px' } },
+                    teams.map(function (team) {
+                      return h(
+                        'button',
+                        {
+                          key: team.id,
+                          type: 'button',
+                          className: 'sh-chip' + (currentTeam && currentTeam.id === team.id ? ' on' : ''),
+                          onClick: function () { setTeamId(team.id) },
+                        },
+                        (team.emoji || '·') + ' ' + team.title,
+                      )
+                    }),
+                  ),
+                  currentTeam
+                    ? h(
+                        'div',
+                        null,
+                        currentTeam.goal ? h('div', { className: 'sh-menu-row-desc', style: { margin: '0 0 6px' } }, currentTeam.goal) : null,
+                        (currentTeam.roles || []).map(function (role) {
+                          return h(
+                            'div',
+                            { key: role.id, className: 'sh-menu-row' },
+                            h(
+                              'div',
+                              { className: 'sh-menu-row-main', onClick: function () { useRole(currentTeam, role) } },
+                              h('div', { className: 'sh-menu-row-name' }, role.title),
+                              h('div', { className: 'sh-menu-row-desc' }, firstSentence(role.duty, 90) || role.deliverable || ''),
+                            ),
+                            h(
+                              'button',
+                              {
+                                type: 'button',
+                                className: 'sh-btn',
+                                style: { padding: '1px 7px', fontSize: '10.5px', flexShrink: 0 },
+                                onClick: function (event) { event.stopPropagation(); useRole(currentTeam, role) },
+                              },
+                              '插入任务书',
+                            ),
+                          )
+                        }),
+                      )
+                    : h('div', { className: 'sh-empty' }, data === null ? '读取中…' : '还没有专家团'),
+                ),
+          ),
+          h(
+            'div',
+            { className: 'sh-menu-foot' },
+            flash ? h('span', { className: 'sh-flash' }, flash) : h('span', { className: 'sh-hint' }, '点名字直接插入到输入框'),
+            h('span', { className: 'sh-spacer', style: { flex: 1 } }),
+            h(
+              'button',
+              {
+                type: 'button',
+                className: 'sh-btn',
+                onClick: function () { setOpen(false); openSection(slots) },
+              },
+              '打开设置',
+            ),
+          ),
+        )
+
+        return react.createElement(react.Fragment, null, button, panel)
       }
     }
 
@@ -1527,7 +2201,7 @@ window.__ModuleLoader__.load({
           )
         })
 
-        var HubButton = makeHubButton(react, scope.slots)
+        var HubButton = makeHubMenu(react, scope.slots)
         scope.slots.inject('conversation.input.left', function* () {
           yield scope.slots.register({
             name: 'conversation.input.left',
