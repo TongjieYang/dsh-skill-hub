@@ -111,3 +111,8 @@ MIT
 - **安装 skill**：新增「安装 skill」页签。贴 `owner/repo` 或 GitHub 地址（可带 `/tree/<branch>/<subdir>`），先预览仓库里有哪些 skill，勾选后装进 `~/.agents/skills`。
 - 对应的 agent 工具与接口：`skill_hub_install_skill`、`POST /skill-hub/api/keys/detect`、`/skills/preview`、`/skills/install`。
 
+## 0.2.2 新增
+
+- 安装同名 skill 时**只能替换**：勾选「替换主库里的同名 skill」后，旧目录移到 `~/.agents/_trash/<日期>/skill-hub/<name>`（同一天重复替换自动加 `-2`），再装新版；不勾则跳过并说明。
+- 预览时就会标出「主库已有」的候选，按钮随之变成「替换同名并安装」，替换是你看得见的一次决定，不是装完才知道。
+- 仓库内同名副本的措辞由「合并」改为「择一」——内容不会被拼在一起。

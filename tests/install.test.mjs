@@ -136,3 +136,29 @@ test('同一个 skill 被仓库发到多个 agent 目录时只算一个', async 
     await rm(root, { recursive: true, force: true })
   }
 })
+
+test('installSkills: 同名时只能替换——旧目录移入 _trash，新版本装进去', async () => {
+  const { root, repo } = await makeRepo()
+  const target = await mkdtemp(join(tmpdir(), 'install-target-'))
+  try {
+    const preview = await scanClone({ url: repo })
+    assert.equal(preview.ok, true)
+
+    // First install, then prove the old copy is really gone from the target and
+    // parked under _trash (never merged, never overwritten in place).
+    await installSkills({ preview, names: ['test-alpha'], target })
+    await writeFile(join(target, 'test-alpha', 'SKILL.md'), '---\nname: test-alpha\ndescription: 旧版\n---\n旧版正文\n', 'utf8')
+
+    const replaced = await installSkills({ preview, names: ['test-alpha'], target, replace: true })
+    assert.equal(replaced.ok, true)
+    assert.equal(replaced.replaced.length, 1)
+    const backup = replaced.replaced[0].backup
+    assert.ok(backup.includes(join('_trash')), `备份应在 _trash 下：${backup}`)
+    assert.match(await readFile(join(backup, 'SKILL.md'), 'utf8'), /旧版正文/)
+    assert.doesNotMatch(await readFile(join(target, 'test-alpha', 'SKILL.md'), 'utf8'), /旧版正文/)
+    assert.equal(replaced.installed[0].action, 'replaced')
+  } finally {
+    await rm(target, { recursive: true, force: true })
+    await rm(root, { recursive: true, force: true })
+  }
+})

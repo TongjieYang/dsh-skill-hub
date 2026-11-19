@@ -232,8 +232,10 @@ const TOOLS = [
     description: [
       '把一个开源 skill 从 GitHub 装进本机共享技能库 ~/.agents/skills。',
       '用户说「装一下这个 skill」「把 github.com/xxx/yyy 里的 skill 装上」时用它。',
-      '规则follow本机约定：装成真实目录（不用软链），身份取 SKILL.md front-matter 的 name，',
-      '同名已存在就跳过、绝不覆盖；安装前 git clone 到临时目录，装完即删。',
+      '规则follow本机约定：装成真实目录（不用软链），身份取 SKILL.md front-matter 的 name。',
+      '同名已存在时不合并、只替换：给 replace:true 会先把旧目录移到 ~/.agents/_trash/<日期>/skill-hub/<名字>，',
+      '再把新版本装进去；不给 replace 就跳过并告诉你哪些名字撞了。',
+      '安装前 git clone 到临时目录，装完即删。',
       '不给 names 时先只做预览、把仓库里的候选 skill 列给用户挑；只有一个候选时直接装。',
     ].join(''),
     parameters: {
@@ -247,6 +249,10 @@ const TOOLS = [
           description: '要安装的 skill 名（front-matter 的 name）。留空=只预览，或仓库只有一个 skill 时直接装它。',
         },
         dryRun: { type: 'boolean', description: 'true 时只预览不安装。' },
+        replace: {
+          type: 'boolean',
+          description: '同名已存在时是否替换：true=把旧目录移到 ~/.agents/_trash/<日期>/skill-hub/ 后装新版（skill 只能替换，不能合并）；默认 false=跳过。',
+        },
       },
       required: ['source'],
     },
@@ -263,7 +269,7 @@ const TOOLS = [
       const lines = [
         `## ${preview.source.owner}/${preview.source.repo}`,
         '',
-        `仓库里找到 ${preview.total} 个 skill${preview.duplicateCount ? `（另合并 ${preview.duplicateCount} 份同名副本）` : ''}：`,
+        `仓库里找到 ${preview.total} 个 skill${preview.duplicateCount ? `（仓库内有 ${preview.duplicateCount} 份同名副本，已择一，其余忽略）` : ''}：`,
         '',
         ...preview.candidates.map((item) => `- \`${item.name}\` — ${item.relPath}${item.description ? `：${item.description}` : ''}`),
         '',
@@ -279,14 +285,28 @@ const TOOLS = [
       }
 
       const names = wanted.length > 0 ? wanted : [preview.candidates[0].name]
-      const result = await installFromPreview({ source, names })
+      const replace = args?.replace === true
+      if (!replace) {
+        const clashes = names.filter((name) => preview.existing?.includes(name))
+        if (clashes.length > 0) {
+          lines.push('', `主库里已经有同名的：${clashes.map((n) => `\`${n}\``).join('、')}。`)
+          lines.push('skill 只能替换、不能合并：要我替换就再调一次并带上 `replace: true`（旧目录会移到 ~/.agents/_trash/<日期>/skill-hub/）。')
+          return lines.join('\n')
+        }
+      }
+      const result = await installFromPreview({ source, names, replace })
       if (!result.ok && result.installed?.length === 0) {
         lines.push('', `安装失败：${result.error ?? result.skipped.map((item) => `${item.name}: ${item.reason}`).join('；')}`)
         return lines.join('\n')
       }
 
       lines.push('', '### 已安装')
-      for (const item of result.installed) lines.push(`- \`${item.name}\` → ${item.path}`)
+      for (const item of result.installed) {
+        const backup = result.replaced?.find((row) => row.name === item.name)?.backup
+        lines.push(backup
+          ? `- \`${item.name}\` 已替换 → ${item.path}（旧版在 ${backup}）`
+          : `- \`${item.name}\` → ${item.path}`)
+      }
       if (result.skipped?.length) {
         lines.push('', '### 跳过')
         for (const item of result.skipped) lines.push(`- \`${item.name}\`：${item.reason}`)
@@ -365,7 +385,10 @@ async function dispatch(method, sub, body) {
     case 'skills/preview':
       return { status: 200, body: await previewInstall({ source: body.source }) }
     case 'skills/install':
-      return { status: 200, body: await installFromPreview({ source: body.source, names: body.names }) }
+      return {
+        status: 200,
+        body: await installFromPreview({ source: body.source, names: body.names, replace: body.replace === true }),
+      }
     default:
       return { status: 404, body: { ok: false, error: `未知接口：${sub}` } }
   }

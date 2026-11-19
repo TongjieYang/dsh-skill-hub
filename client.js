@@ -90,6 +90,9 @@ window.__ModuleLoader__.load({
       '.sh-picklist{display:flex;flex-direction:column;gap:2px;margin-top:8px;max-height:210px;overflow:auto}',
       '.sh-pickrow{display:flex;align-items:baseline;gap:6px;width:100%;text-align:left;background:none;border:0;border-radius:6px;padding:6px 8px;cursor:pointer;font:inherit;color:inherit}',
       '.sh-pickrow:hover{background:var(--dsw-alias-bg-layer-2,#f2f4f7)}',
+      '.sh-existing{flex:none;font-size:11px;line-height:18px;padding:0 6px;border-radius:6px;background:var(--dsw-alias-state-warn-primary,#b26a00);color:#fff;opacity:.9}',
+      '.sh-replace{display:flex;gap:8px;align-items:flex-start;margin:10px 0 0;font-size:12px;color:var(--dsw-alias-label-secondary,#666);line-height:1.6}',
+      '.sh-replace input{margin-top:2px}',
       '.sh-pickrow-name{font-weight:600;font-family:var(--dsw-code-font-family,ui-monospace,SFMono-Regular,monospace);font-size:12px}',
       '.sh-pickrow-desc{flex:1;min-width:0;color:var(--dsw-alias-label-secondary,#6b7280);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
       '.sh-keyrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--dsw-alias-border-l1,#eef0f3)}',
@@ -988,6 +991,9 @@ window.__ModuleLoader__.load({
         var [busy, setBusy] = useState('')
         var [error, setError] = useState('')
         var [done, setDone] = useState(null)
+        // A skill can only be replaced, never merged: when something in the
+        // library already has this name, swapping it is the whole point.
+        var [replaceOn, setReplaceOn] = useState(true)
 
         async function runPreview() {
           setBusy('preview')
@@ -1020,7 +1026,12 @@ window.__ModuleLoader__.load({
           setBusy('install')
           setError('')
           try {
-            var data = await api('skills/install', { source: preview.source.raw, names: names })
+            var clashes = names.filter(function (name) { return (preview.existing || []).indexOf(name) >= 0 })
+            var data = await api('skills/install', {
+              source: preview.source.raw,
+              names: names,
+              replace: replaceOn && clashes.length > 0,
+            })
             if (!data.ok && (!data.installed || data.installed.length === 0)) {
               setError(data.error || (data.skipped || []).map(function (item) { return item.name + '：' + item.reason }).join('；'))
               return
@@ -1035,6 +1046,12 @@ window.__ModuleLoader__.load({
           }
         }
 
+        var clashingNames = preview
+          ? Object.keys(picked).filter(function (name) {
+              return picked[name] && (preview.existing || []).indexOf(name) >= 0
+            })
+          : []
+
         function toggle(name) {
           var next = Object.assign({}, picked)
           next[name] = !next[name]
@@ -1047,7 +1064,7 @@ window.__ModuleLoader__.load({
           h(
             'div',
             { className: 'sh-note' },
-            '装到 ~/.agents/skills/<name>：真实目录、不用软链，身份取 SKILL.md 的 name；同名已存在会跳过、绝不覆盖。安装时 git clone 到临时目录，装完即删。',
+            '装到 ~/.agents/skills/<name>：真实目录、不用软链，身份取 SKILL.md 的 name。同名已存在时只能替换、不能合并——旧目录先移到 ~/.agents/_trash/<日期>/skill-hub/，再装新版，随时可回退。安装时 git clone 到临时目录，装完即删。',
           ),
           error ? h('div', { className: 'sh-note err' }, error) : null,
           h(
@@ -1071,7 +1088,7 @@ window.__ModuleLoader__.load({
                 'div',
                 { className: 'sh-card' },
                 h('h4', null, preview.source.owner + '/' + preview.source.repo + '（' + preview.total + ' 个 skill'
-                  + (preview.duplicateCount ? '，另合并 ' + preview.duplicateCount + ' 份同名副本' : '') + '）'),
+                  + (preview.duplicateCount ? '；仓库里有 ' + (preview.duplicateCount + 1) + ' 份同名副本，已择一，其余忽略' : '') + '）'),
                 h(
                   'div',
                   { className: 'sh-list' },
@@ -1086,14 +1103,30 @@ window.__ModuleLoader__.load({
                       }),
                       h('span', { className: 'sh-pickrow-name' }, item.name),
                       h('span', { className: 'sh-pickrow-desc' }, (item.description || item.relPath)
-                        + (item.duplicates && item.duplicates.length ? '（同名 ' + item.duplicates.length + ' 份）' : '')),
+                        + (item.duplicates && item.duplicates.length ? '（仓库里同名 ' + item.duplicates.length + ' 份）' : '')),
+                      (preview.existing || []).indexOf(item.name) >= 0
+                        ? h('span', { className: 'sh-existing' }, '主库已有')
+                        : null,
                     )
                   }),
                 ),
+                clashingNames.length > 0
+                  ? h(
+                      'label',
+                      { className: 'sh-replace' },
+                      h('input', {
+                        type: 'checkbox',
+                        checked: replaceOn,
+                        onChange: function () { setReplaceOn(!replaceOn) },
+                      }),
+                      h('span', null, '替换主库里的同名 skill：旧目录先移到 ~/.agents/_trash/，不勾就跳过这些名字'),
+                    )
+                  : null,
                 h(
                   'div',
                   { className: 'sh-rowline' },
-                  h('button', { type: 'button', className: 'sh-btn primary', onClick: runInstall, disabled: busy !== '' }, busy === 'install' ? '安装中…' : '装到 ~/.agents/skills'),
+                  h('button', { type: 'button', className: 'sh-btn primary', onClick: runInstall, disabled: busy !== '' },
+                    busy === 'install' ? '安装中…' : (clashingNames.length > 0 && replaceOn ? '替换同名并安装' : '装到 ~/.agents/skills')),
                   h('span', { className: 'sh-muted' }, '目标：' + preview.target),
                 ),
               )
@@ -1104,7 +1137,10 @@ window.__ModuleLoader__.load({
                 { className: 'sh-card' },
                 h('h4', null, '安装结果'),
                 (done.installed || []).map(function (item) {
-                  return h('div', { key: item.name, className: 'sh-done-row' }, '✓ ' + item.name + ' → ' + item.path)
+                  var backup = (done.replaced || []).filter(function (row) { return row.name === item.name })[0]
+                  return h('div', { key: item.name, className: 'sh-done-row' },
+                    (backup ? '↻ ' + item.name + ' 已替换 → ' + item.path + '（旧版在 ' + backup.backup + '）'
+                            : '✓ ' + item.name + ' → ' + item.path))
                 }),
                 (done.skipped || []).map(function (item) {
                   return h('div', { key: item.name, className: 'sh-skip-row' }, '— ' + item.name + '：' + item.reason)
