@@ -944,8 +944,10 @@ window.__ModuleLoader__.load({
                   : h(
                       'div',
                       null,
-                      block('1. 存入钥匙串（推荐：交互式，密钥不进 shell history）', result.script.addPrompt),
-                      block('1b. 或者一条命令带值（会留在 ~/.zsh_history，介意就用上面那条）', result.script.add),
+                      result.script.addPrompt
+                        ? block('1. 存入钥匙串（推荐：交互式，密钥不进 shell history）', result.script.addPrompt)
+                        : null,
+                      block(result.script.addPrompt ? '1b. 或者一条命令带值（会留在 ~/.zsh_history，介意就用上面那条）' : '1. 存入钥匙串（你自己跑）', result.script.add),
                       block('2. 验证（不打印密钥）', result.script.verify),
                       block('3. 用时取回（export）', result.script.export),
                       h('div', { className: 'sh-muted' },
