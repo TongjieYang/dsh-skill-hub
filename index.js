@@ -169,54 +169,111 @@ const TOOLS = [
   },
 ]
 
-function json(status, body) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: {
-      'content-type': 'application/json; charset=utf-8',
-      'cache-control': 'no-store',
-    },
+
+// ---------------------------------------------------------------------------
+// HTTP surface
+//
+// A `resource(request)` route only answers GET/HEAD: the webserver turns every
+// other method into 405 with `Allow: GET, HEAD` before the body is read. Every
+// mutation here is a POST, so the route is registered with the Node-style
+// `handler(req, res)` form instead and reads the body itself.
+// ---------------------------------------------------------------------------
+
+const MAX_BODY_BYTES = 1 << 20
+
+function send(res, status, body) {
+  const payload = Buffer.from(JSON.stringify(body), 'utf8')
+  res.writeHead(status, {
+    'content-type': 'application/json; charset=utf-8',
+    'content-length': String(payload.length),
+    'cache-control': 'no-store',
+  })
+  res.end(payload)
+}
+
+function readBody(req) {
+  return new Promise((resolve, reject) => {
+    const chunks = []
+    let size = 0
+    req.on('data', (chunk) => {
+      size += chunk.length
+      if (size > MAX_BODY_BYTES) {
+        reject(new Error('请求体过大'))
+        req.destroy()
+        return
+      }
+      chunks.push(chunk)
+    })
+    req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')))
+    req.on('error', reject)
   })
 }
 
-async function route(request) {
-  const url = new URL(request.url)
-  const sub = url.pathname.startsWith(API_PREFIX) ? url.pathname.slice(API_PREFIX.length).replace(/^\/+/, '') : ''
-  const method = request.method.toUpperCase()
+async function dispatch(method, sub, body) {
+  if (sub === '' || sub === 'state') {
+    if (method !== 'GET' && method !== 'HEAD') return { status: 405, body: { ok: false, error: '该接口只支持 GET' } }
+    return { status: 200, body: await buildState() }
+  }
+  if (method !== 'POST') return { status: 405, body: { ok: false, error: '该接口只支持 POST' } }
 
+  switch (sub) {
+    case 'classify':
+      return { status: 200, body: await setOverride({ name: body.name, category: body.category }) }
+    case 'team/save':
+      return { status: 200, body: await saveTeam({ team: body.team }) }
+    case 'team/delete':
+      return { status: 200, body: await deleteTeam({ id: body.id }) }
+    case 'team/reset':
+      return { status: 200, body: await deleteTeam({ id: body.id }) }
+    case 'keys/add':
+      return { status: 200, body: await addKey({ key: body.key ?? body }) }
+    case 'keys/remove':
+      return { status: 200, body: await removeKey({ env: body.env }) }
+    case 'keys/script':
+      return { status: 200, body: keyScript(body) }
+    default:
+      return { status: 404, body: { ok: false, error: `未知接口：${sub}` } }
+  }
+}
+
+async function serve(req, res) {
   try {
-    if (method === 'GET' && (sub === '' || sub === 'state')) {
-      return json(200, await buildState())
+    // Cross-site writes are refused: the route is loopback-only and carries no
+    // credentials of its own, so a browser page on another origin must not be
+    // able to register keys or rewrite teams.
+    const site = req.headers['sec-fetch-site']
+    if (typeof site === 'string' && site.toLowerCase() === 'cross-site') {
+      send(res, 403, { ok: false, error: '跨站请求被拒绝' })
+      return
     }
-    if (method !== 'POST') return json(405, { ok: false, error: '只支持 GET /state 与 POST' })
+
+    const url = new URL(req.url ?? '/', 'http://127.0.0.1')
+    const sub = url.pathname.startsWith(API_PREFIX)
+      ? url.pathname.slice(API_PREFIX.length).replace(/^\/+/, '')
+      : ''
+    const method = String(req.method ?? 'GET').toUpperCase()
 
     let body = {}
-    try {
-      body = await request.json()
-    } catch {
-      body = {}
+    if (method === 'POST' || method === 'PUT' || method === 'PATCH') {
+      const raw = await readBody(req)
+      if (raw) {
+        try {
+          body = JSON.parse(raw)
+        } catch {
+          send(res, 400, { ok: false, error: '请求体不是 JSON' })
+          return
+        }
+      }
     }
 
-    switch (sub) {
-      case 'classify':
-        return json(200, await setOverride({ name: body.name, category: body.category }))
-      case 'team/save':
-        return json(200, await saveTeam({ team: body.team }))
-      case 'team/delete':
-        return json(200, await deleteTeam({ id: body.id }))
-      case 'team/reset':
-        return json(200, await deleteTeam({ id: body.id }))
-      case 'keys/add':
-        return json(200, await addKey({ key: body.key ?? body }))
-      case 'keys/remove':
-        return json(200, await removeKey({ env: body.env }))
-      case 'keys/script':
-        return json(200, keyScript(body))
-      default:
-        return json(404, { ok: false, error: `未知接口：${sub}` })
-    }
+    const result = await dispatch(method, sub, body ?? {})
+    send(res, result.status, result.body)
   } catch (error) {
-    return json(500, { ok: false, error: error?.message ?? String(error) })
+    try {
+      send(res, 500, { ok: false, error: error?.message ?? String(error) })
+    } catch {
+      res.destroy()
+    }
   }
 }
 
@@ -225,9 +282,8 @@ export function apply(ctx) {
 
   ctx.inject(['webServer'], (webCtx) => {
     webCtx.effect(
-      () => webCtx.webServer.register({ kind: 'prefix', path: API_PREFIX, resource: (request) => route(request) }),
+      () => webCtx.webServer.register({ kind: 'prefix', path: API_PREFIX, handler: serve }),
       'skill-hub: http api',
     )
   })
-
 }

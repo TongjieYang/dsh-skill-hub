@@ -64,6 +64,7 @@ window.__ModuleLoader__.load({
       '.sh-note{font-size:12px;padding:8px 10px;border-radius:6px;margin:0 0 10px;border:1px solid var(--dsw-alias-border-l1,#e6e8eb);background:var(--dsw-alias-bg-layer-2,#f4f6f8);color:var(--dsw-alias-label-secondary,#6b7280)}',
       '.sh-note.warn{border-color:var(--dsw-alias-state-warn-primary,#d97706);color:var(--dsw-alias-state-warn-primary,#d97706);background:transparent}',
       '.sh-note.err{border-color:var(--dsw-alias-state-error-primary,#dc2626);color:var(--dsw-alias-state-error-primary,#dc2626);background:transparent}',
+      '.sh-hint{font-size:11px;line-height:1.5;margin:8px 0 0;color:var(--dsw-alias-label-secondary,#6b7280)}',
       '.sh-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}',
       '.sh-field{display:flex;flex-direction:column;gap:3px;font-size:12px;margin-bottom:8px}',
       '.sh-field label{color:var(--dsw-alias-label-secondary,#6b7280)}',
@@ -670,11 +671,11 @@ window.__ModuleLoader__.load({
               'div',
               { className: 'sh-grid' },
               h('div', { className: 'sh-field' }, h('label', null, '环境变量名 *'), h('input', {
-                className: 'sh-input', placeholder: 'WEREAD_API_KEY', value: form.env,
+                className: 'sh-input', placeholder: '例如 WEREAD_API_KEY', value: form.env,
                 onChange: function (event) { update('env', event.target.value) },
               })),
               h('div', { className: 'sh-field' }, h('label', null, '钥匙串服务名'), h('input', {
-                className: 'sh-input', placeholder: 'weread / amap / openai', value: form.service,
+                className: 'sh-input', placeholder: '例如 weread / amap / openai', value: form.service,
                 onChange: function (event) { update('service', event.target.value) },
               })),
               h('div', { className: 'sh-field' }, h('label', null, '账号'), h('input', {
@@ -707,6 +708,13 @@ window.__ModuleLoader__.load({
               h('button', { type: 'button', className: 'sh-btn primary', onClick: generate, disabled: busy || !form.env.trim() }, busy ? '生成中…' : '生成命令'),
               secret ? h('button', { type: 'button', className: 'sh-btn', onClick: function () { setSecret('') } }, '清除密钥') : null,
             ),
+            !form.env.trim()
+              ? h(
+                  'p',
+                  { className: 'sh-hint' },
+                  '先填「环境变量名」（大写字母、数字、下划线，例如 WEREAD_API_KEY），再点「生成命令」。密钥框可以留空，那样命令里保留 __SECRET__，你自己替换。',
+                )
+              : null,
           ),
           result
             ? h(
@@ -765,7 +773,7 @@ window.__ModuleLoader__.load({
         )
       }
 
-      return function SkillHubSection(props) {
+      function SkillHubSection(props) {
         var [state, setState] = useState(null)
         var [loading, setLoading] = useState(true)
         var [error, setError] = useState('')
@@ -859,6 +867,55 @@ window.__ModuleLoader__.load({
             : null,
         )
       }
+
+      /**
+       * A section that throws leaves the settings pane empty, which reads to a
+       * user as "the plugin is not installed". Catch the render and show the
+       * message plus the stack head instead.
+       */
+      function withBoundary(Inner) {
+        if (typeof React.Component !== 'function') return Inner
+
+        return class SkillHubBoundary extends React.Component {
+          constructor(props) {
+            super(props)
+            this.state = { error: null }
+          }
+
+          static getDerivedStateFromError(error) {
+            return { error: error }
+          }
+
+          componentDidCatch(error, info) {
+            try {
+              console.error('[skill-hub] section render failed', error, info)
+            } catch (ignored) {
+              /* console may be unavailable in a locked-down shell */
+            }
+          }
+
+          render() {
+            var failure = this.state.error
+            if (!failure) return React.createElement(Inner, this.props)
+            var message = String((failure && failure.message) || failure)
+            var stack = String((failure && failure.stack) || '')
+            return h(
+              'div',
+              { className: 'sh-root' },
+              h(
+                'div',
+                { className: 'sh-head' },
+                h('h1', { className: 'sh-title' }, '技能中枢'),
+                h('p', { className: 'sh-sub' }, '界面渲染出错了，把下面这段发给我就能定位。'),
+              ),
+              h('div', { className: 'sh-note err' }, message),
+              h('pre', { className: 'sh-code' }, stack.slice(0, 4000)),
+            )
+          }
+        }
+      }
+
+      return withBoundary(SkillHubSection)
     }
 
     function apply(ctx) {

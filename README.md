@@ -134,6 +134,13 @@ rank 小的先见者生效；同名的后来者记为「遮蔽」。可在 `conf
 - 入匙命令由用户自己执行；插件不写 `~/.zshrc`、不改任何 shell 启动文件
 - 只读扫描 skill 目录，不修改、不移动、不删除任何 skill
 
+## 已知行为与注意
+
+- **改完代码要重启 DSH**：浏览器半（`client.js`）刷新窗口（`⌘R`）即可；宿主半（`index.js`、`lib/*`）必须重启 DSH，已安装的包不会热替换 JS。
+- **HTTP 路由用 `handler(req, res)` 而不是 `resource(request)`**：DSH 的 webserver 对 `resource` 只放行 `GET`/`HEAD`，其它方法直接回 405 且不读 body。0.1.1 之前所有写操作（改分类 / 存团 / 登记 key）都因此 405，现在改走 `handler` 并自带 body 解析、1 MB 上限、跨站请求（`Sec-Fetch-Site: cross-site`）403。
+- **接口只监听 loopback**，没有自己的鉴权：和 DSH 其它插件路由一样，同机其它进程能访问；跨站写入已被拒。
+- 专家团里绑定的 skill 是**名字快照**，删了 skill 之后团里会出现「⚠️ 绑定了本机没有的 skill」，但团本身不坏。
+
 ## 开发
 
 零依赖、纯 ESM、无构建步骤（宿主半 `index.js` + 浏览器半 `client.js`）。
@@ -141,6 +148,8 @@ rank 小的先见者生效；同名的后来者记为「遮蔽」。可在 `conf
 ```bash
 node --test "tests/*.test.mjs"
 ```
+
+50 条测试覆盖：front-matter 解析、多根扫描与遮蔽、10 类分类器、专家团归一化、三平台入匙脚本、真实 `node:http` 上的 `GET /state` 与 `POST /keys/add`、以及 `client.js` 在 vm 沙箱里的模块契约（只 require react、只注册 settings.section + 同名图标）。
 
 ## License
 

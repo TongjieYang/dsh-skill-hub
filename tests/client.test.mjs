@@ -27,8 +27,16 @@ function loadBundle() {
   return { definition: loads[0], appended }
 }
 
+class FakeComponent {
+  constructor(props) {
+    this.props = props
+    this.state = {}
+  }
+}
+
 const REACT_STUB = {
   createElement: () => null,
+  Component: FakeComponent,
   useState: () => [undefined, () => {}],
   useEffect: () => {},
   useMemo: (fn) => fn(),
