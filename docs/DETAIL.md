@@ -97,3 +97,11 @@ node --test "tests/*.test.mjs"
 ## License
 
 MIT
+
+## 0.2.0 新增
+
+- **Key 流程倒过来**：先在「Key 管理」里选一个本机 skill，插件读它的 SKILL.md 与脚本，把里面出现的变量名挑出来（`$FOO_KEY`、`FOO_KEY=`、`process.env.FOO_KEY`、`"FOO_KEY":` 四种写法都认，shell 噪声 `$PATH`/`$HOME` 与不像凭据的名字会被过滤），你点一个 chip 就自动填好环境变量名、钥匙串服务名与备注。
+- **平台自动识别**：设置页直接显示「macOS 钥匙串 / Windows 凭据管理器（DPAPI）/ Linux Secret Service」，不再让你选。
+- **安装 skill**：新增「安装 skill」页签。贴 `owner/repo` 或 GitHub 地址（可带 `/tree/<branch>/<subdir>`），先预览仓库里有哪些 skill，勾选后装进 `~/.agents/skills`。
+- 对应的 agent 工具与接口：`skill_hub_install_skill`、`POST /skill-hub/api/keys/detect`、`/skills/preview`、`/skills/install`。
+

@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import http from 'node:http'
+import { mkdir, writeFile, rm } from 'node:fs/promises'
+import { join } from 'node:path'
 
 process.env.DSH_SKILL_HUB_DIR = new URL('../.tmp-test-hub', import.meta.url).pathname
 
@@ -55,10 +57,15 @@ test('导出契约：name / inject / apply', () => {
   assert.equal(typeof mod.apply, 'function')
 })
 
-test('注册三个工具，且 schema 只用受支持的键', () => {
+test('注册四个工具，且 schema 只用受支持的键', () => {
   const { ctx, tools } = fakeCtx()
   mod.apply(ctx)
-  assert.deepEqual(tools.map((t) => t.name), ['skill_hub_scan', 'skill_hub_team', 'skill_hub_key_script'])
+  assert.deepEqual(tools.map((t) => t.name), [
+    'skill_hub_scan',
+    'skill_hub_team',
+    'skill_hub_key_script',
+    'skill_hub_install_skill',
+  ])
   for (const tool of tools) {
     assert.equal(typeof tool.description, 'string')
     assert.ok(tool.description.length > 20, `${tool.name}: 描述太短`)
@@ -238,4 +245,57 @@ test('真实 http 上 POST 也能拿到 200（不只是假 req/res）', async ()
   } finally {
     await new Promise((resolve) => server.close(resolve))
   }
+})
+
+test('POST /keys/detect：从选中 skill 的正文里找出变量名', async () => {
+  const hubDir = process.env.DSH_SKILL_HUB_DIR
+  const fixture = join(hubDir, 'fixture-root')
+  await mkdir(join(fixture, 'demo-skill'), { recursive: true })
+  await writeFile(join(fixture, 'demo-skill', 'SKILL.md'), '---\nname: demo-skill\ndescription: 用来测检测\n---\n\n先 export FIXTURE_API_KEY=xxx\n', 'utf8')
+  await writeFile(join(hubDir, 'config.json'), JSON.stringify({
+    version: 1,
+    overrides: {},
+    roots: [{ path: fixture, label: 'test', rank: 100, title: '测试根' }],
+    keys: [],
+    settings: {},
+  }), 'utf8')
+
+  try {
+    const { ctx, routes } = fakeCtx()
+    mod.apply(ctx)
+    const response = await callRoute(routes[0], {
+      method: 'POST',
+      path: '/skill-hub/api/keys/detect',
+      body: { skill: 'demo-skill' },
+    })
+    assert.equal(response.status, 200)
+    assert.equal(response.body.ok, true)
+    assert.equal(response.body.skill.name, 'demo-skill')
+    assert.ok(response.body.vars.some((item) => item.env === 'FIXTURE_API_KEY'))
+    assert.ok(response.body.vars[0].service, '应给出建议的服务名')
+
+    const missing = await callRoute(routes[0], {
+      method: 'POST',
+      path: '/skill-hub/api/keys/detect',
+      body: { skill: 'not-here' },
+    })
+    assert.equal(missing.body.ok, false)
+    assert.match(missing.body.error, /没有这个 skill/)
+  } finally {
+    await rm(join(hubDir, 'config.json'), { force: true })
+    await rm(fixture, { recursive: true, force: true })
+  }
+})
+
+test('POST /skills/preview 拒绝本地路径；/skills/install 没预览就报错', async () => {
+  const { ctx, routes } = fakeCtx()
+  mod.apply(ctx)
+
+  const bad = await callRoute(routes[0], { method: 'POST', path: '/skill-hub/api/skills/preview', body: { source: '/tmp/x' } })
+  assert.equal(bad.body.ok, false)
+  assert.match(bad.body.error, /本地路径/)
+
+  const orphan = await callRoute(routes[0], { method: 'POST', path: '/skill-hub/api/skills/install', body: { source: 'o/r', names: ['x'] } })
+  assert.equal(orphan.body.ok, false)
+  assert.match(orphan.body.error, /预览/)
 })

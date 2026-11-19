@@ -62,6 +62,8 @@ echo 'export WEREAD_API_KEY=wrk-abcdefg' >> ~/.zshrc
 
 - 只登记**元数据**（环境变量名 / 钥匙串服务名 / 账号 / 平台 / 备注），不存密钥
 - 真实密钥只出现在设置面板的密码框里，**不发给后端、不落盘、不进日志**
+- **先选 skill，变量名自动认**：选中 `weread-skills`，它自己从 SKILL.md 里找出 `WEREAD_API_KEY`，你只填值；一个 skill 有多个变量就列成 chip 让你点
+- 平台自动识别（macOS 钥匙串 / Windows DPAPI / Linux Secret Service），不用手选
 - 生成三块命令给你：存入系统钥匙串 / 验证（不打印密钥）/ 需要时取回环境变量
 - **命令由你自己在终端执行**，agent 不代跑、也不索取密钥
 
@@ -82,7 +84,8 @@ echo 'export WEREAD_API_KEY=wrk-abcdefg' >> ~/.zshrc
 | **技能总览** | 扫描 + 去重 + 容器/遮蔽标记；关键词搜索、分类筛选、按类计数 |
 | **分类整理** | 按类分组列出全部 skill，逐条下拉改类，可「恢复自动」 |
 | **专家团** | 查看四个内置团的角色/阶段/铁律/绑定 skill；新建、JSON 编辑、删除、恢复内置 |
-| **Key 管理** | 登记 key 元数据；粘贴密钥生成入匙命令；一键生成「加载全部 key」的 shell 片段 |
+| **Key 管理** | 选 skill → 自动找变量名 → 填 key → 生成入匙命令；登记 key 元数据；一键生成「加载全部 key」的 shell 片段 |
+| **安装 skill** | 贴一个 GitHub 地址或 `owner/repo`，预览仓库里的 skill，勾选装进 `~/.agents/skills` |
 
 ### Agent 侧工具
 
@@ -90,7 +93,18 @@ echo 'export WEREAD_API_KEY=wrk-abcdefg' >> ~/.zshrc
 |---|---|
 | `skill_hub_scan` | 列本机 skill（可按关键词 / 类别过滤），带分类统计 |
 | `skill_hub_team` | 取某个专家团的完整 SOP（可只看某一阶段） |
-| `skill_hub_key_script` | 生成入匙命令**模板**（只含 `__SECRET__` 占位符，拿不到真实密钥） |
+| `skill_hub_key_script` | 生成入匙命令**模板**（只含 `__SECRET__` 占位符，拿不到真实密钥）；给 `skill` 就自动从该 skill 正文找变量名 |
+| `skill_hub_install_skill` | 从 GitHub 仓库把 skill 装进 `~/.agents/skills`（真实目录、不用软链、同名不覆盖） |
+
+### 装 skill 时守的规矩
+
+这个插件装 skill 不走「复制一份到各端」，而是守本机的单一事实来源：
+
+1. 真实目录只落在 `~/.agents/skills/<name>`，**不建软链**；
+2. 身份取 `SKILL.md` front-matter 的 `name`，不是文件夹名；
+3. 同名目录已存在就**跳过并报出来**，绝不覆盖正在用的 skill；
+4. `git clone` 只落到临时目录，装完即删，不把整套仓库留在磁盘上；
+5. 每次安装写一行到 `~/.agents/skill-hub/install.log`（时间 / 来源 / 名字 / 落点），方便以后回滚。
 
 ## 安装
 

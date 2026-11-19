@@ -74,6 +74,21 @@ window.__ModuleLoader__.load({
       '.sh-empty{padding:24px 0;text-align:center;color:var(--dsw-alias-label-secondary,#6b7280);font-size:12px}',
       '.sh-rowline{display:flex;align-items:center;gap:8px}',
       '.sh-spacer{flex:1}',
+      '.sh-muted{color:var(--dsw-alias-label-secondary,#6b7280);font-size:12px}',
+      '.sh-label{font-size:12px;color:var(--dsw-alias-label-secondary,#6b7280);margin-bottom:6px}',
+      '.sh-fixed{padding:7px 10px;border:1px solid var(--dsw-alias-border-l1,#e6e8eb);border-radius:8px;background:var(--dsw-alias-bg-layer-2,#f6f7f9);color:var(--dsw-alias-label-secondary,#6b7280)}',
+      '.sh-picked{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 10px;border:1px solid var(--dsw-alias-border-l1,#e6e8eb);border-radius:8px;background:var(--dsw-alias-bg-layer-1,#fafbfc)}',
+      '.sh-picked-name{font-weight:600}',
+      '.sh-picklist{display:flex;flex-direction:column;gap:2px;margin-top:8px;max-height:210px;overflow:auto}',
+      '.sh-pickrow{display:flex;align-items:baseline;gap:6px;width:100%;text-align:left;background:none;border:0;border-radius:6px;padding:6px 8px;cursor:pointer;font:inherit;color:inherit}',
+      '.sh-pickrow:hover{background:var(--dsw-alias-bg-layer-2,#f2f4f7)}',
+      '.sh-pickrow-name{font-weight:600;font-family:var(--dsw-code-font-family,ui-monospace,SFMono-Regular,monospace);font-size:12px}',
+      '.sh-pickrow-desc{flex:1;min-width:0;color:var(--dsw-alias-label-secondary,#6b7280);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+      '.sh-keyrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--dsw-alias-border-l1,#eef0f3)}',
+      '.sh-keyrow:last-child{border-bottom:0}',
+      '.sh-keyrow-env{font-family:var(--dsw-code-font-family,ui-monospace,SFMono-Regular,monospace);font-size:12px}',
+      '.sh-done-row{padding:5px 0;color:var(--dsw-alias-state-success-primary,#15803d)}',
+      '.sh-skip-row{padding:5px 0;color:var(--dsw-alias-label-secondary,#6b7280)}',
       '.sh-scroll-x{overflow-x:auto}',
     ].join('\n')
 
@@ -155,6 +170,7 @@ window.__ModuleLoader__.load({
         { id: 'classify', label: '分类整理' },
         { id: 'teams', label: '专家团' },
         { id: 'keys', label: 'Key 管理' },
+        { id: 'install', label: '安装 skill' },
       ]
 
       function Overview(props) {
@@ -575,7 +591,16 @@ window.__ModuleLoader__.load({
 
       function Keys(props) {
         var state = props.state
-        var [form, setForm] = useState({ env: '', service: '', account: '', note: '', platform: state.platform })
+        var platformLabel = '未知平台'
+        for (var i = 0; i < state.platforms.length; i += 1) {
+          if (state.platforms[i].id === state.platform) platformLabel = state.platforms[i].label
+        }
+
+        var [query, setQuery] = useState('')
+        var [pickedSkill, setPickedSkill] = useState('')
+        var [detected, setDetected] = useState(null)
+        var [detecting, setDetecting] = useState(false)
+        var [form, setForm] = useState({ env: '', service: '', account: '', note: '' })
         var [secret, setSecret] = useState('')
         var [result, setResult] = useState(null)
         var [error, setError] = useState('')
@@ -588,6 +613,39 @@ window.__ModuleLoader__.load({
           setForm(next)
         }
 
+        function useVar(item) {
+          setForm({
+            env: item.env,
+            service: item.service || '',
+            account: form.account,
+            note: '来自 skill ' + pickedSkill,
+          })
+        }
+
+        async function pickSkill(name) {
+          setPickedSkill(name)
+          setDetected(null)
+          setDetecting(true)
+          setError('')
+          setResult(null)
+          try {
+            var data = await api('keys/detect', { skill: name })
+            setDetected(data)
+            if (data && data.ok && data.vars.length === 1) useVar(data.vars[0])
+          } catch (failure) {
+            setError(failure.message)
+          } finally {
+            setDetecting(false)
+          }
+        }
+
+        function resetSkill() {
+          setPickedSkill('')
+          setDetected(null)
+          setQuery('')
+          setError('')
+        }
+
         async function generate() {
           setBusy(true)
           setError('')
@@ -598,7 +656,7 @@ window.__ModuleLoader__.load({
               service: form.service.trim() || form.env.trim().toLowerCase().replace(/_/g, '-'),
               account: form.account.trim(),
               note: form.note.trim(),
-              platform: form.platform,
+              platform: state.platform,
             }
             var data = await api('keys/add', { key: payload })
             setResult({ script: data.script, key: data.key, hasSecret: secret.length > 0 })
@@ -648,9 +706,90 @@ window.__ModuleLoader__.load({
               'div',
               { className: 'sh-code-head' },
               h('span', null, label),
-              h('button', { type: 'button', className: 'sh-btn', onClick: function () { doCopy(label, value) } }, copied === label ? '已复制' : '复制'),
+              h('button', { type: 'button', className: 'sh-btn', onClick: function () { doCopy(label, value) } }, copied === label ? '已复制' : '待复制'),
             ),
             h('pre', { className: 'sh-code' }, value),
+          )
+        }
+
+        var needle = query.trim().toLowerCase()
+        var matches = state.skills.filter(function (skill) {
+          if (!needle) return true
+          return (
+            skill.name.toLowerCase().indexOf(needle) >= 0 ||
+            (skill.description || '').toLowerCase().indexOf(needle) >= 0
+          )
+        })
+
+        var picker = pickedSkill
+          ? h(
+              'div',
+              { className: 'sh-picked' },
+              h('span', { className: 'sh-picked-name' }, pickedSkill),
+              detected && detected.skill ? h('span', { className: 'sh-muted' }, ' · ' + (detected.skill.source || '') + ' · ' + detected.skill.category) : null,
+              h('button', { type: 'button', className: 'sh-btn', onClick: resetSkill }, '换一个'),
+            )
+          : h(
+              'div',
+              null,
+              h('input', {
+                className: 'sh-input',
+                placeholder: '搜一个 skill，例如 weread / amap / 高德',
+                value: query,
+                onChange: function (event) { setQuery(event.target.value) },
+              }),
+              h(
+                'div',
+                { className: 'sh-picklist' },
+                matches.slice(0, 8).map(function (skill) {
+                  return h(
+                    'button',
+                    {
+                      key: skill.name,
+                      type: 'button',
+                      className: 'sh-pickrow',
+                      onClick: function () { pickSkill(skill.name) },
+                    },
+                    h('span', { className: 'sh-pickrow-name' }, skill.name),
+                    h('span', { className: 'sh-muted' }, ' · ' + skill.category),
+                    h('span', { className: 'sh-pickrow-desc' }, short(skill.description, 90)),
+                  )
+                }),
+                matches.length === 0 ? h('div', { className: 'sh-empty' }, '没有匹配的 skill') : null,
+              ),
+            )
+
+        var detectedBlock = null
+        if (detecting) detectedBlock = h('div', { className: 'sh-empty' }, '正在读这个 skill 的正文…')
+        else if (detected && detected.ok) {
+          detectedBlock = h(
+            'div',
+            null,
+            detected.vars.length
+              ? h(
+                  'div',
+                  null,
+                  h('div', { className: 'sh-label' }, '这个 skill 里出现的变量（点一下自动填）'),
+                  h(
+                    'div',
+                    { className: 'sh-chips' },
+                    detected.vars.map(function (item) {
+                      return h(
+                        'button',
+                        {
+                          key: item.env,
+                          type: 'button',
+                          className: 'sh-chip' + (form.env === item.env ? ' on' : ''),
+                          onClick: function () { useVar(item) },
+                          title: item.samples[0] || '',
+                        },
+                        item.env,
+                        h('span', { className: 'sh-muted' }, ' ×' + item.hits),
+                      )
+                    }),
+                  ),
+                )
+              : h('div', { className: 'sh-note' }, detected.hint || '这个 skill 正文里没有变量名，手动填吧'),
           )
         }
 
@@ -666,7 +805,14 @@ window.__ModuleLoader__.load({
           h(
             'div',
             { className: 'sh-card' },
-            h('h4', null, '登记一个 key'),
+            h('h4', null, '① 选一个 skill'),
+            picker,
+            detectedBlock,
+          ),
+          h(
+            'div',
+            { className: 'sh-card' },
+            h('h4', null, '② 填 key'),
             h(
               'div',
               { className: 'sh-grid' },
@@ -682,12 +828,7 @@ window.__ModuleLoader__.load({
                 className: 'sh-input', placeholder: '默认当前用户', value: form.account,
                 onChange: function (event) { update('account', event.target.value) },
               })),
-              h('div', { className: 'sh-field' }, h('label', null, '平台'), h('select', {
-                className: 'sh-select', value: form.platform,
-                onChange: function (event) { update('platform', event.target.value) },
-              }, state.platforms.map(function (item) {
-                return h('option', { key: item.id, value: item.id }, item.label)
-              }))),
+              h('div', { className: 'sh-field' }, h('label', null, '平台（自动识别）'), h('div', { className: 'sh-fixed' }, platformLabel)),
             ),
             h('div', { className: 'sh-field' }, h('label', null, '备注'), h('input', {
               className: 'sh-input', placeholder: '微信读书 / 高德 / …', value: form.note,
@@ -705,14 +846,14 @@ window.__ModuleLoader__.load({
             h(
               'div',
               { className: 'sh-rowline' },
-              h('button', { type: 'button', className: 'sh-btn primary', onClick: generate, disabled: busy || !form.env.trim() }, busy ? '生成中…' : '生成命令'),
+              h('button', { type: 'button', className: 'sh-btn primary', onClick: generate, disabled: busy || !form.env.trim() }, busy ? '生成中…' : '③ 生成命令'),
               secret ? h('button', { type: 'button', className: 'sh-btn', onClick: function () { setSecret('') } }, '清除密钥') : null,
             ),
             !form.env.trim()
               ? h(
                   'p',
                   { className: 'sh-hint' },
-                  '先填「环境变量名」（大写字母、数字、下划线，例如 WEREAD_API_KEY），再点「生成命令」。密钥框可以留空，那样命令里保留 __SECRET__，你自己替换。',
+                  '先选 skill（会自动带出变量名），或直接填「环境变量名」，再点生成。密钥框可以留空，那样命令里保留 __SECRET__，你自己替换。',
                 )
               : null,
           ),
@@ -729,45 +870,171 @@ window.__ModuleLoader__.load({
                       null,
                       block('1. 存入钥匙串（你自己跑）', result.script.add),
                       block('2. 验证（不打印密钥）', result.script.verify),
-                      block('3. 需要时取回环境变量', result.script.export),
+                      block('3. 用时取回（export）', result.script.export),
                     ),
-                result.hasSecret ? null : h('div', { className: 'sh-note' }, '命令里保留着 __SECRET__ 占位符——把上面的密钥填进输入框再生成一次即可得到带真实值的命令。'),
               )
             : null,
-          h('div', { className: 'sh-sec-title' }, '已登记（只有元数据，没有密钥）'),
-          state.keys.length === 0
-            ? h('div', { className: 'sh-empty' }, '还没有登记任何 key')
-            : state.keys.map(function (entry) {
-                return h(
+          h(
+            'div',
+            { className: 'sh-card' },
+            h('h4', null, '已登记（只有元数据，没有密钥）'),
+            state.keys.length === 0
+              ? h('div', { className: 'sh-empty' }, '还没有登记任何 key')
+              : h(
                   'div',
-                  { key: entry.env, className: 'sh-card' },
-                  h(
-                    'div',
-                    { className: 'sh-rowline' },
-                    h('span', { className: 'sh-name' }, entry.env),
-                    h('span', { className: 'sh-badge' }, entry.service),
-                    h('span', { className: 'sh-badge' }, entry.account),
-                    h('span', { className: 'sh-badge' }, entry.platform),
-                    h('span', { className: 'sh-spacer' }),
-                    h('button', {
-                      type: 'button',
-                      className: 'sh-btn',
-                      onClick: function () {
-                        setForm({ env: entry.env, service: entry.service.replace(/^skill-hub:/, ''), account: entry.account, note: entry.note, platform: entry.platform })
-                        setResult(null)
-                      },
-                    }, '填入表单'),
-                    h('button', { type: 'button', className: 'sh-btn danger', onClick: function () { remove(entry) } }, '移除'),
-                  ),
-                  entry.note ? h('p', { style: { marginTop: '4px' } }, entry.note) : null,
-                )
-              }),
+                  { className: 'sh-list' },
+                  state.keys.map(function (entry) {
+                    return h(
+                      'div',
+                      { key: entry.env, className: 'sh-keyrow' },
+                      h('div', null,
+                        h('div', { className: 'sh-keyrow-env' }, entry.env),
+                        h('div', { className: 'sh-muted' }, entry.service + ' · ' + entry.platform + (entry.note ? ' · ' + entry.note : '')),
+                      ),
+                      h('button', { type: 'button', className: 'sh-btn', onClick: function () { remove(entry) }, disabled: busy }, '移除'),
+                    )
+                  }),
+                ),
+          ),
           state.loadAll && state.loadAll.script
             ? h(
                 'div',
-                null,
-                h('div', { className: 'sh-sec-title' }, '一次性加载全部 key'),
+                { className: 'sh-card' },
+                h('h4', null, '一次性加载全部 key'),
                 block('shell 片段', state.loadAll.script),
+              )
+            : null,
+        )
+      }
+
+      function Install(props) {
+        var state = props.state
+        var [source, setSource] = useState('')
+        var [preview, setPreview] = useState(null)
+        var [picked, setPicked] = useState({})
+        var [busy, setBusy] = useState('')
+        var [error, setError] = useState('')
+        var [done, setDone] = useState(null)
+
+        async function runPreview() {
+          setBusy('preview')
+          setError('')
+          setDone(null)
+          setPreview(null)
+          try {
+            var data = await api('skills/preview', { source: source.trim() })
+            if (!data.ok) {
+              setError(data.error || '预览失败')
+              return
+            }
+            setPreview(data)
+            var next = {}
+            if (data.total === 1) next[data.candidates[0].name] = true
+            setPicked(next)
+          } catch (failure) {
+            setError(failure.message)
+          } finally {
+            setBusy('')
+          }
+        }
+
+        async function runInstall() {
+          var names = Object.keys(picked).filter(function (name) { return picked[name] })
+          if (names.length === 0) {
+            setError('先勾选要装的 skill')
+            return
+          }
+          setBusy('install')
+          setError('')
+          try {
+            var data = await api('skills/install', { source: preview.source.raw, names: names })
+            if (!data.ok && (!data.installed || data.installed.length === 0)) {
+              setError(data.error || (data.skipped || []).map(function (item) { return item.name + '：' + item.reason }).join('；'))
+              return
+            }
+            setDone(data)
+            setPreview(null)
+            await props.reload()
+          } catch (failure) {
+            setError(failure.message)
+          } finally {
+            setBusy('')
+          }
+        }
+
+        function toggle(name) {
+          var next = Object.assign({}, picked)
+          next[name] = !next[name]
+          setPicked(next)
+        }
+
+        return h(
+          'div',
+          null,
+          h(
+            'div',
+            { className: 'sh-note' },
+            '装到 ~/.agents/skills/<name>：真实目录、不用软链，身份取 SKILL.md 的 name；同名已存在会跳过、绝不覆盖。安装时 git clone 到临时目录，装完即删。',
+          ),
+          error ? h('div', { className: 'sh-note err' }, error) : null,
+          h(
+            'div',
+            { className: 'sh-card' },
+            h('h4', null, '从 GitHub 装一个 skill'),
+            h('div', { className: 'sh-field' }, h('label', null, '仓库地址或 owner/repo'), h('input', {
+              className: 'sh-input',
+              placeholder: '例如 TongjieYang/dsh-skill-hub 或 https://github.com/owner/repo',
+              value: source,
+              onChange: function (event) { setSource(event.target.value) },
+            })),
+            h(
+              'div',
+              { className: 'sh-rowline' },
+              h('button', { type: 'button', className: 'sh-btn primary', onClick: runPreview, disabled: busy !== '' || !source.trim() }, busy === 'preview' ? '预览中…' : '预览仓库里的 skill'),
+            ),
+          ),
+          preview
+            ? h(
+                'div',
+                { className: 'sh-card' },
+                h('h4', null, preview.source.owner + '/' + preview.source.repo + '（' + preview.total + ' 个 skill）'),
+                h(
+                  'div',
+                  { className: 'sh-list' },
+                  preview.candidates.map(function (item) {
+                    return h(
+                      'label',
+                      { key: item.name, className: 'sh-pickrow' },
+                      h('input', {
+                        type: 'checkbox',
+                        checked: !!picked[item.name],
+                        onChange: function () { toggle(item.name) },
+                      }),
+                      h('span', { className: 'sh-pickrow-name' }, item.name),
+                      h('span', { className: 'sh-pickrow-desc' }, item.description || item.relPath),
+                    )
+                  }),
+                ),
+                h(
+                  'div',
+                  { className: 'sh-rowline' },
+                  h('button', { type: 'button', className: 'sh-btn primary', onClick: runInstall, disabled: busy !== '' }, busy === 'install' ? '安装中…' : '装到 ~/.agents/skills'),
+                  h('span', { className: 'sh-muted' }, '目标：' + preview.target),
+                ),
+              )
+            : null,
+          done
+            ? h(
+                'div',
+                { className: 'sh-card' },
+                h('h4', null, '安装结果'),
+                (done.installed || []).map(function (item) {
+                  return h('div', { key: item.name, className: 'sh-done-row' }, '✓ ' + item.name + ' → ' + item.path)
+                }),
+                (done.skipped || []).map(function (item) {
+                  return h('div', { key: item.name, className: 'sh-skip-row' }, '— ' + item.name + '：' + item.reason)
+                }),
+                h('p', { className: 'sh-hint' }, 'DSH 读的是 ~/.agents/skills，新开一个会话说「用 xxx skill」即可；当前会话的工具表要重启才会刷新。'),
               )
             : null,
         )
@@ -805,6 +1072,7 @@ window.__ModuleLoader__.load({
           if (tab === 'overview') body = h(Overview, { state: state, reload: reload })
           else if (tab === 'classify') body = h(Classify, { state: state, reload: reload })
           else if (tab === 'teams') body = h(Teams, { state: state, reload: reload })
+          else if (tab === 'install') body = h(Install, { state: state, reload: reload })
           else body = h(Keys, { state: state, reload: reload })
         }
 

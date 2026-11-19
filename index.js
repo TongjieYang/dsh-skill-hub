@@ -7,7 +7,7 @@
 
 import {
   buildState, searchSkills, renderTeam, setOverride, saveTeam, deleteTeam,
-  addKey, removeKey, keyScript,
+  addKey, removeKey, keyScript, detectSkillKeys, previewInstall, installFromPreview,
 } from './lib/hub.js'
 
 export const name = 'skill-hub'
@@ -121,7 +121,8 @@ const TOOLS = [
       type: 'object',
       additionalProperties: false,
       properties: {
-        env: { type: 'string', description: '环境变量名，如 WEREAD_API_KEY。' },
+        skill: { type: 'string', description: '本机已安装的 skill 名；给了它就自动从该 skill 的正文里找变量名，不用猜。' },
+        env: { type: 'string', description: '环境变量名，如 WEREAD_API_KEY。给了 skill 且 env 留空时自动取检测到的那一个。' },
         service: { type: 'string', description: '钥匙串里的服务名，如 weread / amap / baidu-map / openai。' },
         account: { type: 'string', description: '钥匙串里的账号名，默认取当前用户名。' },
         platform: {
@@ -131,16 +132,41 @@ const TOOLS = [
         },
         note: { type: 'string', description: '一句话备注，方便以后认出这是谁的 key。' },
       },
-      required: ['env'],
+      required: [],
     },
     output: STRING_OUTPUT,
     async execute(args) {
+      let env = String(args?.env ?? '').trim()
+      let service = String(args?.service ?? '').trim()
+      let note = String(args?.note ?? '').trim()
+      let detected = null
+
+      if (!env && args?.skill) {
+        detected = await detectSkillKeys({ skill: args.skill, platform: args.platform })
+        if (!detected.ok) return `检测失败：${detected.error}`
+        if (detected.vars.length === 0) {
+          return `skill \`${detected.skill.name}\` 的正文里没有出现形如 $FOO_KEY 的变量名，请把 env 直接给它。`
+        }
+        if (detected.vars.length > 1) {
+          return [
+            `skill \`${detected.skill.name}\` 里找到 ${detected.vars.length} 个变量，选一个再把 env 传给我：`,
+            '',
+            ...detected.vars.map((item) => `- \`${item.env}\`（出现 ${item.hits} 次，建议服务名 ${item.service}）`),
+          ].join('\n')
+        }
+        env = detected.vars[0].env
+        service = service || detected.vars[0].service
+        note = note || `来自 skill ${detected.skill.name}`
+      }
+
+      if (!env) return '缺少 env：要么直接给环境变量名，要么给一个可用 skill 让它自动检测。'
+
       const script = keyScript({
-        env: args?.env,
-        service: args?.service,
+        env,
+        service,
         account: args?.account,
         platform: args?.platform,
-        note: args?.note,
+        note,
       })
       if (!script.ok) return `无法生成脚本：${script.error}`
       return [
@@ -165,6 +191,74 @@ const TOOLS = [
         '',
         '提示：真实密钥请让用户在设置面板里填，它会留在浏览器里、只用于拼命令。',
       ].join('\n')
+    },
+  },
+  {
+    name: 'skill_hub_install_skill',
+    description: [
+      '把一个开源 skill 从 GitHub 装进本机共享技能库 ~/.agents/skills。',
+      '用户说「装一下这个 skill」「把 github.com/xxx/yyy 里的 skill 装上」时用它。',
+      '规则follow本机约定：装成真实目录（不用软链），身份取 SKILL.md front-matter 的 name，',
+      '同名已存在就跳过、绝不覆盖；安装前 git clone 到临时目录，装完即删。',
+      '不给 names 时先只做预览、把仓库里的候选 skill 列给用户挑；只有一个候选时直接装。',
+    ].join(''),
+    parameters: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        source: { type: 'string', description: 'GitHub 地址：owner/repo 或 https://github.com/owner/repo（可带 /tree/branch/subdir）。' },
+        names: {
+          type: 'array',
+          items: { type: 'string' },
+          description: '要安装的 skill 名（front-matter 的 name）。留空=只预览，或仓库只有一个 skill 时直接装它。',
+        },
+        dryRun: { type: 'boolean', description: 'true 时只预览不安装。' },
+      },
+      required: ['source'],
+    },
+    output: STRING_OUTPUT,
+    async execute(args) {
+      const source = String(args?.source ?? '').trim()
+      if (!source) return '缺少 source：给一个 owner/repo 或 GitHub 地址。'
+
+      const preview = await previewInstall({ source })
+      if (!preview.ok) return `预览失败：${preview.error}`
+      if (preview.total === 0) return `${source} 里没有找到 SKILL.md，装不了。`
+
+      const wanted = (args?.names ?? []).map((item) => String(item)).filter(Boolean)
+      const lines = [
+        `## ${preview.source.owner}/${preview.source.repo}`,
+        '',
+        `仓库里找到 ${preview.total} 个 skill：`,
+        '',
+        ...preview.candidates.map((item) => `- \`${item.name}\` — ${item.relPath}${item.description ? `：${item.description}` : ''}`),
+        '',
+        `装到：\`${preview.target}\``,
+      ]
+
+      const shouldInstall = !args?.dryRun && (wanted.length > 0 || preview.total === 1)
+      if (!shouldInstall) {
+        lines.push('', wanted.length === 0 && preview.total > 1
+          ? '仓库里有多个 skill，把要装的名字放进 names 再调一次。'
+          : '（dryRun：没有写入任何文件。）')
+        return lines.join('\n')
+      }
+
+      const names = wanted.length > 0 ? wanted : [preview.candidates[0].name]
+      const result = await installFromPreview({ source, names })
+      if (!result.ok && result.installed?.length === 0) {
+        lines.push('', `安装失败：${result.error ?? result.skipped.map((item) => `${item.name}: ${item.reason}`).join('；')}`)
+        return lines.join('\n')
+      }
+
+      lines.push('', '### 已安装')
+      for (const item of result.installed) lines.push(`- \`${item.name}\` → ${item.path}`)
+      if (result.skipped?.length) {
+        lines.push('', '### 跳过')
+        for (const item of result.skipped) lines.push(`- \`${item.name}\`：${item.reason}`)
+      }
+      lines.push('', 'DSH 会直接读 ~/.agents/skills，重启或新开一个会话说「用 xxx skill」即可。')
+      return lines.join('\n')
     },
   },
 ]
@@ -225,12 +319,18 @@ async function dispatch(method, sub, body) {
       return { status: 200, body: await deleteTeam({ id: body.id }) }
     case 'team/reset':
       return { status: 200, body: await deleteTeam({ id: body.id }) }
+    case 'keys/detect':
+      return { status: 200, body: await detectSkillKeys({ skill: body.skill }) }
     case 'keys/add':
       return { status: 200, body: await addKey({ key: body.key ?? body }) }
     case 'keys/remove':
       return { status: 200, body: await removeKey({ env: body.env }) }
     case 'keys/script':
       return { status: 200, body: keyScript(body) }
+    case 'skills/preview':
+      return { status: 200, body: await previewInstall({ source: body.source }) }
+    case 'skills/install':
+      return { status: 200, body: await installFromPreview({ source: body.source, names: body.names }) }
     default:
       return { status: 404, body: { ok: false, error: `未知接口：${sub}` } }
   }
