@@ -24,6 +24,8 @@ window.__ModuleLoader__.load({
       '.sh-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:2px 0 10px}',
       '.sh-title{margin:0;font-size:17px;font-weight:600;letter-spacing:.2px}',
       '.sh-sub{margin:3px 0 0;color:var(--dsw-alias-label-secondary,#6b7280);font-size:12px}',
+      '.sh-dockbtn{display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 8px;border:0;border-radius:8px;background:transparent;color:var(--dsw-alias-label-secondary,#6b7280);font-size:12px;cursor:pointer}',
+      '.sh-dockbtn:hover{background:var(--dsw-alias-bg-layer-2,#f3f4f6);color:var(--dsw-alias-label-primary,#111827)}',
       '.sh-tabs{display:flex;gap:2px;border-bottom:1px solid var(--dsw-alias-border-l1,#e6e8eb);margin-bottom:12px;flex-wrap:wrap}',
       '.sh-tab{appearance:none;background:none;border:0;border-bottom:2px solid transparent;padding:7px 11px;margin-bottom:-1px;cursor:pointer;color:var(--dsw-alias-label-secondary,#6b7280);font-size:13px;font-family:inherit}',
       '.sh-tab:hover{color:var(--dsw-alias-label-primary,#1a1a1a)}',
@@ -1386,7 +1388,8 @@ window.__ModuleLoader__.load({
       try {
         var entries = (slots && typeof slots.entries === 'function' ? slots.entries('sidebar.settings') : null) || []
         var entry = entries[0]
-        var handle = entry && entry.options ? entry.options.store : null
+        // The shell store hangs off the slot entry itself (`store`), not options.
+        var handle = entry ? entry.store ?? (entry.options && entry.options.store) ?? null : null
         var store = handle && typeof handle.create === 'function' ? handle.create() : handle
         var actions = store && store.actions
         if (actions && typeof actions.openSection === 'function') {
@@ -1477,6 +1480,24 @@ window.__ModuleLoader__.load({
       }
     }
 
+    // The desktop keyboard bridge swallows plugin-registered chords before the
+    // renderer can see them, so the composer gets a visible way in too.
+    function makeHubButton(react, slots) {
+      return function HubButton() {
+        return react.createElement(
+          'button',
+          {
+            type: 'button',
+            className: 'sh-dockbtn',
+            title: '\u6280\u80fd\u4e2d\u67a2\uff1a\u5217\u51fa\u672c\u673a skill\u3001\u5206\u7c7b\u3001\u4e13\u5bb6\u56e2\u3001Key',
+            onMouseDown: function (event) { event.preventDefault() },
+            onClick: function (event) { event.preventDefault(); event.stopPropagation(); openSection(slots) },
+          },
+          '\u6280\u80fd',
+        )
+      }
+    }
+
     function apply(ctx) {
       ensureStyles()
 
@@ -1506,6 +1527,14 @@ window.__ModuleLoader__.load({
           )
         })
 
+        var HubButton = makeHubButton(react, scope.slots)
+        scope.slots.inject('conversation.input.left', function* () {
+          yield scope.slots.register({
+            name: 'conversation.input.left',
+            id: 'skill-hub-button',
+            order: 60,
+          }, HubButton)
+        })
         scope.slots.inject('settings.section.icon', function* () {
           yield scope.slots.register(
             { name: 'settings.section.icon', id: 'skill-hub', order: 60, label: '技能中枢' },

@@ -138,4 +138,6 @@ MIT
 - 在输入框里也能触发（`regions: ['page','editable','terminal']`），但别的弹窗打开时不抢键（`modals: ['settings']`）。
 - 首选键位被占时依次尝试 `⇧⌘J`、`⇧⌘H`、`⇧⌘U`…，全被占才注册「无默认键位」；面板里随时可改。
 - 为什么不用 `⌥`：macOS 的 `⌥+字母` 是死键，快捷键服务明确让死键通过，合成按键与真人按键都不触发。
-- 额外挂了一个 DOM `keydown` 监听（同一组合键），覆盖 Web 端与原生桥不接管的情况；两条路径都只做一件事——打开设置并选中技能中枢，重复触发无副作用。
+- 打开设置用的是 `sidebar.settings` 槽条目上的**根 store**（`entry.store` → `create().actions.openSection('skill-hub')`）；注意 store 挂在条目本身，不在 `entry.options` 上——踩过这个坑，表现是「快捷键和按钮都毫无反应」。
+- 额外挂了一个 DOM `keydown` 监听（同一组合键）覆盖 Web 端；两条路径都只做一件事——打开设置并选中技能中枢，重复触发无副作用。
+- 输入框左侧工具行（`conversation.input.left`）加了 `技能` 按钮，作为不用记键位的入口。
