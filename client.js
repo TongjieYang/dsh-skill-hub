@@ -2298,7 +2298,7 @@ window.__ModuleLoader__.load({
           var next = !open
           if (next && buttonRef.current) {
             var rect = buttonRef.current.getBoundingClientRect()
-            setPos({ left: Math.max(12, Math.min(rect.left, window.innerWidth - 580)), bottom: window.innerHeight - rect.top + 10 })
+            setPos({ right: Math.max(12, window.innerWidth - rect.right), bottom: window.innerHeight - rect.top + 10 })
           }
           setOpen(next)
           setFlash('')
@@ -2421,7 +2421,7 @@ window.__ModuleLoader__.load({
               if (open && tab === 'install') { setOpen(false); return }
               if (!open && buttonRef.current) {
                 var rect = buttonRef.current.getBoundingClientRect()
-                setPos({ left: Math.max(12, Math.min(rect.left, window.innerWidth - 580)), bottom: window.innerHeight - rect.top + 10 })
+                setPos({ right: Math.max(12, window.innerWidth - rect.right), bottom: window.innerHeight - rect.top + 10 })
               }
               setTab('install')
               setOpen(true)
@@ -2437,7 +2437,7 @@ window.__ModuleLoader__.load({
 
         var panel = h(
           'div',
-          { id: 'skill-hub-menu', className: 'sh-menu sh-fade', style: { left: pos.left + 'px', bottom: pos.bottom + 'px' } },
+          { id: 'skill-hub-menu', className: 'sh-menu sh-fade', style: { right: pos.right + 'px', bottom: pos.bottom + 'px' } },
           h(
             'div',
             { className: 'sh-menu-head' },
