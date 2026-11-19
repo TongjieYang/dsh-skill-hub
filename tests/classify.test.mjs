@@ -40,8 +40,8 @@ test('categoryCounts returns every category in declaration order', () => {
   assert.equal(counts.find((x) => x.id === 'other').count, 0)
 })
 
-test('every category has zh label and 10 buckets exist', () => {
-  assert.equal(CATEGORY_IDS.length, 10)
+test('every category has zh label and 12 buckets exist', () => {
+  assert.equal(CATEGORY_IDS.length, 12)
   for (const id of CATEGORY_IDS) {
     const meta = categoryById(id)
     assert.ok(meta.zh.length > 0, id)

@@ -1,6 +1,6 @@
 // dsh-skill-hub — host half.
 //
-// Registers three agent tools and one HTTP route under /skill-hub/api.
+// Registers five agent tools and one HTTP route under /skill-hub/api.
 // Tool definitions are hand-written "compiled" objects (name / description /
 // parameters JSON Schema / output.render / execute) so this bundle needs no
 // dependency on @deepseek-ai/dsh-tools and installs from a plain directory.
@@ -9,6 +9,7 @@ import {
   buildState, searchSkills, renderTeam, setOverride, saveTeam, deleteTeam,
   addKey, removeKey, keyScript, detectSkillKeys, previewInstall, installFromPreview,
 } from './lib/hub.js'
+import { auditLibrary } from './lib/audit.js'
 
 export const name = 'skill-hub'
 export const inject = ['tools']
@@ -21,6 +22,39 @@ const output = (schema) => ({ schema, render: (_args, value) => text(value) })
 const STRING_OUTPUT = output({ type: 'string' })
 
 const TOOLS = [
+  {
+    name: 'skill_hub_audit',
+    description: [
+      '体检本机技能库，按本机约定找出不合规的地方：主库里出现软链、DSH 端不空（会遮蔽主库）、',
+      '端侧存了实体副本、目录名与 SKILL.md 的 name 不一致、没有 description、容器目录、仍未分类。',
+      '用户问「我的 skill 库有没有问题」「安装的东西合规吗」「为什么会撞名」时用它。',
+      '插件拦不住别的安装器写盘，所以这是事后审计：只读，不改任何文件。',
+    ].join(''),
+    parameters: { type: 'object', additionalProperties: false, properties: {} },
+    output: STRING_OUTPUT,
+    async execute() {
+      const report = await auditLibrary()
+      const severityLabel = { high: '严重', middle: '注意', low: '提示' }
+      const lines = [
+        `## 技能库体检：${report.clean ? '没有发现问题' : `${report.findings.length} 条`}`,
+        '',
+        `- 扫描到 ${report.skillCount} 个 skill，规则来自本机约定（主库唯一实体 / 端侧只放软链 / DSH 端留空）`,
+        `- 严重 ${report.bySeverity.high} · 注意 ${report.bySeverity.middle} · 提示 ${report.bySeverity.low}`,
+        '',
+      ]
+      if (report.clean) {
+        lines.push('所有条目都符合约定。')
+      } else {
+        for (const item of report.findings) {
+          lines.push(`### [${severityLabel[item.severity] ?? item.severity}] ${item.message}`)
+          if (item.refs?.length) lines.push(`> ${item.refs.join(' / ')}`)
+          lines.push('')
+        }
+      }
+      lines.push('插件只能审计、不能拦截：别的安装器直接写盘，它看到的是结果。')
+      return lines.join('\n')
+    },
+  },
   {
     name: 'skill_hub_scan',
     description: [
@@ -229,7 +263,7 @@ const TOOLS = [
       const lines = [
         `## ${preview.source.owner}/${preview.source.repo}`,
         '',
-        `仓库里找到 ${preview.total} 个 skill：`,
+        `仓库里找到 ${preview.total} 个 skill${preview.duplicateCount ? `（另合并 ${preview.duplicateCount} 份同名副本）` : ''}：`,
         '',
         ...preview.candidates.map((item) => `- \`${item.name}\` — ${item.relPath}${item.description ? `：${item.description}` : ''}`),
         '',
@@ -304,8 +338,9 @@ function readBody(req) {
 }
 
 async function dispatch(method, sub, body) {
-  if (sub === '' || sub === 'state') {
+  if (sub === '' || sub === 'state' || sub === 'audit') {
     if (method !== 'GET' && method !== 'HEAD') return { status: 405, body: { ok: false, error: '该接口只支持 GET' } }
+    if (sub === 'audit') return { status: 200, body: await auditLibrary() }
     return { status: 200, body: await buildState() }
   }
   if (method !== 'POST') return { status: 405, body: { ok: false, error: '该接口只支持 POST' } }

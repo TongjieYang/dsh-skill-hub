@@ -34,7 +34,7 @@ test('buildState composes skills, categories, teams, keys', async () => {
   const state = await buildState({ dir })
   assert.equal(state.ok, true)
   assert.equal(state.skills.length, 3)
-  assert.equal(state.categories.length, 10)
+  assert.equal(state.categories.length, 12)
   assert.equal(state.teams.length, 4)
   assert.ok(state.teams.every((t) => Array.isArray(t.missingSkills)))
   const daohuo = state.teams.find((t) => t.id === 'daohuo-video')

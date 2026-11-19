@@ -57,10 +57,11 @@ test('导出契约：name / inject / apply', () => {
   assert.equal(typeof mod.apply, 'function')
 })
 
-test('注册四个工具，且 schema 只用受支持的键', () => {
+test('注册五个工具，且 schema 只用受支持的键', () => {
   const { ctx, tools } = fakeCtx()
   mod.apply(ctx)
   assert.deepEqual(tools.map((t) => t.name), [
+    'skill_hub_audit',
     'skill_hub_scan',
     'skill_hub_team',
     'skill_hub_key_script',
@@ -161,7 +162,25 @@ test('GET /state 返回 200 JSON', async () => {
   assert.ok(Array.isArray(response.body.teams))
   assert.ok(Array.isArray(response.body.keys))
   assert.ok(Array.isArray(response.body.categories))
-  assert.equal(response.body.categories.length, 10)
+  assert.equal(response.body.categories.length, 12)
+})
+
+test('GET /audit 返回体检结果', async () => {
+  const { ctx, routes } = fakeCtx()
+  mod.apply(ctx)
+  const response = await callRoute(routes[0], { path: '/skill-hub/api/audit' })
+  assert.equal(response.status, 200, JSON.stringify(response.body))
+  assert.equal(response.body.ok, true)
+  assert.equal(typeof response.body.skillCount, 'number')
+  assert.ok(response.body.bySeverity && typeof response.body.bySeverity.high === 'number')
+  assert.ok(Array.isArray(response.body.findings))
+})
+
+test('HEAD/其它方法打 /audit 一律 405', async () => {
+  const { ctx, routes } = fakeCtx()
+  mod.apply(ctx)
+  const response = await callRoute(routes[0], { method: 'POST', path: '/skill-hub/api/audit' })
+  assert.equal(response.status, 405)
 })
 
 test('POST /keys/add 登记元数据并给出占位符脚本', async () => {

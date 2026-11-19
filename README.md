@@ -6,7 +6,7 @@
   <img src="icon.svg" width="88" alt="Skill Hub">
 </p>
 
-装完在 **设置 → 技能中枢** 里就有四个页签：技能总览 / 分类整理 / 专家团 / Key 管理。
+装完在 **设置 → 技能中枢** 里就有五个页签：技能总览（含技能库体检）/ 分类整理 / 专家团 / Key 管理 / 安装 skill。
 
 ---
 
@@ -26,7 +26,7 @@ skill 目录是分裂的：`~/.dsh/skills`、`~/.agents/skills`、`~/.claude/ski
 
 `baoyu-*`、`lark-*`、`xyq-*`、`cheat-*`、`dbs-*`、`office-*`……前缀只说明作者，不说明用途。想按「我要干的事」找 skill，只能靠记忆。
 
-**这个插件**：10 类自动归类，三层判定 —— 名字前缀规则 → 平台词提示（小红书/抖音/飞书/高德…）→ 描述关键词加权打分（名字命中权重 4、描述命中权重 1，ASCII 关键词按整词匹配，避免 `docker` 被 `doc` 误伤）。手改的分类写进 `config.json`，永远压过自动结果。
+**这个插件**：12 类自动归类，三层判定 —— 名字前缀规则 → 平台词提示（小红书/抖音/飞书/高德…）→ 描述关键词加权打分（名字命中权重 4、描述命中权重 1，ASCII 关键词按整词匹配，避免 `docker` 被 `doc` 误伤）。手改的分类写进 `config.json`，永远压过自动结果。
 
 ```
 🎬 内容与视频   ✍️ 写作与文案   🎨 图像与设计   🛠 开发与工程   🧩 飞书与协作
@@ -94,7 +94,8 @@ echo 'export WEREAD_API_KEY=wrk-abcdefg' >> ~/.zshrc
 | `skill_hub_scan` | 列本机 skill（可按关键词 / 类别过滤），带分类统计 |
 | `skill_hub_team` | 取某个专家团的完整 SOP（可只看某一阶段） |
 | `skill_hub_key_script` | 生成入匙命令**模板**（只含 `__SECRET__` 占位符，拿不到真实密钥）；给 `skill` 就自动从该 skill 正文找变量名 |
-| `skill_hub_install_skill` | 从 GitHub 仓库把 skill 装进 `~/.agents/skills`（真实目录、不用软链、同名不覆盖） |
+| `skill_hub_install_skill` | 从 GitHub 仓库把 skill 装进 `~/.agents/skills`（真实目录、不用软链、同名不覆盖；同一仓库发到多个 agent 目录的副本自动合并成一份） |
+| `skill_hub_audit` | 按本机约定体检技能库：主库里出现软链、DSH 端不空、端侧存了实体副本、目录名与 name 不一致、没有 description、容器目录、未分类 |
 
 ### 装 skill 时守的规矩
 
@@ -148,6 +149,14 @@ rank 小的先见者生效；同名的后来者记为「遮蔽」。可在 `conf
 - 入匙命令由用户自己执行；插件不写 `~/.zshrc`、不改任何 shell 启动文件
 - 只读扫描 skill 目录，不修改、不移动、不删除任何 skill
 
+### 0.2.1：仓库副本去重 / 分类不再有「其他」/ 技能库体检
+
+- **同一个 skill 被仓库发到多个 agent 目录只算一份**：`impeccable` 这类仓库会把 skill 同时放进 `.agents/skills`、`.claude/skills`、`plugin/skills`、`cursor-plugin/skills` 等 20 多个目录，预览时按本机布局优先（`.agents/skills` > `.dsh/skills` > 顶层 `skills` > `plugin/skills`）只保留一份，并提示「另合并 N 份同名副本」。
+- **分类扩到 12 类**：新增「智能体与工作流」（子智能体、编排、交接、验收）与「商业与决策」（诊断、增长、定价、决策）；`other` 从 51 个降到 0。关键词匹配支持复数（`video` 命中 `videos`）。
+- **技能库体检**：技能总览页新增体检卡片，或让 agent 调 `skill_hub_audit`。它按本机约定检查，**只读不改**：主库（`~/.agents/skills`）里出现软链＝严重；`~/.dsh/skills` 非空＝严重（rank 400，会遮蔽主库）；端侧（`~/.claude/skills` 等）存了真实目录＝注意（应软链到主库）；目录名与 `SKILL.md` 的 name 不一致、没有 description、容器目录、未分类＝提示。
+
+**这个插件拦不住别的安装器写盘**——其他插件直接写文件，所以体检是事后审计：它告诉你结果合不合规，但不阻止写。要真正拦截，只能改 DSH 的安装链路本身。
+
 ## 已知行为与注意
 
 - **改完代码要重启 DSH**：浏览器半（`client.js`）刷新窗口（`⌘R`）即可；宿主半（`index.js`、`lib/*`）必须重启 DSH，已安装的包不会热替换 JS。
@@ -163,7 +172,7 @@ rank 小的先见者生效；同名的后来者记为「遮蔽」。可在 `conf
 node --test "tests/*.test.mjs"
 ```
 
-50 条测试覆盖：front-matter 解析、多根扫描与遮蔽、10 类分类器、专家团归一化、三平台入匙脚本、真实 `node:http` 上的 `GET /state` 与 `POST /keys/add`、以及 `client.js` 在 vm 沙箱里的模块契约（只 require react、只注册 settings.section + 同名图标）。
+73 条测试覆盖：front-matter 解析、多根扫描与遮蔽、12 类分类器、仓库多副本去重、技能库体检、专家团归一化、三平台入匙脚本、真实 `node:http` 上的 `GET /state` 与 `POST /keys/add`、以及 `client.js` 在 vm 沙箱里的模块契约（只 require react、只注册 settings.section + 同名图标）。
 
 ## License
 

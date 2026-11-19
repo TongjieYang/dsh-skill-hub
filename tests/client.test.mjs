@@ -126,3 +126,30 @@ test('style tag is injected once and removed by the effect disposer', () => {
   assert.match(appended[0].textContent, /--dsw-alias-brand-primary/)
   assert.equal(disposers.length, 1)
 })
+
+test('每个 className 在样式表里都有定义', async () => {
+  const { readFile } = await import('node:fs/promises')
+  const source = await readFile(new URL('../client.js', import.meta.url), 'utf8')
+
+  // Every literal class token used in JSX-ish h(...) calls must exist in the CSS
+  // block. Dynamic pieces (`'sh-x' + cond`) only contribute their literal part.
+  const tokens = new Set()
+  for (const match of source.matchAll(/className:\s*'([^']*)'/g)) {
+    for (const token of match[1].split(/\s+/)) {
+      // `sev-` is a prefix glued to a runtime value, not a class of its own.
+      if (token && !token.includes('+') && !token.endsWith('-')) tokens.add(token)
+    }
+  }
+  assert.ok(tokens.size > 20, `扫描到的类名太少（${tokens.size}），检查正则`)
+
+  const missing = [...tokens].filter((token) => {
+    const selector = '.' + token
+    return (
+      !source.includes(`${selector}{`) &&
+      !source.includes(`${selector},`) &&
+      !source.includes(`${selector} `) &&
+      !source.includes(`${selector}:`)
+    )
+  })
+  assert.deepEqual(missing, [], `这些类名没有对应样式：${missing.join(', ')}`)
+})

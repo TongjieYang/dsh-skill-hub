@@ -65,6 +65,14 @@ window.__ModuleLoader__.load({
       '.sh-note.warn{border-color:var(--dsw-alias-state-warn-primary,#d97706);color:var(--dsw-alias-state-warn-primary,#d97706);background:transparent}',
       '.sh-note.err{border-color:var(--dsw-alias-state-error-primary,#dc2626);color:var(--dsw-alias-state-error-primary,#dc2626);background:transparent}',
       '.sh-hint{font-size:11px;line-height:1.5;margin:8px 0 0;color:var(--dsw-alias-label-secondary,#6b7280)}',
+      '.sh-row{display:flex;align-items:center;justify-content:space-between;gap:10px}',
+      '.sh-error{margin-top:8px;padding:8px 10px;border-radius:6px;background:var(--dsw-alias-state-error-primary,#fdecec);color:#9b1c1c;font-size:12px;line-height:1.5}',
+      '.sh-audit{margin-top:8px;display:flex;flex-direction:column;gap:4px;max-height:260px;overflow:auto}',
+      '.sh-audit-row{display:flex;gap:8px;align-items:flex-start;font-size:11px;line-height:1.5;padding:4px 6px;border-radius:5px;background:var(--dsw-alias-bg-layer-2,#f6f7f8)}',
+      '.sh-audit-sev{flex:0 0 auto;font-weight:600;padding:0 5px;border-radius:4px;background:var(--dsw-alias-bg-base,#fff)}',
+      '.sh-audit-row.sev-high .sh-audit-sev{color:#9b1c1c}',
+      '.sh-audit-row.sev-middle .sh-audit-sev{color:#a16207}',
+      '.sh-audit-row.sev-low .sh-audit-sev{color:#4b5563}',
       '.sh-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}',
       '.sh-field{display:flex;flex-direction:column;gap:3px;font-size:12px;margin-bottom:8px}',
       '.sh-field label{color:var(--dsw-alias-label-secondary,#6b7280)}',
@@ -177,6 +185,20 @@ window.__ModuleLoader__.load({
         var state = props.state
         var [query, setQuery] = useState('')
         var [category, setCategory] = useState('')
+        var [audit, setAudit] = useState(null)
+        var [auditBusy, setAuditBusy] = useState(false)
+        var [auditError, setAuditError] = useState('')
+        var runAudit = async function () {
+          setAuditBusy(true)
+          setAuditError('')
+          try {
+            setAudit(await api('audit'))
+          } catch (error) {
+            setAuditError(String(error && error.message ? error.message : error))
+          } finally {
+            setAuditBusy(false)
+          }
+        }
         var skills = state.skills
         var filtered = useMemo(function () {
           var needle = query.trim().toLowerCase()
@@ -191,9 +213,60 @@ window.__ModuleLoader__.load({
         }, [skills, query, category])
         var shown = filtered.slice(0, 300)
 
+        var severityLabel = { high: '严重', middle: '注意', low: '提示' }
         return h(
           'div',
           null,
+          h(
+            'div',
+            { className: 'sh-card', style: { marginBottom: '12px' } },
+            h(
+              'div',
+              { className: 'sh-row' },
+              h('div', { className: 'sh-label' }, '技能库体检'),
+              h(
+                'button',
+                { type: 'button', className: 'sh-btn', disabled: auditBusy, onClick: runAudit },
+                auditBusy ? '正在体检…' : '按本机约定体检',
+              ),
+            ),
+            h(
+              'div',
+              { className: 'sh-hint' },
+              '检查主库是否出现软链、DSH 端是否为空、端侧是否存了实体副本、目录名与 SKILL.md 是否一致。只读，不改任何文件。',
+            ),
+            auditError ? h('div', { className: 'sh-error' }, auditError) : null,
+            audit
+              ? h(
+                  'div',
+                  null,
+                  h(
+                    'div',
+                    { className: 'sh-sub', style: { marginTop: '8px' } },
+                    audit.clean
+                      ? '没有发现不合规的地方' + (audit.findings.length ? '（另有 ' + audit.findings.length + ' 条提示）' : '')
+                      : '严重 ' + audit.bySeverity.high + ' · 注意 ' + audit.bySeverity.middle + ' · 提示 ' + audit.bySeverity.low,
+                  ),
+                  audit.findings.length
+                    ? h(
+                        'div',
+                        { className: 'sh-audit' },
+                        audit.findings.slice(0, 40).map(function (item, index) {
+                          return h(
+                            'div',
+                            { key: index, className: 'sh-audit-row sev-' + item.severity },
+                            h('span', { className: 'sh-audit-sev' }, severityLabel[item.severity] || item.severity),
+                            h('span', null, item.message),
+                          )
+                        }),
+                      )
+                    : null,
+                  audit.findings.length > 40
+                    ? h('div', { className: 'sh-hint' }, '只列出前 40 条，共 ' + audit.findings.length + ' 条。')
+                    : null,
+                )
+              : null,
+          ),
           h('input', {
             className: 'sh-input',
             placeholder: '搜索 skill 名或描述，例如 视频 / lark / 地图',
@@ -997,7 +1070,8 @@ window.__ModuleLoader__.load({
             ? h(
                 'div',
                 { className: 'sh-card' },
-                h('h4', null, preview.source.owner + '/' + preview.source.repo + '（' + preview.total + ' 个 skill）'),
+                h('h4', null, preview.source.owner + '/' + preview.source.repo + '（' + preview.total + ' 个 skill'
+                  + (preview.duplicateCount ? '，另合并 ' + preview.duplicateCount + ' 份同名副本' : '') + '）'),
                 h(
                   'div',
                   { className: 'sh-list' },
@@ -1011,7 +1085,8 @@ window.__ModuleLoader__.load({
                         onChange: function () { toggle(item.name) },
                       }),
                       h('span', { className: 'sh-pickrow-name' }, item.name),
-                      h('span', { className: 'sh-pickrow-desc' }, item.description || item.relPath),
+                      h('span', { className: 'sh-pickrow-desc' }, (item.description || item.relPath)
+                        + (item.duplicates && item.duplicates.length ? '（同名 ' + item.duplicates.length + ' 份）' : '')),
                     )
                   }),
                 ),

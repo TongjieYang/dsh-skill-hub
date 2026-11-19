@@ -104,3 +104,35 @@ test('installSkills: 预览失效时明确报错', async () => {
 test('defaultTarget 指共享主库', () => {
   assert.match(defaultTarget('/Users/demo'), /\.agents\/skills$/)
 })
+
+test('同一个 skill 被仓库发到多个 agent 目录时只算一个', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'install-dup-'))
+  const repo = join(root, 'repo')
+  const body = '---\nname: dup-skill\ndescription: 一份 skill 多个壳\n---\n\n正文\n'
+  for (const rel of ['.claude/skills/dup-skill', '.cursor/skills/dup-skill', 'plugin/skills/dup-skill', '.agents/skills/dup-skill']) {
+    await mkdir(join(repo, rel), { recursive: true })
+    await writeFile(join(repo, rel, 'SKILL.md'), body, 'utf8')
+  }
+  // 测试夹具里的 SKILL.md 不该被当成可安装的 skill
+  await mkdir(join(repo, 'tests/fixtures/ghost'), { recursive: true })
+  await writeFile(join(repo, 'tests/fixtures/ghost/SKILL.md'), '---\nname: ghost\n---\n', 'utf8')
+
+  await run('git', ['init', '--quiet'], { cwd: repo })
+  await run('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', 'add', '-A'], { cwd: repo })
+  await run('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '--quiet', '-m', 'f'], { cwd: repo })
+
+  let preview
+  try {
+    preview = await scanClone({ url: repo })
+    assert.equal(preview.total, 1, '同名副本应合并成一个')
+    assert.equal(preview.duplicateCount, 3)
+    assert.equal(preview.candidates[0].name, 'dup-skill')
+    // 保留的是本机惯用的共享库布局
+    assert.equal(preview.candidates[0].relPath, join('.agents', 'skills', 'dup-skill'))
+  assert.equal(preview.duplicateCount, 3, '另外三份副本应被合并计数')
+    assert.ok(!preview.candidates.some((item) => item.name === 'ghost'), 'tests/ 下的夹具不参与')
+  } finally {
+    await cleanupPreview(preview)
+    await rm(root, { recursive: true, force: true })
+  }
+})
