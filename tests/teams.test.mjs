@@ -79,6 +79,9 @@ test('key script: macOS uses security and keeps the placeholder only', () => {
   assert.ok(s.add.includes(PLACEHOLDER))
   assert.ok(s.add.includes("-s 'skill-hub:weread'"))
   assert.ok(s.add.includes("-a 'ytj'"))
+  // 交互式那条不能把值塞进 argv：没有 __SECRET__，`-w` 在末尾等输入
+  assert.ok(!s.addPrompt.includes(PLACEHOLDER))
+  assert.ok(s.addPrompt.endsWith('-U -w'))
   assert.ok(s.export.startsWith('export WEREAD_API_KEY="$(security find-generic-password'))
   assert.ok(s.remove.includes('delete-generic-password'))
   assert.ok(!JSON.stringify(s).includes('wrk-'), 'no real secret shape')

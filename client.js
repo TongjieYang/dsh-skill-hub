@@ -944,11 +944,12 @@ window.__ModuleLoader__.load({
                   : h(
                       'div',
                       null,
-                      block('1. 存入钥匙串（你自己跑）', result.script.add),
+                      block('1. 存入钥匙串（推荐：交互式，密钥不进 shell history）', result.script.addPrompt),
+                      block('1b. 或者一条命令带值（会留在 ~/.zsh_history，介意就用上面那条）', result.script.add),
                       block('2. 验证（不打印密钥）', result.script.verify),
                       block('3. 用时取回（export）', result.script.export),
                       h('div', { className: 'sh-muted' },
-                        '想每个终端自动带上：把第 3 行加到 ~/.zshenv（不是 ~/.zshrc —— 非交互 shell 不读 .zshrc）。'
+                        '想每个终端自动带上：把下面那行 export 加到 ~/.zshenv（不是 ~/.zshrc —— 非交互 shell 不读 .zshrc）。'
                         + '不想改任何文件也行：skill 需要时用 $(security find-generic-password …) 现取。'),
                     ),
               )

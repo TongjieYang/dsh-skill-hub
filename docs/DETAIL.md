@@ -124,3 +124,8 @@ MIT
 - 克隆前用 `git ls-remote` 给两条路各计时 3 秒，取快的；一条失败自动换另一条；同一进程内记住上次结果，不重复探测。
 - 每次预览前清掉 2 小时前的 `$TMPDIR/skill-hub-*` 残留。
 - Key 页面补一句：要自动带上变量就写进 `~/.zshenv`（非交互 shell 不读 `~/.zshrc`），不想改文件就让 skill 现取。
+
+## 0.2.4 新增
+
+- 入匙命令分两条：默认可交互（`security add-generic-password … -U -w` 由 `security` 隐藏输入地向你要值，密钥不进 argv，也就不进 `~/.zsh_history`），另附一条带值的版本并写明它会留在 history 里。
+- 说明插件不碰任何 shell 配置文件；要自动导出就写进 `~/.zshenv`（`.zshrc` 只对交互 shell 生效，agent 跑的非交互 shell 读不到）。

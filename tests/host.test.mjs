@@ -195,6 +195,7 @@ test('POST /keys/add 登记元数据并给出占位符脚本', async () => {
   assert.equal(response.status, 200)
   assert.equal(response.body.ok, true)
   assert.match(response.body.script.add, /__SECRET__/)
+  assert.doesNotMatch(response.body.script.addPrompt, /__SECRET__/)
   assert.match(response.body.script.add, /security add-generic-password/)
   assert.equal(response.body.key.env, 'WEREAD_API_KEY')
   assert.ok(!('secret' in response.body.key), '登记项里不能出现 secret 字段')

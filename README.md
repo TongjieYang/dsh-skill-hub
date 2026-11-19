@@ -148,6 +148,10 @@ rank 小的先见者生效；同名的后来者记为「遮蔽」。可在 `conf
 - 仓库把同一个 skill 发到多个 agent 目录时，按 `.agents/skills` > `.dsh/skills` > 顶层 `skills` > `plugin/skills` 择一，其余忽略（不再出现两份同名）；
 - **同名只能替换，不能合并**：`replace: true` 时旧目录先移到 `~/.agents/_trash/<日期>/skill-hub/<name>`，再装新版；不传则为跳过并列出撞名的条目。
 
+**往钥匙串里存 key**：默认给两条命令 ——
+`security add-generic-password -s 'skill-hub:weread' -a 'ytj' -U -w`（推荐：`security` 隐藏输入地问你要值，密钥不进 argv、不进 `~/.zsh_history`），
+以及一条把值直接写进命令的版本（方便，但会留在 shell history）。插件**不写** `~/.zshrc` / `~/.zshenv`；想让每个终端自动带上变量，把 `export …$(security find-generic-password …)` 自己加到 `~/.zshenv`（非交互 shell 不读 `.zshrc`），不加也行 —— skill 用的时候现取。
+
 **克隆走哪条路**：预览时先用 `git ls-remote` 分别给「按你的 git 配置」和「直连 GitHub（忽略 git 配置）」计时，取快的那条；一条失败自动换另一条，结果里会写 clone 用时和实际走的路。你的 git 若把 github 重写到镜像（`url.…insteadOf`），镜像慢时这条路会明显拖时间，插件会把另一个选项也试一遍。
 
 **临时目录**：每次预览前清掉 2 小时前的 `$TMPDIR/skill-hub-*` 残留（进程被杀时留下的克隆）。

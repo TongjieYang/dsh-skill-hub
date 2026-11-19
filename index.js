@@ -206,7 +206,12 @@ const TOOLS = [
       return [
         `## ${script.env} → ${script.service}`,
         '',
-        '把 __SECRET__ 换成真实密钥后，在**你自己的终端**执行：',
+        '推荐这样存（`security` 会隐藏输入地向你要密钥，密钥不进 argv，也就不进 shell history）：',
+        '```bash',
+        script.addPrompt,
+        '```',
+        '',
+        '或者一条命令带值（`__SECRET__` 换成真实密钥；会留在 shell history 里，介意就用上面那条）：',
         '```bash',
         script.add,
         '```',
