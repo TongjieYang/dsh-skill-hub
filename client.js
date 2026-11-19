@@ -44,7 +44,7 @@ window.__ModuleLoader__.load({
       '.sh-input:focus,.sh-area:focus,.sh-select:focus{outline:none;border-color:var(--dsw-alias-brand-primary,#2563eb)}',
       '.sh-area{min-height:300px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.5;resize:vertical}',
       '.sh-chips{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}',
-      '.sh-chip{appearance:none;font-family:inherit;font-size:12px;padding:4px 9px;border-radius:999px;cursor:pointer;border:1px solid var(--dsw-alias-border-l1,#e6e8eb);background:var(--dsw-alias-bg-layer-1,#fff);color:var(--dsw-alias-label-secondary,#6b7280)}',
+      '.sh-chip{appearance:none;display:inline-flex;align-items:center;gap:4px;font-family:inherit;font-size:12px;padding:4px 9px;border-radius:999px;cursor:pointer;border:1px solid var(--dsw-alias-border-l1,#e6e8eb);background:var(--dsw-alias-bg-layer-1,#fff);color:var(--dsw-alias-label-secondary,#6b7280)}',
       '.sh-chip.on{background:var(--dsw-alias-brand-primary,#2563eb);border-color:transparent;color:#fff}',
       '.sh-chip .n{opacity:.7;margin-left:4px;font-variant-numeric:tabular-nums}',
       '.sh-list{display:flex;flex-direction:column;gap:1px}',
@@ -120,7 +120,37 @@ window.__ModuleLoader__.load({
       '.sh-tiny{padding:3px 6px !important;font-size:11.5px !important;min-width:0}',
       '.sh-savebar .sh-btn{white-space:nowrap;flex:0 0 auto}',
       '.sh-savebar .sh-hint{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}',
-      '.sh-chip-x{border:0;background:none;color:inherit;cursor:pointer;padding:0;font-size:12px;line-height:1}',
+      '.sh-team{display:flex;flex-direction:column;gap:16px}',
+      '.sh-team-switch{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:2px 0 4px}',
+      '.sh-team-switch-label{font-size:11px;letter-spacing:.08em;color:var(--dsw-alias-label-secondary,#6b7280);flex:0 0 auto;text-transform:uppercase}',
+      '.sh-team-pill{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border:1px solid var(--dsw-alias-border-l1,#e6e8eb);border-radius:999px;background:var(--dsw-alias-bg-layer-1,#fff);color:var(--dsw-alias-label-primary,#111827);font:inherit;font-size:12.5px;cursor:pointer;white-space:nowrap;flex:0 0 auto;transition:background .16s var(--sh-ease),border-color .16s var(--sh-ease),color .16s var(--sh-ease)}',
+      '.sh-team-pill:hover{background:var(--dsw-alias-bg-layer-2,#f4f5f7)}',
+      '.sh-team-pill.on{background:var(--dsw-alias-brand-primary,#2f6bff);border-color:var(--dsw-alias-brand-primary,#2f6bff);color:#fff}',
+      '.sh-team-pill-emoji{font-size:14px;line-height:1}',
+      '.sh-team-pill-name{max-width:120px;overflow:hidden;text-overflow:ellipsis}',
+      '.sh-team-pill-dot{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.55}',
+      '.sh-team-pill.add{color:var(--dsw-alias-label-secondary,#6b7280);border-style:dashed}',
+      '.sh-panel{border:1px solid var(--dsw-alias-border-l1,#e6e8eb);border-radius:14px;background:var(--dsw-alias-bg-layer-1,#fff);padding:12px;box-shadow:0 1px 2px rgba(16,24,40,.04)}',
+      '.sh-panel-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;min-width:0}',
+      '.sh-panel-title{font-size:13px;font-weight:600;letter-spacing:.01em;white-space:nowrap}',
+      '.sh-panel-note{font-size:11px;color:var(--dsw-alias-label-secondary,#6b7280);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}',
+      '.sh-panel-actions{display:flex;gap:8px;flex:0 0 auto}',
+      '.sh-basic{display:grid;grid-template-columns:56px minmax(0,1fr);gap:8px}',
+      '.sh-basic-emoji{grid-column:1}',
+      '.sh-picker{margin-top:8px;border:1px solid var(--dsw-alias-border-l1,#e6e8eb);border-radius:10px;padding:8px;background:var(--dsw-alias-bg-base,#fff)}',
+      '.sh-note.ok{color:var(--dsw-alias-state-success-primary,#15803d)}',
+      '.sh-root :focus-visible{outline:2px solid var(--dsw-alias-brand-primary,#2f6bff);outline-offset:1px}',
+      '@media (prefers-reduced-motion: reduce){.sh-fade{animation:none!important}}',
+      '.sh-linkbtn{border:0;background:none;color:var(--dsw-alias-label-secondary,#6b7280);font:inherit;font-size:11px;cursor:pointer;padding:2px 4px;border-radius:6px}',
+      '.sh-linkbtn:hover{background:var(--dsw-alias-bg-layer-2,#f4f5f7);color:var(--dsw-alias-label-primary,#111827)}',
+      '.sh-linkbtn.danger:hover{color:var(--dsw-alias-state-error-primary,#b42318)}',
+      '.sh-node-tools{display:flex;align-items:center;gap:4px}',
+      '.sh-node-title{font-weight:600}',
+      '.sh-node{background:var(--dsw-alias-bg-layer-1,#fff)}',
+      '.sh-node+.sh-node::before{background:var(--dsw-alias-border-l2,#d5d9e0)}',
+      '.sh-menu-row-desc{display:block;font-size:11px;color:var(--dsw-alias-label-secondary,#6b7280);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+      '.sh-chip-x{border:0;background:none;color:inherit;cursor:pointer;padding:0 1px;font-size:12px;line-height:1;opacity:.65;border-radius:4px}',
+      '.sh-chip-x:hover{opacity:1}',
       '.sh-empty{padding:28px 8px;text-align:center;color:var(--dsw-alias-label-secondary,#6b7280);font-size:12.5px}',
       '.sh-board{display:grid;grid-template-columns:repeat(auto-fill,minmax(236px,1fr));gap:10px;align-items:start}',
       '.sh-col{display:flex;flex-direction:column;min-width:0;border:1px solid var(--dsw-alias-border-l1,#e6e8eb);border-radius:14px;background:var(--dsw-alias-bg-layer-1,#fff);box-shadow:0 1px 2px rgba(16,24,40,.04)}',
@@ -591,7 +621,6 @@ window.__ModuleLoader__.load({
         var [busy, setBusy] = useState(false)
         var [pickerFor, setPickerFor] = useState('')
         var [pickerQuery, setPickerQuery] = useState('')
-        var [mode, setMode] = useState('simple')
         var [notice, setNotice] = useState('')
         var selected = state.teams.find(function (team) { return team.id === selectedId }) || state.teams[0] || null
         var working = draft || selected
@@ -746,160 +775,278 @@ window.__ModuleLoader__.load({
 
         var dirty = draft !== null
 
+        function sectionHead(title, note, action) {
+          return h(
+            'div',
+            { className: 'sh-panel-head' },
+            h('span', { className: 'sh-panel-title' }, title),
+            note ? h('span', { className: 'sh-panel-note' }, note) : null,
+            h('span', { style: { flex: 1 } }),
+            action || null,
+          )
+        }
+
+        function roleNode(role, index) {
+          return h(
+            'div',
+            { key: index, className: 'sh-rolecard sh-fade' },
+            h(
+              'div',
+              { className: 'sh-rolecard-top' },
+              h('input', {
+                className: 'sh-input sh-mini',
+                placeholder: '角色名，如 选品情报',
+                value: role.title,
+                onChange: function (event) { patchRole(index, 'title', event.target.value) },
+              }),
+              h('input', {
+                className: 'sh-input sh-mini',
+                placeholder: '交付物，如 卖点假设表',
+                value: role.deliverable || '',
+                onChange: function (event) { patchRole(index, 'deliverable', event.target.value) },
+              }),
+            ),
+            h('textarea', {
+              className: 'sh-input sh-mini',
+              style: { minHeight: '52px', resize: 'vertical', lineHeight: 1.5 },
+              placeholder: '职责：这个角色做什么、按什么标准验收',
+              value: role.duty || '',
+              onChange: function (event) { patchRole(index, 'duty', event.target.value) },
+            }),
+            h(
+              'div',
+              { className: 'sh-chips', style: { margin: 0 } },
+              (role.skills || []).map(function (name) {
+                return h(
+                  'span',
+                  { key: name, className: 'sh-chip on' },
+                  name,
+                  h(
+                    'button',
+                    {
+                      type: 'button',
+                      className: 'sh-chip-x',
+                      title: '解绑',
+                      onClick: function () {
+                        edit(function (t) {
+                          t.roles[index].skills = t.roles[index].skills.filter(function (item) { return item !== name })
+                        })
+                      },
+                    },
+                    '×',
+                  ),
+                )
+              }),
+              h(
+                'button',
+                {
+                  type: 'button',
+                  className: 'sh-chip',
+                  onClick: function () {
+                    setPickerFor(pickerFor === String(index) ? '' : String(index))
+                    setPickerQuery('')
+                  },
+                },
+                pickerFor === String(index) ? '收起' : '＋ 绑定 skill',
+              ),
+              h('span', { style: { flex: 1 } }),
+              working.roles.length > 1
+                ? h(
+                    'button',
+                    {
+                      type: 'button',
+                      className: 'sh-linkbtn danger',
+                      onClick: function () {
+                        edit(function (t) {
+                          var gone = t.roles[index].id
+                          t.roles.splice(index, 1)
+                          t.stages.forEach(function (stage) {
+                            stage.roleIds = (stage.roleIds || []).filter(function (id) { return id !== gone })
+                          })
+                        })
+                      },
+                    },
+                    '删除角色',
+                  )
+                : null,
+            ),
+            pickerFor === String(index)
+              ? h(
+                  'div',
+                  { className: 'sh-picker' },
+                  h('input', {
+                    className: 'sh-input sh-mini',
+                    placeholder: '搜 skill 名或描述',
+                    value: pickerQuery,
+                    autoFocus: true,
+                    onChange: function (event) { setPickerQuery(event.target.value) },
+                  }),
+                  h(
+                    'div',
+                    { className: 'sh-col-body', style: { maxHeight: '172px', marginTop: '4px', padding: 0 } },
+                    state.skills
+                      .filter(function (skill) {
+                        if ((role.skills || []).indexOf(skill.name) >= 0) return false
+                        var needle = pickerQuery.trim().toLowerCase()
+                        if (needle === '') return true
+                        return (skill.name + ' ' + (skill.description || '')).toLowerCase().indexOf(needle) >= 0
+                      })
+                      .slice(0, 40)
+                      .map(function (skill) {
+                        return h(
+                          'button',
+                          {
+                            key: skill.name,
+                            type: 'button',
+                            className: 'sh-menu-row',
+                            onClick: function () {
+                              edit(function (t) {
+                                if (!t.roles[index].skills) t.roles[index].skills = []
+                                t.roles[index].skills.push(skill.name)
+                              })
+                              setPickerFor('')
+                            },
+                          },
+                          h('span', { className: 'sh-menu-row-name' }, skill.name),
+                          h('span', { className: 'sh-menu-row-desc' }, skill.description || ''),
+                        )
+                      }),
+                    state.skills.length === 0 ? h('div', { className: 'sh-hint', style: { padding: '8px' } }, '本地没有扫到 skill') : null,
+                  ),
+                )
+              : null,
+          )
+        }
+
+        function stageNode(stage, index) {
+          return h(
+            'div',
+            { key: index, className: 'sh-node sh-fade' },
+            h('span', { className: 'sh-node-dot' }, String(index + 1)),
+            h('input', {
+              className: 'sh-input sh-mini sh-node-title',
+              value: stage.title,
+              placeholder: '这一步做什么',
+              onChange: function (event) { patchStage(index, 'title', event.target.value) },
+            }),
+            h('input', {
+              className: 'sh-input sh-mini',
+              placeholder: '这一步的交付物',
+              value: stage.deliverable || '',
+              onChange: function (event) { patchStage(index, 'deliverable', event.target.value) },
+            }),
+            h(
+              'div',
+              { className: 'sh-node-roles' },
+              working.roles.map(function (role) {
+                var on = (stage.roleIds || []).indexOf(role.id) >= 0
+                return h(
+                  'button',
+                  {
+                    key: role.id,
+                    type: 'button',
+                    className: 'sh-rolechip' + (on ? ' on' : ''),
+                    title: on ? '点了就撤下' : '点了就挂上',
+                    onClick: function () {
+                      edit(function (t) {
+                        var list = t.stages[index].roleIds || []
+                        t.stages[index].roleIds = on
+                          ? list.filter(function (id) { return id !== role.id })
+                          : list.concat([role.id])
+                      })
+                    },
+                  },
+                  role.title,
+                )
+              }),
+            ),
+            h(
+              'div',
+              { className: 'sh-node-tools' },
+              h(
+                'button',
+                {
+                  type: 'button',
+                  className: 'sh-linkbtn',
+                  disabled: index === 0,
+                  title: '上移',
+                  onClick: function () {
+                    edit(function (t) {
+                      var item = t.stages.splice(index, 1)[0]
+                      t.stages.splice(index - 1, 0, item)
+                    })
+                  },
+                },
+                '↑',
+              ),
+              h(
+                'button',
+                {
+                  type: 'button',
+                  className: 'sh-linkbtn',
+                  disabled: index === working.stages.length - 1,
+                  title: '下移',
+                  onClick: function () {
+                    edit(function (t) {
+                      var item = t.stages.splice(index, 1)[0]
+                      t.stages.splice(index + 1, 0, item)
+                    })
+                  },
+                },
+                '↓',
+              ),
+              working.stages.length > 1
+                ? h(
+                    'button',
+                    {
+                      type: 'button',
+                      className: 'sh-linkbtn danger',
+                      onClick: function () { edit(function (t) { t.stages.splice(index, 1) }) },
+                    },
+                    '移除',
+                  )
+                : null,
+            ),
+          )
+        }
+
         return h(
           'div',
-          null,
-                  h(
-          'div',
-          { className: 'sh-card', style: { marginTop: '8px' } },
+          { className: 'sh-team' },
+
+          // ① 团分类：最上面
           h(
             'div',
-            { className: 'sh-row', style: { gap: '8px' } },
-            h('div', { className: 'sh-label', style: { minWidth: 0 } }, '分工与流程'),
-            h('span', { className: 'sh-spacer', style: { flex: 1 } }),
-            h(
-              'button',
-              { type: 'button', className: 'sh-btn', disabled: busy, onClick: autoFill, title: '把空着的职责/交付物/负责人/铁律自动补齐' },
-              '自动整理',
-            ),
-            h(
-              'button',
-              {
-                type: 'button',
-                className: 'sh-btn',
-                disabled: busy,
-                onClick: function () { exportSkill(false) },
-                title: '导出成 ~/.agents/skills/team-<id>/SKILL.md，Codex / WorkBuddy / Claude 都能直接用',
-              },
-              '导出为 skill',
-            ),
-            h(
-              'button',
-              { type: 'button', className: 'sh-btn' + (mode === 'simple' ? ' primary' : ''), onClick: function () { setMode(mode === 'simple' ? 'detail' : 'simple') } },
-              mode === 'simple' ? '简易' : '详细',
-            ),
-          ),
-          notice && notice !== 'EXPORT_EXISTS'
-            ? h('div', { className: 'sh-hint', style: { color: 'var(--dsw-alias-state-success-primary,#15803d)' } }, notice)
-            : null,
-          notice === 'EXPORT_EXISTS'
-            ? h(
-                'div',
-                { className: 'sh-row', style: { justifyContent: 'flex-end', gap: '8px' } },
-                h('button', { type: 'button', className: 'sh-btn danger', disabled: busy, onClick: function () { exportSkill(true) } }, '覆盖导出（旧版进 _trash）'),
-              )
-            : null,
-          mode === 'simple'
-            ? h('div', { className: 'sh-hint' }, '简易模式：改名字、负责人、产出就够了；职责 / skill 绑定 / 铁律在「详细」里。')
-            : null,
-          h(
-            'div',
-            { className: 'sh-sumtables' },
-            h(
-              'div',
-              { className: 'sh-sumtable' },
-              h('div', { className: 'sh-sumhead' }, '分工 · ' + working.roles.length + ' 个角色'),
-              working.roles.map(function (role, index) {
-                var stages = working.stages.filter(function (st) { return (st.roleIds || []).indexOf(role.id) >= 0 })
-                return h(
-                  'div',
-                  { key: 'sum-r-' + role.id + index, className: 'sh-sumrow' },
-                  mode === 'simple'
-                    ? h('input', {
-                        className: 'sh-input sh-tiny',
-                        value: role.title,
-                        onChange: function (event) { patchRole(index, 'title', event.target.value) },
-                      })
-                    : h('span', { className: 'sh-sumname' }, role.title || '未命名'),
-                  h('span', { className: 'sh-summeta' }, (role.skills || []).length ? (role.skills || []).length + ' skill' : '无 skill'),
-                  mode === 'detail'
-                    ? h('span', { className: 'sh-summeta' }, stages.length ? stages.length + ' 阶段' : '未出场')
-                    : null,
-                  h('span', { className: 'sh-summeta ellipsis', title: role.deliverable || '' }, role.deliverable || '无交付物'),
-                )
-              }),
-            ),
-            h(
-              'div',
-              { className: 'sh-sumtable' },
-              h('div', { className: 'sh-sumhead' }, '流程 · ' + working.stages.length + ' 步'),
-              working.stages.map(function (stage, index) {
-                var owners = (stage.roleIds || []).map(function (id) {
-                  var found = working.roles.filter(function (r) { return r.id === id })[0]
-                  return found ? found.title : id
-                })
-                return h(
-                  'div',
-                  { key: 'sum-s-' + stage.id + index, className: 'sh-sumrow' },
-                  h('span', { className: 'sh-sumidx' }, String(index + 1)),
-                  mode === 'simple'
-                    ? h('input', {
-                        className: 'sh-input sh-tiny',
-                        value: stage.title,
-                        onChange: function (event) { patchStage(index, 'title', event.target.value) },
-                      })
-                    : h('span', { className: 'sh-sumname' }, stage.title || '未命名'),
-                  mode === 'simple'
-                    ? h(
-                        'select',
-                        {
-                          className: 'sh-select sh-tiny',
-                          value: (stage.roleIds || [])[0] || '',
-                          onChange: function (event) {
-                            var value = event.target.value
-                            patchStage(index, 'roleIds', value ? [value] : [])
-                          },
-                        },
-                        h('option', { value: '' }, '未指派'),
-                        working.roles.map(function (role) {
-                          return h('option', { key: role.id, value: role.id }, role.title)
-                        }),
-                      )
-                    : h('span', { className: 'sh-summeta' }, owners.join(' + ') || '未指派'),
-                  mode === 'simple'
-                    ? h('input', {
-                        className: 'sh-input sh-tiny',
-                        value: stage.deliverable,
-                        placeholder: '产出',
-                        onChange: function (event) { patchStage(index, 'deliverable', event.target.value) },
-                      })
-                    : h('span', { className: 'sh-summeta ellipsis', title: stage.deliverable || '' }, stage.deliverable || '未定义'),
-                )
-              }),
-            ),
-          ),
-        ),
-        h(
-          'div',
-          { className: 'sh-split' },
-            h(
-              'aside',
-              { className: 'sh-rail' },
+            { className: 'sh-team-switch' },
+            h('span', { className: 'sh-team-switch-label' }, '专家团'),
             state.teams.map(function (team) {
               return h(
                 'button',
                 {
                   key: team.id,
                   type: 'button',
-                  className: 'sh-rail-item' + (team.id === working.id ? ' on' : ''),
+                  className: 'sh-team-pill' + (team.id === working.id ? ' on' : ''),
                   onClick: function () { setSelectedId(team.id) },
                 },
-                h('span', null, team.emoji || '·'),
-                h('span', { style: { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, team.title),
+                h('span', { className: 'sh-team-pill-emoji' }, team.emoji || '🧩'),
+                h('span', { className: 'sh-team-pill-name' }, team.title),
+                team.builtin ? null : h('span', { className: 'sh-team-pill-dot', title: '本地自定义' }),
               )
             }),
-            h('button', { type: 'button', className: 'sh-rail-item', onClick: createTeam }, '＋ 新建'),
+            h('button', { type: 'button', className: 'sh-team-pill add', onClick: createTeam }, '＋ 新建'),
           ),
+
+          // ② 名称与描述
           h(
             'div',
-            { className: 'sh-editor' },
-            error ? h('div', { className: 'sh-note err' }, error) : null,
+            { className: 'sh-panel' },
+            sectionHead('基本信息', working.builtin ? '内置模板 · 保存后成为本地版本' : '本地自定义'),
             h(
               'div',
-              { style: { display: 'grid', gridTemplateColumns: '58px minmax(0,1fr)', gap: '8px' } },
+              { className: 'sh-basic' },
               h(
                 'label',
-                { className: 'sh-field' },
+                { className: 'sh-field sh-basic-emoji' },
                 h('span', { className: 'sh-label' }, '图标'),
                 h('input', {
                   className: 'sh-input',
@@ -920,17 +1067,8 @@ window.__ModuleLoader__.load({
               ),
             ),
             h(
-              'div',
-              { className: 'sh-savebar' },
-              h('button', { type: 'button', className: 'sh-btn primary', disabled: busy || !dirty, onClick: save }, dirty ? '保存改动' : '已是最新'),
-              h('button', { type: 'button', className: 'sh-btn', disabled: busy, onClick: resetTeam }, '恢复内置'),
-              h('button', { type: 'button', className: 'sh-btn danger', disabled: busy, onClick: removeTeam }, '删除'),
-              h('span', { className: 'sh-spacer', style: { flex: 1 } }),
-              h('span', { className: 'sh-hint' }, working.builtin ? '内置模板 · 保存后成为本地版本' : '自定义团'),
-            ),
-            h(
               'label',
-              { className: 'sh-field' },
+              { className: 'sh-field', style: { marginTop: '8px' } },
               h('span', { className: 'sh-label' }, '这个团要交付什么'),
               h('input', {
                 className: 'sh-input',
@@ -940,328 +1078,164 @@ window.__ModuleLoader__.load({
             ),
             h(
               'div',
-              { style: { display: mode === 'detail' ? '' : 'none' } },
+              { className: 'sh-savebar' },
+              h('button', { type: 'button', className: 'sh-btn primary', disabled: busy || !dirty, onClick: save }, dirty ? '保存改动' : '已是最新'),
+              h('button', { type: 'button', className: 'sh-btn', disabled: busy, onClick: resetTeam }, '恢复内置'),
+              h('button', { type: 'button', className: 'sh-btn danger', disabled: busy, onClick: removeTeam }, '删除'),
+              h('span', { style: { flex: 1 } }),
+              h('span', { className: 'sh-hint' }, dirty ? '有未保存的改动' : ''),
+            ),
+            error ? h('div', { className: 'sh-note err' }, error) : null,
+            notice && notice !== 'EXPORT_EXISTS'
+              ? h('div', { className: 'sh-note ok' }, notice)
+              : null,
+            notice === 'EXPORT_EXISTS'
+              ? h(
+                  'div',
+                  { className: 'sh-row', style: { justifyContent: 'flex-end', gap: '8px', marginTop: '8px' } },
+                  h('button', { type: 'button', className: 'sh-btn danger', disabled: busy, onClick: function () { exportSkill(true) } }, '覆盖导出（旧版进 _trash）'),
+                )
+              : null,
+          ),
+
+          // ③ 分工与流程总览
+          h(
+            'div',
+            { className: 'sh-panel' },
+            sectionHead(
+              '分工与流程',
+              '先看总览，下面改细节',
               h(
                 'div',
-                { className: 'sh-secthead' },
-                h('h5', null, '角色'),
-                h('span', { className: 'sh-hint' }, '每个角色写清职责与交付物，绑上它能用的 skill'),
-                h('span', { className: 'sh-spacer', style: { flex: 1 } }),
-                h(
-                  'button',
-                  {
-                    type: 'button',
-                    className: 'sh-btn',
-                    onClick: function () {
-                      edit(function (t) {
-                        var n = t.roles.length + 1
-                        t.roles.push({ id: 'r' + n, title: '角色' + n, duty: '', skills: [], deliverable: '' })
-                      })
-                    },
-                  },
-                  '＋ 角色',
-                ),
+                { className: 'sh-panel-actions' },
+                h('button', { type: 'button', className: 'sh-btn', disabled: busy, onClick: autoFill, title: '把空着的职责 / 交付物 / 负责人 / 铁律自动补齐' }, '自动整理'),
+                h('button', { type: 'button', className: 'sh-btn', disabled: busy, onClick: function () { exportSkill(false) }, title: '导出成 ~/.agents/skills/team-<id>/SKILL.md' }, '导出为 skill'),
               ),
-              working.roles.map(function (role, index) {
-                return h(
-                  'div',
-                  { key: index, className: 'sh-rolecard sh-fade' },
-                  h(
-                    'div',
-                    { className: 'sh-rolecard-top' },
-                    h('input', {
-                      className: 'sh-input sh-mini',
-                      placeholder: '角色名，如 选品情报',
-                      value: role.title,
-                      onChange: function (event) { patchRole(index, 'title', event.target.value) },
-                    }),
-                    h('input', {
-                      className: 'sh-input sh-mini',
-                      placeholder: '交付物，如 卖点假设表',
-                      value: role.deliverable || '',
-                      onChange: function (event) { patchRole(index, 'deliverable', event.target.value) },
-                    }),
-                  ),
-                  h('textarea', {
-                    className: 'sh-input sh-mini',
-                    style: { minHeight: '52px', resize: 'vertical', lineHeight: 1.5 },
-                    placeholder: '职责：这个角色做什么、按什么标准验收',
-                    value: role.duty || '',
-                    onChange: function (event) { patchRole(index, 'duty', event.target.value) },
-                  }),
-                  h(
-                    'div',
-                    { className: 'sh-chips', style: { margin: 0 } },
-                    (role.skills || []).map(function (name) {
-                      return h(
-                        'span',
-                        { key: name, className: 'sh-chip on', style: { cursor: 'default' } },
-                        name,
-                        h(
-                          'button',
-                          {
-                            type: 'button',
-                            className: 'sh-chip-x',
-                            style: { marginLeft: '5px', border: 0, background: 'none', color: 'inherit', cursor: 'pointer', padding: 0 },
-                            onClick: function () {
-                              edit(function (t) {
-                                t.roles[index].skills = t.roles[index].skills.filter(function (item) { return item !== name })
-                              })
-                            },
-                          },
-                          '×',
-                        ),
-                      )
-                    }),
-                    h(
-                      'button',
-                      {
-                        type: 'button',
-                        className: 'sh-chip',
-                        onClick: function () {
-                          setPickerFor(pickerFor === String(index) ? '' : String(index))
-                          setPickerQuery('')
-                        },
-                      },
-                      pickerFor === String(index) ? '收起' : '＋ skill',
-                    ),
-                    h(
-                      'span',
-                      { className: 'sh-spacer', style: { flex: 1 } },
-                    ),
-                    working.roles.length > 1
-                      ? h(
-                          'button',
-                          {
-                            type: 'button',
-                            className: 'sh-btn',
-                            style: { padding: '1px 7px', fontSize: '10.5px' },
-                            onClick: function () {
-                              edit(function (t) {
-                                var gone = t.roles[index].id
-                                t.roles.splice(index, 1)
-                                t.stages.forEach(function (stage) {
-                                  stage.roleIds = (stage.roleIds || []).filter(function (id) { return id !== gone })
-                                })
-                              })
-                            },
-                          },
-                          '删除角色',
-                        )
-                      : null,
-                  ),
-                  pickerFor === String(index)
-                    ? h(
-                        'div',
-                        { style: { marginTop: '6px' } },
-                        h('input', {
-                          className: 'sh-input sh-mini',
-                          placeholder: '搜 skill 名',
-                          value: pickerQuery,
-                          onChange: function (event) { setPickerQuery(event.target.value) },
-                        }),
-                        h(
-                          'div',
-                          { className: 'sh-col-body', style: { maxHeight: '180px', marginTop: '4px', padding: 0 } },
-                          state.skills
-                            .filter(function (skill) {
-                              if ((role.skills || []).indexOf(skill.name) >= 0) return false
-                              var needle = pickerQuery.trim().toLowerCase()
-                              if (needle === '') return true
-                              return (skill.name + ' ' + (skill.description || '')).toLowerCase().indexOf(needle) >= 0
-                            })
-                            .slice(0, 40)
-                            .map(function (skill) {
-                              return h(
-                                'button',
-                                {
-                                  key: skill.name,
-                                  type: 'button',
-                                  className: 'sh-menu-row',
-                                  style: { border: 0, background: 'none', width: '100%', textAlign: 'left', font: 'inherit' },
-                                  onClick: function () {
-                                    edit(function (t) {
-                                      if (!t.roles[index].skills) t.roles[index].skills = []
-                                      t.roles[index].skills.push(skill.name)
-                                    })
-                                    setPickerFor('')
-                                  },
-                                },
-                                h('span', { className: 'sh-menu-row-name' }, skill.name),
-                              )
-                            }),
-                        ),
-                      )
-                    : null,
-                )
-              }),
             ),
             h(
               'div',
-              { style: { display: mode === 'detail' ? '' : 'none' } },
+              { className: 'sh-sumtables' },
               h(
                 'div',
-                { className: 'sh-secthead' },
-                h('h5', null, '流程'),
-                h('span', { className: 'sh-hint' }, '按顺序排步骤，点节点里的胶囊把角色挂上去'),
-              ),
-              h(
-                'div',
-                { className: 'sh-flow' },
-                working.stages.map(function (stage, index) {
+                { className: 'sh-sumtable' },
+                h('div', { className: 'sh-sumhead' }, '分工 · ' + working.roles.length + ' 个角色'),
+                working.roles.map(function (role, index) {
+                  var stages = working.stages.filter(function (st) { return (st.roleIds || []).indexOf(role.id) >= 0 })
                   return h(
                     'div',
-                    { key: index, className: 'sh-node sh-fade' },
-                    h('span', { className: 'sh-node-dot' }, String(index + 1)),
-                    h('input', {
-                      className: 'sh-input sh-mini sh-node-title',
-                      style: { padding: '3px 6px', fontSize: '12px' },
-                      value: stage.title,
-                      onChange: function (event) { patchStage(index, 'title', event.target.value) },
-                    }),
-                    h('input', {
-                      className: 'sh-input sh-mini',
-                      style: { padding: '3px 6px', fontSize: '11px' },
-                      placeholder: '这一步的交付物',
-                      value: stage.deliverable || '',
-                      onChange: function (event) { patchStage(index, 'deliverable', event.target.value) },
-                    }),
-                    h(
-                      'div',
-                      { className: 'sh-node-roles' },
-                      working.roles.map(function (role) {
-                        var on = (stage.roleIds || []).indexOf(role.id) >= 0
-                        return h(
-                          'button',
-                          {
-                            key: role.id,
-                            type: 'button',
-                            className: 'sh-rolechip' + (on ? ' on' : ''),
-                            onClick: function () {
-                              edit(function (t) {
-                                var list = t.stages[index].roleIds || []
-                                t.stages[index].roleIds = on
-                                  ? list.filter(function (id) { return id !== role.id })
-                                  : list.concat([role.id])
-                              })
-                            },
-                          },
-                          role.title,
-                        )
-                      }),
-                    ),
-                    h(
-                      'div',
-                      { style: { display: 'flex', gap: '4px', alignItems: 'center' } },
-                      h(
-                        'button',
-                        {
-                          type: 'button',
-                          className: 'sh-btn',
-                          style: { padding: '0 6px', fontSize: '10.5px' },
-                          disabled: index === 0,
-                          title: '上移',
-                          onClick: function () {
-                            edit(function (t) {
-                              var item = t.stages.splice(index, 1)[0]
-                              t.stages.splice(index - 1, 0, item)
-                            })
-                          },
-                        },
-                        '↑',
-                      ),
-                      h(
-                        'button',
-                        {
-                          type: 'button',
-                          className: 'sh-btn',
-                          style: { padding: '0 6px', fontSize: '10.5px' },
-                          disabled: index === working.stages.length - 1,
-                          title: '下移',
-                          onClick: function () {
-                            edit(function (t) {
-                              var item = t.stages.splice(index, 1)[0]
-                              t.stages.splice(index + 1, 0, item)
-                            })
-                          },
-                        },
-                        '↓',
-                      ),
-                      working.stages.length > 1
-                        ? h(
-                            'button',
-                            {
-                              type: 'button',
-                              className: 'sh-btn',
-                              style: { padding: '0 6px', fontSize: '10.5px' },
-                              onClick: function () { edit(function (t) { t.stages.splice(index, 1) }) },
-                            },
-                            '移除',
-                          )
-                        : null,
-                    ),
+                    { key: 'sum-r-' + role.id + index, className: 'sh-sumrow' },
+                    h('span', { className: 'sh-sumname' }, role.title || '未命名'),
+                    h('span', { className: 'sh-summeta' }, (role.skills || []).length ? (role.skills || []).length + ' skill' : '无 skill'),
+                    h('span', { className: 'sh-summeta ellipsis', title: role.deliverable || '' }, role.deliverable || '无交付物'),
+                    h('span', { className: 'sh-summeta' }, stages.length ? stages.length + ' 步' : '未出场'),
                   )
                 }),
-                h(
-                  'button',
-                  {
-                    type: 'button',
-                    className: 'sh-node-add',
-                    onClick: function () {
-                      edit(function (t) {
-                        t.stages.push({ id: 's' + (t.stages.length + 1), title: '新步骤', deliverable: '', roleIds: [] })
-                      })
-                    },
-                  },
-                  '＋ 阶段',
-                ),
               ),
-            ),
-            h(
-              'div',
-              { style: { display: mode === 'detail' ? '' : 'none' } },
               h(
                 'div',
-                { className: 'sh-secthead' },
-                h('h5', null, '铁律'),
-                h('span', { className: 'sh-hint' }, '必须遵守的约束，会原样出现在 SOP 里'),
+                { className: 'sh-sumtable' },
+                h('div', { className: 'sh-sumhead' }, '流程 · ' + working.stages.length + ' 步'),
+                working.stages.map(function (stage, index) {
+                  var owners = (stage.roleIds || []).map(function (id) {
+                    var found = working.roles.filter(function (r) { return r.id === id })[0]
+                    return found ? found.title : id
+                  })
+                  return h(
+                    'div',
+                    { key: 'sum-s-' + stage.id + index, className: 'sh-sumrow' },
+                    h('span', { className: 'sh-sumidx' }, String(index + 1)),
+                    h('span', { className: 'sh-sumname' }, stage.title || '未命名'),
+                    h('span', { className: 'sh-summeta' }, owners.join(' + ') || '未指派'),
+                    h('span', { className: 'sh-summeta ellipsis', title: stage.deliverable || '' }, stage.deliverable || '未定义'),
+                  )
+                }),
               ),
-              (working.guardrails || []).map(function (line, index) {
-                return h(
-                  'div',
-                  { key: index, className: 'sh-guardrow' },
-                  h('input', {
-                    className: 'sh-input sh-mini',
-                    value: line,
-                    onChange: function (event) {
-                      edit(function (t) { t.guardrails[index] = event.target.value })
-                    },
-                  }),
-                  h(
-                    'button',
-                    {
-                      type: 'button',
-                      className: 'sh-btn',
-                      style: { padding: '1px 7px' },
-                      onClick: function () { edit(function (t) { t.guardrails.splice(index, 1) }) },
-                    },
-                    '×',
-                  ),
-                )
-              }),
+            ),
+          ),
+
+          // ④ 角色
+          h(
+            'div',
+            { className: 'sh-panel' },
+            sectionHead(
+              '角色 · ' + working.roles.length,
+              '职责 / 交付物 / 绑定 skill 都能改',
               h(
                 'button',
                 {
                   type: 'button',
                   className: 'sh-btn',
-                  style: { marginTop: '6px' },
-                  onClick: function () { edit(function (t) { t.guardrails.push('') }) },
+                  onClick: function () {
+                    edit(function (t) {
+                      var n = t.roles.length + 1
+                      t.roles.push({ id: 'r' + n, title: '角色' + n, duty: '', skills: [], deliverable: '' })
+                    })
+                  },
                 },
-                '＋ 一条',
+                '＋ 角色',
               ),
             ),
+            working.roles.map(roleNode),
           ),
-        ),
+
+          // ⑤ 流程
+          h(
+            'div',
+            { className: 'sh-panel' },
+            sectionHead('流程 · ' + working.stages.length, '按顺序排步骤，点胶囊把角色挂上去'),
+            h('div', { className: 'sh-flow' }, working.stages.map(stageNode)),
+            h(
+              'button',
+              {
+                type: 'button',
+                className: 'sh-node-add',
+                onClick: function () {
+                  edit(function (t) {
+                    t.stages.push({ id: 's' + (t.stages.length + 1), title: '新步骤', deliverable: '', roleIds: [] })
+                  })
+                },
+              },
+              '＋ 阶段',
+            ),
+          ),
+
+          // ⑥ 铁律
+          h(
+            'div',
+            { className: 'sh-panel' },
+            sectionHead('铁律', '会原样出现在 SOP 里'),
+            (working.guardrails || []).map(function (line, index) {
+              return h(
+                'div',
+                { key: index, className: 'sh-guardrow' },
+                h('input', {
+                  className: 'sh-input sh-mini',
+                  value: line,
+                  onChange: function (event) {
+                    edit(function (t) { t.guardrails[index] = event.target.value })
+                  },
+                }),
+                h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'sh-linkbtn danger',
+                    onClick: function () { edit(function (t) { t.guardrails.splice(index, 1) }) },
+                  },
+                  '×',
+                ),
+              )
+            }),
+            h(
+              'button',
+              {
+                type: 'button',
+                className: 'sh-node-add',
+                onClick: function () { edit(function (t) { t.guardrails.push('') }) },
+              },
+              '＋ 一条',
+            ),
+          ),
         )
       }
 

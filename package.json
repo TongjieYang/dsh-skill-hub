@@ -1,6 +1,6 @@
 {
   "name": "dsh-skill-hub",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "private": true,
   "description": "技能中枢：本机 skill 清单与分类、专家团编排、系统钥匙串 Key 管理，全部在 DeepSeek Harness 设置页里完成。",
   "type": "module",
