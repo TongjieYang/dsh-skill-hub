@@ -16,12 +16,35 @@ window.__ModuleLoader__.load({
     var exports = module.exports
 
     var API = '/skill-hub/api'
+    // 主题：auto = 跟随宿主；light / dark = 强制。存在 localStorage，只作用于本插件容器。
+    var THEME_KEY = 'skill-hub-theme'
+    var CURRENT_THEME = 'auto'
+    try {
+      var savedTheme = window.localStorage.getItem(THEME_KEY)
+      if (savedTheme === 'light' || savedTheme === 'dark' || savedTheme === 'auto') CURRENT_THEME = savedTheme
+    } catch (themeReadError) {}
+    var THEME_LABELS = { auto: '跟随', light: '浅色', dark: '深色' }
+    var THEME_NEXT = { auto: 'light', light: 'dark', dark: 'auto' }
+
     var PLACEHOLDER = '__SECRET__'
     var STYLE_ID = 'dsh-skill-hub-styles'
 
     var CSS = [
+      // ---- 配色：浅色 / 深色 / 跟随宿主。只作用于本插件的两块容器，
+      // 不影响宿主与其它插件（变量在容器内重定义，不写 :root）。
+      '.sh-root[data-sh-theme="light"], .sh-menu[data-sh-theme="light"]{--dsw-alias-bg-base:#ffffff;--dsw-alias-bg-layer-1:#ffffff;--dsw-alias-bg-layer-2:#f4f6f9;--dsw-alias-bg-overlay:#ffffff;--dsw-alias-border-l1:#e4e8ee;--dsw-alias-border-l2:#cfd6df;--dsw-alias-label-primary:#171b21;--dsw-alias-label-secondary:#5b6672;--dsw-alias-brand-primary:#2f6bff;--dsw-alias-state-success-primary:#14804a;--dsw-alias-state-error-primary:#c62f2f;--dsw-alias-state-warn-primary:#a86400}',
+      '.sh-root[data-sh-theme="dark"], .sh-menu[data-sh-theme="dark"]{--dsw-alias-bg-base:#0e1116;--dsw-alias-bg-layer-1:#161b22;--dsw-alias-bg-layer-2:#1e242d;--dsw-alias-bg-overlay:#171c24;--dsw-alias-border-l1:#2a323c;--dsw-alias-border-l2:#3b4552;--dsw-alias-label-primary:#e8edf4;--dsw-alias-label-secondary:#9aa6b4;--dsw-alias-brand-primary:#6d9bff;--dsw-alias-state-success-primary:#4ade80;--dsw-alias-state-error-primary:#f87171;--dsw-alias-state-warn-primary:#fbbf24}',
+      // ---- 动效：一套 token，三种时长。高频反馈 120ms，状态切换 180ms，整块入场 260ms。
+      '.sh-root, .sh-menu{--sh-d1:120ms;--sh-d2:180ms;--sh-d3:260ms;--sh-ease:cubic-bezier(.16,1,.3,1);--sh-ease-out:cubic-bezier(.4,0,1,1)}',
+      '@keyframes sh-menu-in{from{opacity:0;transform:translateX(10px)}to{opacity:1;transform:none}}',
+      '@keyframes sh-menu-in-up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}',
+      '@keyframes sh-soft-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}',
       '.sh-root{--sh-ease:cubic-bezier(.16,1,.3,1);display:flex;flex-direction:column;height:100%;min-height:0;color:var(--dsw-alias-label-primary,#1a1a1a);font-size:13px;line-height:1.5}',
       '.sh-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:2px 0 10px}',
+      '.sh-themebtn{min-width:96px;font-variant-numeric:tabular-nums}',
+      '.sh-tabfx{animation:sh-soft-in var(--sh-d2) var(--sh-ease) both}',
+      '.sh-chip-dot{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.5;flex:0 0 auto}',
+      '.sh-teamname{display:inline-flex;align-items:center;gap:6px}',
       '.sh-title{margin:0;font-size:17px;font-weight:600;letter-spacing:.2px}',
       '.sh-sub{margin:3px 0 0;color:var(--dsw-alias-label-secondary,#6b7280);font-size:12px}',
       '.sh-dockbtn{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 8px;border:1px solid var(--dsw-alias-border-l1,#e3e6ea);border-radius:7px;background:var(--dsw-alias-bg-layer-1,#fff);color:var(--dsw-alias-label-primary,#1f2328);font:inherit;font-size:12px;line-height:1;cursor:pointer;transition:background .16s var(--sh-ease),border-color .16s var(--sh-ease)}',
@@ -34,7 +57,7 @@ window.__ModuleLoader__.load({
       '.sh-tab:hover{color:var(--dsw-alias-label-primary,#1a1a1a)}',
       '.sh-tab.on{color:var(--dsw-alias-brand-primary,#2563eb);border-bottom-color:var(--dsw-alias-brand-primary,#2563eb);font-weight:600}',
       '.sh-body{flex:1;min-height:0;overflow:auto;padding-right:4px}',
-      '.sh-btn{appearance:none;font-family:inherit;font-size:12px;padding:5px 10px;border-radius:6px;cursor:pointer;border:1px solid var(--dsw-alias-border-l2,#d5d9e0);background:var(--dsw-alias-bg-layer-1,#fff);color:var(--dsw-alias-label-primary,#1a1a1a)}',
+      '.sh-btn{appearance:none;transition:background var(--sh-d1) var(--sh-ease),border-color var(--sh-d1) var(--sh-ease),color var(--sh-d1) var(--sh-ease),box-shadow var(--sh-d2) var(--sh-ease);font-family:inherit;font-size:12px;padding:5px 10px;border-radius:6px;cursor:pointer;border:1px solid var(--dsw-alias-border-l2,#d5d9e0);background:var(--dsw-alias-bg-layer-1,#fff);color:var(--dsw-alias-label-primary,#1a1a1a)}',
       '.sh-btn:hover{border-color:var(--dsw-alias-brand-primary,#2563eb);color:var(--dsw-alias-brand-primary,#2563eb)}',
       '.sh-btn.primary{background:var(--dsw-alias-brand-primary,#2563eb);border-color:transparent;color:#fff}',
       '.sh-btn.primary:hover{opacity:.9;color:#fff}',
@@ -45,7 +68,7 @@ window.__ModuleLoader__.load({
       '.sh-area{min-height:300px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.5;resize:vertical}',
       '.sh-chips{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}',
       '.sh-chip{appearance:none;display:inline-flex;align-items:center;gap:4px;min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:inherit;font-size:12px;padding:4px 9px;border-radius:999px;cursor:pointer;border:1px solid var(--dsw-alias-border-l1,#e6e8eb);background:var(--dsw-alias-bg-layer-1,#fff);color:var(--dsw-alias-label-secondary,#6b7280)}',
-      '.sh-chip.on{background:var(--dsw-alias-brand-primary,#2563eb);border-color:transparent;color:#fff}',
+      '.sh-chip.on{background:color-mix(in srgb, var(--dsw-alias-brand-primary,#2f6bff) 13%, transparent);border-color:color-mix(in srgb, var(--dsw-alias-brand-primary,#2f6bff) 46%, transparent);color:var(--dsw-alias-brand-primary,#2f6bff);font-weight:560}',
       '.sh-chip .n{opacity:.7;margin-left:4px;font-variant-numeric:tabular-nums}',
       '.sh-list{display:flex;flex-direction:column;gap:1px}',
       '.sh-list-2{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:2px 12px;align-items:start}',
@@ -148,7 +171,7 @@ window.__ModuleLoader__.load({
       '.sh-menu-form .sh-input{flex:1;min-width:0}',
       '.sh-check{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--dsw-alias-label-secondary,#6b7280);cursor:pointer}',
       '.sh-root :focus-visible{outline:2px solid var(--dsw-alias-brand-primary,#2f6bff);outline-offset:1px}',
-      '@media (prefers-reduced-motion: reduce){.sh-fade{animation:none!important}}',
+      '@media (prefers-reduced-motion: reduce){.sh-fade,.sh-menu{animation:none!important}}',
       '.sh-linkbtn{border:0;background:none;color:var(--dsw-alias-label-secondary,#6b7280);font:inherit;font-size:11px;cursor:pointer;padding:2px 4px;border-radius:6px}',
       '.sh-linkbtn:hover{background:var(--dsw-alias-bg-layer-2,#f4f5f7);color:var(--dsw-alias-label-primary,#111827)}',
       '.sh-linkbtn.danger:hover{color:var(--dsw-alias-state-error-primary,#b42318)}',
@@ -208,7 +231,7 @@ window.__ModuleLoader__.load({
       '.sh-node-add:hover{border-color:var(--dsw-alias-brand-primary,#2563eb);color:var(--dsw-alias-brand-primary,#2563eb)}',
       '.sh-guardrow{display:flex;gap:8px;align-items:center}',
       '.sh-guardrow+.sh-guardrow{margin-top:6px}',
-      '.sh-menu{position:fixed;z-index:2147483000;box-sizing:border-box;border:1px solid var(--dsw-alias-border-l1,#e6e8eb);border-radius:14px;background:var(--dsw-alias-bg-overlay,#fff);box-shadow:0 18px 48px rgba(16,24,40,.18),0 2px 6px rgba(16,24,40,.06);overflow:hidden;display:flex;flex-direction:column;max-height:560px}',
+      '.sh-menu{position:fixed;z-index:2147483000;box-sizing:border-box;border:1px solid var(--dsw-alias-border-l1,#e6e8eb);border-radius:14px;background:var(--dsw-alias-bg-overlay,#fff);box-shadow:0 18px 48px rgba(16,24,40,.18),0 2px 6px rgba(16,24,40,.06);overflow:hidden;display:flex;flex-direction:column;max-height:560px;animation:sh-menu-in var(--sh-d3) var(--sh-ease) both;will-change:transform,opacity}',
       '.sh-menu-head{display:flex;align-items:center;gap:8px;padding:11px 12px;border-bottom:1px solid var(--dsw-alias-border-l1,#eef0f3)}',
       '.sh-menu-title{font-size:12.5px;font-weight:600;letter-spacing:.01em}',
       '.sh-menu-tabs{display:flex;gap:2px;padding:8px 12px 0}',
@@ -232,9 +255,8 @@ window.__ModuleLoader__.load({
       '.sh-linkbtn:hover{opacity:1;text-decoration:underline}',
       '.sh-menu-foot{display:flex;align-items:center;gap:8px;padding:9px 12px;border-top:1px solid var(--dsw-alias-border-l1,#eef0f3);background:var(--dsw-alias-bg-layer-1,#fbfcfd)}',
       '.sh-flash{font-size:11.5px;color:var(--dsw-alias-state-success-primary,#15803d)}',
-      '.sh-fade{animation:sh-fade .22s var(--sh-ease,cubic-bezier(.16,1,.3,1))}',
-      '@keyframes sh-fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}',
-    ].join('\n')
+      '.sh-fade{animation:sh-soft-in var(--sh-d3) var(--sh-ease) both}',
+          ].join('\n')
 
     function ensureStyles() {
       if (typeof document === 'undefined' || document.getElementById(STYLE_ID)) return
@@ -1855,6 +1877,14 @@ window.__ModuleLoader__.load({
         var [loading, setLoading] = useState(true)
         var [error, setError] = useState('')
         var [tab, setTab] = useState('overview')
+        var [theme, setTheme] = useState(CURRENT_THEME)
+
+        function cycleTheme() {
+          var next = THEME_NEXT[theme] || 'auto'
+          CURRENT_THEME = next
+          setTheme(next)
+          try { window.localStorage.setItem(THEME_KEY, next) } catch (themeWriteError) {}
+        }
 
         async function reload() {
           setLoading(true)
@@ -1888,7 +1918,7 @@ window.__ModuleLoader__.load({
 
         return h(
           'div',
-          { className: 'sh-root' },
+          { className: 'sh-root', 'data-sh-theme': theme },
           h(
             'div',
             { className: 'sh-head' },
@@ -1911,6 +1941,13 @@ window.__ModuleLoader__.load({
             h(
               'div',
               { className: 'sh-rowline' },
+              h('button', {
+                type: 'button',
+                className: 'sh-btn sh-themebtn',
+                title: '配色：跟随系统 / 浅色 / 深色',
+                'aria-label': '切换配色',
+                onClick: cycleTheme,
+              }, '配色 · ' + THEME_LABELS[theme]),
               h('button', { type: 'button', className: 'sh-btn', onClick: reload, disabled: loading }, loading ? '刷新中…' : '刷新'),
               props && props.close ? h('button', { type: 'button', className: 'sh-btn', onClick: props.close }, '关闭') : null,
             ),
@@ -1932,7 +1969,7 @@ window.__ModuleLoader__.load({
             }),
           ),
           error && state ? h('div', { className: 'sh-note err' }, error) : null,
-          h('div', { className: 'sh-body' }, body),
+          h('div', { className: 'sh-body sh-tabfx', key: tab }, body),
           state && state.warnings.length
             ? h(
                 'details',
@@ -2272,6 +2309,7 @@ window.__ModuleLoader__.load({
         var [installBusy, setInstallBusy] = useState(false)
         var [installMsg, setInstallMsg] = useState('')
         var buttonRef = useRef(null)
+        var menuRef = useRef(null)
         var installRef = useRef(null)
 
         useEffect(function () {
@@ -2288,9 +2326,14 @@ window.__ModuleLoader__.load({
 
         useEffect(function () {
           if (!open) return undefined
-          function relayout() { setPos(computeLayout()) }
+          fitMenu()
+          var raf = window.requestAnimationFrame(fitMenu)
+          function relayout() { setPos(computeLayout()); fitMenu() }
           window.addEventListener('resize', relayout)
-          return function () { window.removeEventListener('resize', relayout) }
+          return function () {
+            window.cancelAnimationFrame(raf)
+            window.removeEventListener('resize', relayout)
+          }
         }, [open])
 
         useEffect(function () {
@@ -2319,6 +2362,19 @@ window.__ModuleLoader__.load({
           var maxHeight = Math.max(240, Math.min(MENU_MAX_H, vh - EDGE * 2))
           var gap = 10
           var layout = { width: width, left: left, maxHeight: maxHeight, mode: 'up', bottom: EDGE, top: null }
+          // 窗口够高时改成「右侧抽屉」：从标题栏下方一直铺到输入框上方，
+          // 完全不覆盖输入区，也只占右侧一列，不挡正在读的正文。
+          if (rect && vh >= 560 && rect.top - 96 >= 280) {
+            var dockW = Math.max(352, Math.min(430, Math.round(vw * 0.36)))
+            if (dockW > vw - EDGE * 2) dockW = Math.max(300, vw - EDGE * 2)
+            layout.mode = 'dock'
+            layout.width = dockW
+            layout.left = Math.max(EDGE, vw - dockW - 16)
+            layout.top = 72
+            layout.bottom = null
+            layout.maxHeight = Math.floor(rect.top - 72 - 16)
+            return layout
+          }
           if (rect) {
             var spaceAbove = rect.top - EDGE - gap
             var spaceBelow = vh - rect.bottom - EDGE - gap
@@ -2333,6 +2389,26 @@ window.__ModuleLoader__.load({
             }
           }
           return layout
+        }
+
+        // 兜底：面板挂载后按真实矩形再夹一次，ref 晚挂载、缩放、滚动都不会把面板顶出窗口。
+        function fitMenu() {
+          var el = menuRef.current
+          var btn = buttonRef.current
+          if (!el || !btn) return
+          var vw = window.innerWidth || 1200
+          var vh = window.innerHeight || 800
+          var rect = btn.getBoundingClientRect()
+          var w = Math.max(340, Math.min(430, Math.round(vw * 0.36)))
+          if (w > vw - 24) w = Math.max(300, vw - 24)
+          var left = Math.max(12, vw - w - 16)
+          var topEdge = 72
+          var available = Math.max(240, Math.min(vh - topEdge - 16, rect.top - topEdge - 16))
+          el.style.width = w + 'px'
+          el.style.left = left + 'px'
+          el.style.top = topEdge + 'px'
+          el.style.bottom = 'auto'
+          el.style.maxHeight = available + 'px'
         }
 
         function openMenu(nextTab) {
@@ -2476,13 +2552,16 @@ window.__ModuleLoader__.load({
           'div',
           {
             id: 'skill-hub-menu',
-            className: 'sh-menu sh-fade',
+            ref: menuRef,
+            className: 'sh-menu',
+            'data-sh-theme': CURRENT_THEME,
             style: {
               width: pos.width + 'px',
               left: pos.left + 'px',
-              top: pos.mode === 'down' ? pos.top + 'px' : 'auto',
+              top: pos.mode === 'up' ? 'auto' : pos.top + 'px',
               bottom: pos.mode === 'up' ? pos.bottom + 'px' : 'auto',
               maxHeight: pos.maxHeight + 'px',
+              animationName: pos.mode === 'dock' ? 'sh-menu-in' : 'sh-menu-in-up',
             },
           },
           h(
@@ -2580,7 +2659,8 @@ window.__ModuleLoader__.load({
                           className: 'sh-chip' + (currentTeam && currentTeam.id === team.id ? ' on' : ''),
                           onClick: function () { setTeamId(team.id) },
                         },
-                        (team.emoji || '·') + ' ' + team.title,
+                        h('span', { className: 'sh-chip-dot' }),
+                        team.title,
                       )
                     }),
                   ),

@@ -196,3 +196,13 @@ MIT
 - vlog：`type=scene|hero`，`palette=vivid|earth|cool`，`rendering=digital|painterly`，标题压在画面上三分之一，右下角留出时长/平台角标的位置。
 
 **短视频团**：把本机 `baokuan-video` / `onetake` / `adu-motion-video` / `qihao` 串成一条线；`baoyu-*` 在这个团里只负责封面（cover-image / xhs-images）与数据信息图——**baoyu-skills 本身没有视频类 skill**，这点不要误传。
+
+## 0.3.6 — 动效、配色与抽屉式弹层
+
+**动效**：一套 token（`--sh-d1 120ms / --sh-d2 180ms / --sh-d3 260ms`，`cubic-bezier(.16,1,.3,1)`）。只做三类动作：按钮/卡片的 120ms 反馈、页签切换的 180ms 淡入上移、整块面板的 260ms 入场；`prefers-reduced-motion` 下全部关闭。没有逐块相同的入场，也没有来回弹的装饰。
+
+**弹层改成右侧抽屉**：面板从标题栏下沿（72px）铺到输入框上方 16px，宽 `clamp(340, 36vw, 430)`，**不再覆盖输入区**；面板挂载后再按真实矩形夹一次（`fitMenu()`），窗口缩放、滚动、ref 晚挂载都不会把它顶出窗口。空间不够（窗口很矮）时退回「按钮上方」的浮层。
+
+**配色**：`.sh-root` 与 `.sh-menu` 各自带 `data-sh-theme`（`auto / light / dark`），在容器内重定义 `--dsw-alias-*`，所以整套面板跟着换肤且**不影响宿主与其它插件**。设置页头部有「配色 · 跟随/浅色/深色」按钮，选择存在 localStorage。
+
+**弹层专家团页签**：去掉用 emoji 当图标（改用 6px 中性圆点），选中态从「实心品牌色块」改成 13% 品牌色染底 + 品牌色文字与描边，浅/深两套主题下对比都够。
