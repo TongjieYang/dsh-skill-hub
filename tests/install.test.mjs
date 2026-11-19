@@ -2,10 +2,10 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
-import { mkdtemp, mkdir, writeFile, readFile, rm, stat, lstat } from 'node:fs/promises'
+import { mkdtemp, mkdir, writeFile, readFile, rm, stat, lstat, utimes } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { parseSource, scanClone, installSkills, cleanupPreview, defaultTarget } from '../lib/install.js'
+import { parseSource, scanClone, installSkills, cleanupPreview, defaultTarget, sweepStaleTmp } from '../lib/install.js'
 
 const run = promisify(execFile)
 
@@ -160,5 +160,37 @@ test('installSkills: 同名时只能替换——旧目录移入 _trash，新版�
   } finally {
     await rm(target, { recursive: true, force: true })
     await rm(root, { recursive: true, force: true })
+  }
+})
+
+test('scanClone: 报告用时与走的那条路，本地仓库不走探测', async () => {
+  const { root, repo } = await makeRepo()
+  try {
+    const preview = await scanClone({ url: repo })
+    assert.equal(preview.ok, true)
+    assert.equal(preview.mode, 'configured')
+    assert.equal(typeof preview.cloneMs, 'number')
+    assert.ok(preview.cloneMs >= 0)
+  } finally {
+    await rm(root, { recursive: true, force: true })
+  }
+})
+
+test('sweepStaleTmp: 只清两小时前的 skill-hub-* 残留，别的东西不碰', async () => {
+  const base = await mkdtemp(join(tmpdir(), 'sweep-base-'))
+  const oldOne = join(base, 'skill-hub-old')
+  const newOne = join(base, 'skill-hub-new')
+  const unrelated = join(base, 'not-ours')
+  try {
+    for (const dir of [oldOne, newOne, unrelated]) await mkdir(dir, { recursive: true })
+    const threeHoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000)
+    await utimes(oldOne, threeHoursAgo, threeHoursAgo)
+    const { removed } = await sweepStaleTmp({ base })
+    assert.equal(removed, 1)
+    assert.equal(await stat(oldOne).then(() => true, () => false), false, '旧残留应被删掉')
+    assert.equal(await stat(newOne).then(() => true, () => false), true, '刚结束的预览不能删')
+    assert.equal(await stat(unrelated).then(() => true, () => false), true, '不认识的目录不碰')
+  } finally {
+    await rm(base, { recursive: true, force: true })
   }
 })

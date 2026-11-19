@@ -947,6 +947,9 @@ window.__ModuleLoader__.load({
                       block('1. 存入钥匙串（你自己跑）', result.script.add),
                       block('2. 验证（不打印密钥）', result.script.verify),
                       block('3. 用时取回（export）', result.script.export),
+                      h('div', { className: 'sh-muted' },
+                        '想每个终端自动带上：把第 3 行加到 ~/.zshenv（不是 ~/.zshrc —— 非交互 shell 不读 .zshrc）。'
+                        + '不想改任何文件也行：skill 需要时用 $(security find-generic-password …) 现取。'),
                     ),
               )
             : null,
@@ -991,9 +994,25 @@ window.__ModuleLoader__.load({
         var [busy, setBusy] = useState('')
         var [error, setError] = useState('')
         var [done, setDone] = useState(null)
+        // Cloning a big repo over a mirror can take a minute; a frozen button
+        // reads as "挂了", so count the seconds out loud.
+        var [elapsed, setElapsed] = useState(0)
         // A skill can only be replaced, never merged: when something in the
         // library already has this name, swapping it is the whole point.
         var [replaceOn, setReplaceOn] = useState(true)
+
+        useEffect(
+          function () {
+            if (busy !== 'preview') return undefined
+            setElapsed(0)
+            var startedAt = Date.now()
+            var timer = setInterval(function () {
+              setElapsed(Math.round((Date.now() - startedAt) / 1000))
+            }, 500)
+            return function () { clearInterval(timer) }
+          },
+          [busy],
+        )
 
         async function runPreview() {
           setBusy('preview')
@@ -1080,7 +1099,13 @@ window.__ModuleLoader__.load({
             h(
               'div',
               { className: 'sh-rowline' },
-              h('button', { type: 'button', className: 'sh-btn primary', onClick: runPreview, disabled: busy !== '' || !source.trim() }, busy === 'preview' ? '预览中…' : '预览仓库里的 skill'),
+              h('button', { type: 'button', className: 'sh-btn primary', onClick: runPreview, disabled: busy !== '' || !source.trim() }, busy === 'preview' ? '预览中… ' + elapsed + 's' : '预览仓库里的 skill'),
+              busy === 'preview'
+                ? h('div', { className: 'sh-muted' },
+                    elapsed >= 15
+                      ? '正在 git clone（大仓库或走了镜像/代理都会慢），最多等 120 秒。'
+                      : '正在拉取仓库…')
+                : null,
             ),
           ),
           preview
@@ -1089,6 +1114,10 @@ window.__ModuleLoader__.load({
                 { className: 'sh-card' },
                 h('h4', null, preview.source.owner + '/' + preview.source.repo + '（' + preview.total + ' 个 skill'
                   + (preview.duplicateCount ? '；仓库里有 ' + (preview.duplicateCount + 1) + ' 份同名副本，已择一，其余忽略' : '') + '）'),
+                h('div', { className: 'sh-muted' },
+                  'clone 用时 ' + ((preview.cloneMs || 0) / 1000).toFixed(1) + 's'
+                  + (preview.modeLabel ? ' · ' + preview.modeLabel : '')
+                  + (preview.fallbackFrom ? ' · 另一条路失败后换的这条' : '')),
                 h(
                   'div',
                   { className: 'sh-list' },
