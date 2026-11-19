@@ -6,7 +6,7 @@
 // dependency on @deepseek-ai/dsh-tools and installs from a plain directory.
 
 import {
-  buildState, searchSkills, renderTeam, setOverride, saveTeam, deleteTeam,
+  buildState, searchSkills, renderTeam, setOverride, saveTeam, deleteTeam, autoFillTeam, exportTeamSkill,
   addKey, removeKey, keyScript, detectSkillKeys, previewInstall, installFromPreview,
 } from './lib/hub.js'
 import { auditLibrary } from './lib/audit.js'
@@ -140,7 +140,43 @@ const TOOLS = [
       if (!team) {
         return `没有找到专家团「${wanted}」。可用：${state.teams.map((t) => t.id).join('、')}`
       }
-      return renderTeam(team, String(args?.stage ?? '').trim())
+      const skillNames = new Set(state.skills.map((s) => s.name))
+      return renderTeam(team, String(args?.stage ?? '').trim(), skillNames)
+    },
+  },
+  {
+    name: 'skill_hub_team_export',
+    description: [
+      '把一个专家团导出成真正的 skill 目录（~/.agents/skills/team-<id>/SKILL.md），',
+      '这样 Codex、WorkBuddy、Claude 等其它 agent 端也能直接用这个团：它们按普通 skill 装载即可。',
+      '同名目录已存在时不会覆盖，必须显式传 replace: true（旧目录移到 ~/.agents/_trash/<日期>/skill-hub/）。',
+    ].join(''),
+    parameters: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        team: { type: 'string', description: '团 id，如 daohuo-video。' },
+        replace: { type: 'boolean', description: '同名已存在时是否替换（旧目录进回收站）。' },
+      },
+      required: ['team'],
+    },
+    output: STRING_OUTPUT,
+    async execute(args) {
+      const result = await exportTeamSkill({
+        id: String(args?.team ?? '').trim(),
+        replace: args?.replace === true,
+      })
+      if (!result.ok) return `导出失败：${result.error}`
+      return [
+        `已导出专家团 skill：${result.skill}`,
+        `路径：${result.path}`,
+        result.replaced ? `旧版本已移到：${result.backup}` : '',
+        '',
+        '其它 agent 端：Codex 原生读 ~/.agents/skills，直接可用；WorkBuddy 需要一条软链（见 README）；',
+        'Claude 端同样链到 ~/.agents/skills。装载后按 SOP 的角色/流程推进即可。',
+      ]
+        .filter(Boolean)
+        .join('\n')
     },
   },
   {
@@ -397,6 +433,13 @@ async function dispatch(method, sub, body) {
       return { status: 200, body: await deleteTeam({ id: body.id }) }
     case 'team/reset':
       return { status: 200, body: await deleteTeam({ id: body.id }) }
+    case 'team/autofill':
+      return { status: 200, body: await autoFillTeam({ id: body.id }) }
+    case 'team/export':
+      return {
+        status: 200,
+        body: await exportTeamSkill({ id: body.id, target: body.target, replace: body.replace === true }),
+      }
     case 'keys/detect':
       return { status: 200, body: await detectSkillKeys({ skill: body.skill }) }
     case 'keys/add':

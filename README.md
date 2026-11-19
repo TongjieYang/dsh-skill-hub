@@ -82,8 +82,8 @@ echo 'export WEREAD_API_KEY=wrk-abcdefg' >> ~/.zshrc
 | 页签 | 做什么 |
 |---|---|
 | **技能总览** | 扫描 + 去重 + 容器/遮蔽标记；关键词搜索、分类筛选、按类计数 |
-| **分类整理** | 按类分组列出全部 skill，逐条下拉改类，可「恢复自动」 |
-| **专家团** | 查看四个内置团的角色/阶段/铁律/绑定 skill；新建、JSON 编辑、删除、恢复内置 |
+| **分类整理** | 按类分组的**多列看板**，每张卡直接下拉改类，可「恢复自动」 |
+| **专家团** | 先看**分工表 + 流程表**再改细节；`简易 / 详细` 两档；`自动整理` 补齐空项；`导出为 skill` 让 Codex/WorkBuddy 直接用 |
 | **Key 管理** | 选 skill → 自动找变量名 → 填 key → 生成入匙命令；登记 key 元数据；一键生成「加载全部 key」的 shell 片段 |
 | **安装 skill** | 贴一个 GitHub 地址或 `owner/repo`，预览仓库里的 skill，勾选装进 `~/.agents/skills` |
 
@@ -94,6 +94,39 @@ echo 'export WEREAD_API_KEY=wrk-abcdefg' >> ~/.zshrc
 除了快捷键，输入框左侧工具行还有一个 **`技能`** 按钮（在「完全权限」右边、模型名左边），点一下同样直达技能中枢——测试时不用记键位。
 
 
+### 专家团：先整理，再设定
+
+打开一个团，最上面是两张汇总表，而不是一堆输入框：
+
+- **分工 · N 个角色**：每个角色几 skill、出场几次、交付什么
+- **流程 · N 步**：第几步、谁负责、产出什么
+
+上面三个按钮：
+
+| 按钮 | 做什么 |
+|---|---|
+| `自动整理` | 把没填的东西补齐：没阶段的按角色顺序生成阶段、阶段没指派就按标题词挑角色、缺职责/交付物/目标/铁律全部补上；**幂等**，再点一次不会有变化 |
+| `导出为 skill` | 把整个团写成 `~/.agents/skills/team-<id>/SKILL.md`（分工表 + 流程 + 复盘 + 铁律 + 怎么配合内置能力）。同名已存在会问你要不要覆盖（旧版进 `_trash/`） |
+| `简易 ｜ 详细` | 简易：只改名、负责人、产出；详细：再露出职责、skill 绑定、流程节点、铁律 |
+
+**跨工具怎么用**（这是 `导出为 skill` 的意义）：
+
+- **DSH / Codex**：原生读 `~/.agents/skills`，导出后新开一个会话说「用 team-daohuo-video」，或者直接 `/team-daohuo-video`。
+- **Claude Code / WorkBuddy**：它们各自读自己的 `skills` 目录，导完加一条软链即可：
+  ```bash
+  ln -s ~/.agents/skills/team-daohuo-video ~/.claude/skills/team-daohuo-video      # Claude
+  ln -s ~/.agents/skills/team-daohuo-video ~/.workbuddy/skills/team-daohuo-video   # WorkBuddy
+  ```
+- 每个团也可以完全不用导出：`skill_hub_team`（agent 工具）与输入框的「专家团」页签都能直接取到完整 SOP。
+
+### 输入框的「技能」弹层
+
+点输入框左下的 `▱ 技能 ▴`：
+
+- **技能** 页签：搜 340 个 skill，点一行插入 `/<name> `；点右边的 `＋提示词` 插入整句（中文描述自动写成「用这个 skill 完成：…」，英文写成「Use this skill to: …」）
+- **专家团** 页签：选一个团，每个角色一行 `插入任务书`，插进去的是「按「团」里「角色」这个角色来做 / 职责 / 交付物 / 先用这些 skill（按顺序）/ 做完按三条自检」
+- 底部 `打开设置` 直接跳技能中枢
+
 ### Agent 侧工具
 
 | 工具 | 用途 |
@@ -102,6 +135,7 @@ echo 'export WEREAD_API_KEY=wrk-abcdefg' >> ~/.zshrc
 | `skill_hub_team` | 取某个专家团的完整 SOP（可只看某一阶段） |
 | `skill_hub_key_script` | 生成入匙命令**模板**（只含 `__SECRET__` 占位符，拿不到真实密钥）；给 `skill` 就自动从该 skill 正文找变量名 |
 | `skill_hub_install_skill` | 从 GitHub 仓库把 skill 装进 `~/.agents/skills`（真实目录、不用软链、同名不覆盖；同一仓库发到多个 agent 目录的副本自动合并成一份） |
+| `skill_hub_team_export` | 把专家团导出成 `~/.agents/skills/team-<id>/SKILL.md`（同名可 `replace: true`，旧版进 `_trash/`） |
 | `skill_hub_audit` | 按本机约定体检技能库：主库里出现软链、DSH 端不空、端侧存了实体副本、目录名与 name 不一致、没有 description、容器目录、未分类 |
 
 ### 装 skill 时守的规矩

@@ -142,6 +142,13 @@ MIT
 - 额外挂了一个 DOM `keydown` 监听（同一组合键）覆盖 Web 端；两条路径都只做一件事——打开设置并选中技能中枢，重复触发无副作用。
 - 输入框左侧工具行（`conversation.input.left`）加了 `技能` 按钮，作为不用记键位的入口。
 
+## 0.3.1
+
+- 输入口弹层加宽到 560px；「技能」按钮改成描边胶囊（4 宫格图标 + 技能 + ▾），hover/按下态走主题 token。
+- 提示词生成：`buildSkillPrompt` / `buildRolePrompt`；`firstSentence` 重写，域名（`inference.sh`）与版本号（`GPT Image 2.5`）不再被拦腰截断。
+- 专家团：顶部「分工与流程」汇总表（角色表 + 流程表）+ `自动整理` / `导出为 skill` / `简易｜详细`；详细编辑区在简易模式下折叠。
+- 宿主：`autoCompose`（幂等补齐）、`renderTeamSop`（分工/流程/复盘/铁律/与内置能力配合）、`renderTeamSkill`（front-matter + SOP）、`autoFillTeam`、`exportTeamSkill`（写 `~/.agents/skills/team-<id>`，同名默认拒绝，`replace` 时旧版进 `_trash`）；新端点 `team/autofill`、`team/export`；新工具 `skill_hub_team_export`。
+
 ## 0.3.0 · 界面重做
 
 三个页签按「Operate 模式」重做：

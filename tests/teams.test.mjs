@@ -2,6 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
   BUILTIN_TEAMS, mergeTeams, missingSkills, normalizeTeam, builtinTeam, slugify, emptyTeam,
+  autoCompose, renderTeamSkill,
 } from '../lib/teams.js'
 import { buildKeyScript, buildLoadAll, PLACEHOLDER, ENV_RE } from '../lib/keygen.js'
 
@@ -117,4 +118,55 @@ test('loadAll stitches export lines for registered keys only', () => {
 test('ENV_RE accepts the documented shape', () => {
   assert.ok(ENV_RE.test('WEREAD_API_KEY'))
   assert.ok(!ENV_RE.test('WEREAD-KEY'))
+})
+
+test('autoCompose fills blanks: stage owners, duties, deliverables, guardrails', () => {
+  const raw = {
+    id: 'half',
+    title: '半成品团',
+    goal: '',
+    roles: [
+      { id: 'r1', title: '调研', skills: ['research'], duty: '', deliverable: '' },
+      { id: 'r2', title: '写作', skills: ['copywriting'], duty: '', deliverable: '' },
+    ],
+    stages: [{ id: 's1', title: '调研一下', deliverable: '', roleIds: [] }],
+    guardrails: [],
+  }
+  const { team, changes } = autoCompose(raw)
+  assert.ok(changes.length >= 4)
+  assert.equal(team.stages[0].roleIds[0], 'r1')
+  assert.ok(team.roles[0].duty.length > 0)
+  assert.ok(team.roles[0].deliverable.length > 0)
+  assert.equal(team.guardrails.length, 3)
+  assert.ok(team.goal.length > 0)
+  // 再跑一次不应再产生改动（幂等）
+  assert.equal(autoCompose(team).changes.length, 0)
+})
+
+test('autoCompose creates one stage per role when there are no stages', () => {
+  const { team, changes } = autoCompose({
+    id: 'flat',
+    title: '无阶段团',
+    roles: [
+      { id: 'a', title: '写', skills: [] },
+      { id: 'b', title: '发', skills: [] },
+    ],
+    stages: [],
+  })
+  assert.equal(team.stages.length, 2)
+  assert.deepEqual(team.stages.map((s) => s.roleIds[0]), ['a', 'b'])
+  assert.ok(changes.some((c) => c.includes('阶段')))
+})
+
+test('renderTeamSkill emits front-matter and a runnable SOP', () => {
+  const team = normalizeTeam(BUILTIN_TEAMS[0])
+  const text = renderTeamSkill({ ...team, skillName: 'team-daohuo-video' }, { skillNames: new Set(['research']) })
+  assert.ok(text.startsWith('---\n'))
+  assert.ok(text.includes('name: team-daohuo-video'))
+  assert.ok(text.includes('description: '))
+  assert.ok(text.includes('## 分工'))
+  assert.ok(text.includes('## 流程'))
+  assert.ok(text.includes('## 复盘'))
+  assert.ok(text.includes('怎么用这个 skill'))
+  assert.ok(text.includes('本地没装'))
 })

@@ -225,3 +225,43 @@ test('每个 className 在样式表里都有定义', async () => {
   })
   assert.deepEqual(missing, [], `这些类名没有对应样式：${missing.join(', ')}`)
 })
+
+test('prompt builders produce directly usable text (checked on real descriptions)', () => {
+  const { definition } = loadBundle()
+  const mod = definition.factory(() => REACT_STUB)
+  assert.ok(mod.__prompts && mod.__prompts.skill && mod.__prompts.role)
+  const { skill: skillPrompt, role: rolePrompt } = mod.__prompts
+
+  const samples = [
+    ['weread-skills', '微信读书助手 — 搜索书籍、管理书架、查看笔记划线、浏览书评、阅读统计、发现推荐好书', '用这个 skill 完成：'],
+    ['amap', '通过脚本直连高德 Web Service API 完成地理编码、逆地理编码、IP 定位、天气、路径规划、距离测量和 POI 查询。', '用这个 skill 完成：'],
+    ['agent-browser', 'Browser automation for AI agents via inference.sh. Navigate web pages, interact with elements using @e refs.', 'Use this skill to: '],
+    ['impeccable', 'Use when the user wants to design, redesign, shape, critique, audit, polish, simplify, harden, animate.', 'Use this skill to: '],
+    ['baoyu-image-gen', 'AI image generation with OpenAI GPT Image 2.5, Azure OpenAI, Google, OpenRouter, DashScope.', 'Use this skill to: '],
+  ]
+  for (const [name, description, marker] of samples) {
+    const text = skillPrompt({ name }, description)
+    assert.ok(text.startsWith('/' + name + ' '), name)
+    assert.ok(text.includes(marker), name + ' → ' + text)
+    assert.ok(!text.includes('undefined'), name)
+    assert.ok(text.length > name.length + 8, name)
+  }
+  assert.equal(skillPrompt({ name: 'x' }, ''), '/x ')
+
+  // 域名 / 版本号不能被当成句号切开
+  const { sentence } = mod.__prompts
+  assert.ok(sentence('Browser automation via inference.sh. Navigate pages.', 160).endsWith('inference.sh.'))
+  assert.ok(sentence('AI image generation with GPT Image 2.5, Azure OpenAI.', 160).includes('2.5'))
+  assert.ok(sentence('第一句。第二句。', 160) === '第一句。')
+  assert.equal(skillPrompt({}, 'abc'), '')
+
+  const role = rolePrompt(
+    { title: '带货视频团' },
+    { title: '脚本与钩子', duty: '写 5 条开头', deliverable: '口播稿', skills: ['baokuan-video', 'dbs-hook'] },
+  )
+  assert.ok(role.includes('按「带货视频团」里「脚本与钩子」这个角色来做。'))
+  assert.ok(role.includes('职责：写 5 条开头'))
+  assert.ok(role.includes('交付物：口播稿'))
+  assert.ok(role.includes('baokuan-video → dbs-hook'))
+  assert.ok(role.includes('①产出能独立交付'))
+})

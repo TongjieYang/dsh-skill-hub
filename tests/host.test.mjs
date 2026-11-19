@@ -64,6 +64,7 @@ test('注册五个工具，且 schema 只用受支持的键', () => {
     'skill_hub_audit',
     'skill_hub_scan',
     'skill_hub_team',
+    'skill_hub_team_export',
     'skill_hub_key_script',
     'skill_hub_install_skill',
   ])

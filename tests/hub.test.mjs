@@ -1,12 +1,10 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdtemp, mkdir, writeFile } from 'node:fs/promises'
+import { mkdtemp, mkdir, writeFile, readFile } from 'node:fs/promises'
+import { existsSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import {
-  buildState, searchSkills, renderTeam, setOverride, saveTeam, deleteTeam,
-  addKey, removeKey, keyScript,
-} from '../lib/hub.js'
+import { buildState, searchSkills, renderTeam, setOverride, saveTeam, deleteTeam, addKey, removeKey, keyScript, exportTeamSkill, autoFillTeam } from '../lib/hub.js'
 import { loadConfig } from '../lib/store.js'
 
 async function fixture() {
@@ -102,11 +100,12 @@ test('renderTeam prints roles, stages, guardrails, missing skills', async () => 
   const text = renderTeam(team)
   assert.ok(text.includes('应用开发团'))
   assert.ok(text.includes('绑定 skill'))
+  assert.ok(text.includes('## 分工'))
+  assert.ok(text.includes('## 复盘'))
   assert.ok(text.includes('铁律'))
   assert.ok(text.includes('缺失 skill'))
   const staged = renderTeam(team, 's1')
   assert.ok(staged.includes('当前阶段'))
-  assert.ok(!staged.includes('## 阶段'))
 })
 
 test('addKey records metadata and returns placeholder script; secret never stored', async () => {
@@ -147,4 +146,47 @@ test('keyScript works for an unregistered key', async () => {
   const res = keyScript({ env: 'AMAP_KEY', service: 'amap', platform: 'linux' })
   assert.equal(res.ok, true)
   assert.ok(res.add.includes('secret-tool'))
+})
+
+test('exportTeamSkill writes a skill folder, refuses overwrite, replaces into trash', async () => {
+  const { dir } = await fixture()
+  const target = await mkdtemp(join(tmpdir(), 'sh-export-'))
+  const first = await exportTeamSkill({ dir, id: 'app-builder', target })
+  assert.equal(first.ok, true)
+  assert.equal(first.skill, 'team-app-builder')
+  const text = await readFile(join(first.path, 'SKILL.md'), 'utf8')
+  assert.ok(text.includes('name: team-app-builder'))
+  assert.ok(text.includes('## 流程'))
+
+  const again = await exportTeamSkill({ dir, id: 'app-builder', target })
+  assert.equal(again.ok, false)
+  assert.ok(again.error.includes('已经存在'))
+
+  const replaced = await exportTeamSkill({ dir, id: 'app-builder', target, replace: true })
+  assert.equal(replaced.replaced, true)
+  assert.ok(replaced.backup.includes('_trash'))
+  assert.ok(existsSync(replaced.backup))
+})
+
+test('autoFillTeam completes a half-written team and persists it', async () => {
+  const { dir } = await fixture()
+  await saveTeam({
+    dir,
+    team: {
+      id: 'half-team',
+      title: '半成品团',
+      goal: '',
+      roles: [{ id: 'r1', title: '调研', skills: ['research'], duty: '', deliverable: '' }],
+      stages: [{ id: 's1', title: '调研一下', deliverable: '', roleIds: [] }],
+      guardrails: [],
+    },
+  })
+  const res = await autoFillTeam({ dir, id: 'half-team' })
+  assert.equal(res.ok, true)
+  assert.ok(res.changes.length > 0)
+  const saved = JSON.parse(await readFile(join(dir, 'teams', 'half-team.json'), 'utf8'))
+  assert.ok(saved.goal.length > 0)
+  assert.equal(saved.guardrails.length, 3)
+  assert.ok(saved.roles[0].duty.length > 0)
+  assert.equal(saved.stages[0].roleIds[0], 'r1')
 })

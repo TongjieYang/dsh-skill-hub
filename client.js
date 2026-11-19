@@ -24,8 +24,11 @@ window.__ModuleLoader__.load({
       '.sh-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:2px 0 10px}',
       '.sh-title{margin:0;font-size:17px;font-weight:600;letter-spacing:.2px}',
       '.sh-sub{margin:3px 0 0;color:var(--dsw-alias-label-secondary,#6b7280);font-size:12px}',
-      '.sh-dockbtn{display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 8px;border:0;border-radius:8px;background:transparent;color:var(--dsw-alias-label-secondary,#6b7280);font-size:12px;cursor:pointer}',
-      '.sh-dockbtn:hover{background:var(--dsw-alias-bg-layer-2,#f3f4f6);color:var(--dsw-alias-label-primary,#111827)}',
+      '.sh-dockbtn{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 8px;border:1px solid var(--dsw-alias-border-l1,#e3e6ea);border-radius:7px;background:var(--dsw-alias-bg-layer-1,#fff);color:var(--dsw-alias-label-primary,#1f2328);font:inherit;font-size:12px;line-height:1;cursor:pointer;transition:background .16s var(--sh-ease),border-color .16s var(--sh-ease)}',
+      '.sh-dockbtn:hover{background:var(--dsw-alias-bg-layer-2,#f4f5f7)}',
+      '.sh-dockbtn.on{background:var(--dsw-alias-bg-layer-2,#f4f5f7);border-color:var(--dsw-alias-border-l2,#d5d9e0)}',
+      '.sh-dockbtn svg{width:13px;height:13px;flex:0 0 auto;opacity:.8}',
+      '.sh-dockbtn-caret{font-size:9px;line-height:1;color:var(--dsw-alias-label-secondary,#8b93a1)}',
       '.sh-tabs{display:flex;gap:2px;border-bottom:1px solid var(--dsw-alias-border-l1,#e6e8eb);margin-bottom:12px;flex-wrap:wrap}',
       '.sh-tab{appearance:none;background:none;border:0;border-bottom:2px solid transparent;padding:7px 11px;margin-bottom:-1px;cursor:pointer;color:var(--dsw-alias-label-secondary,#6b7280);font-size:13px;font-family:inherit}',
       '.sh-tab:hover{color:var(--dsw-alias-label-primary,#1a1a1a)}',
@@ -106,6 +109,15 @@ window.__ModuleLoader__.load({
       '.sh-scroll-x{overflow-x:auto}',
       '.sh-toolbar{display:flex;align-items:center;gap:10px;margin:0 0 10px;flex-wrap:wrap}',
       '.sh-savebar{position:sticky;top:-2px;z-index:4;display:flex;flex-wrap:nowrap;align-items:center;gap:8px;padding:8px 10px;margin:0 0 4px;border:1px solid var(--dsw-alias-border-l1,#e6e8eb);border-radius:12px;background:var(--dsw-alias-bg-layer-1,#fff);box-shadow:0 2px 8px rgba(16,24,40,.05)}',
+      '.sh-sumtables{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}',
+      '.sh-sumtable{min-width:0;border:1px solid var(--dsw-alias-border-l1,#eceef1);border-radius:10px;overflow:hidden}',
+      '.sh-sumhead{padding:6px 9px;font-size:11px;font-weight:600;color:var(--dsw-alias-label-secondary,#6b7280);background:var(--dsw-alias-bg-layer-2,#f6f7f8)}',
+      '.sh-sumrow{display:flex;align-items:center;gap:6px;padding:5px 9px;font-size:11.5px;border-top:1px solid var(--dsw-alias-border-l1,#f1f3f5);min-width:0}',
+      '.sh-sumname{flex:0 0 auto;max-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}',
+      '.sh-summeta{flex:0 0 auto;color:var(--dsw-alias-label-secondary,#8b93a1);font-size:10.5px;white-space:nowrap}',
+      '.sh-summeta.ellipsis{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}',
+      '.sh-sumidx{flex:0 0 auto;width:16px;height:16px;border-radius:50%;background:var(--dsw-alias-bg-layer-2,#f1f3f5);color:var(--dsw-alias-label-secondary,#6b7280);font-size:10px;display:inline-flex;align-items:center;justify-content:center}',
+      '.sh-tiny{padding:3px 6px !important;font-size:11.5px !important;min-width:0}',
       '.sh-savebar .sh-btn{white-space:nowrap;flex:0 0 auto}',
       '.sh-savebar .sh-hint{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}',
       '.sh-chip-x{border:0;background:none;color:inherit;cursor:pointer;padding:0;font-size:12px;line-height:1}',
@@ -153,7 +165,7 @@ window.__ModuleLoader__.load({
       '.sh-node-add:hover{border-color:var(--dsw-alias-brand-primary,#2563eb);color:var(--dsw-alias-brand-primary,#2563eb)}',
       '.sh-guardrow{display:flex;gap:8px;align-items:center}',
       '.sh-guardrow+.sh-guardrow{margin-top:6px}',
-      '.sh-menu{position:fixed;z-index:2147483000;width:420px;max-width:min(92vw,460px);border:1px solid var(--dsw-alias-border-l1,#e6e8eb);border-radius:14px;background:var(--dsw-alias-bg-overlay,#fff);box-shadow:0 18px 48px rgba(16,24,40,.18),0 2px 6px rgba(16,24,40,.06);overflow:hidden;display:flex;flex-direction:column;max-height:min(70vh,560px)}',
+      '.sh-menu{position:fixed;z-index:2147483000;width:560px;max-width:min(94vw,620px);border:1px solid var(--dsw-alias-border-l1,#e6e8eb);border-radius:14px;background:var(--dsw-alias-bg-overlay,#fff);box-shadow:0 18px 48px rgba(16,24,40,.18),0 2px 6px rgba(16,24,40,.06);overflow:hidden;display:flex;flex-direction:column;max-height:min(70vh,560px)}',
       '.sh-menu-head{display:flex;align-items:center;gap:8px;padding:11px 12px;border-bottom:1px solid var(--dsw-alias-border-l1,#eef0f3)}',
       '.sh-menu-title{font-size:12.5px;font-weight:600;letter-spacing:.01em}',
       '.sh-menu-tabs{display:flex;gap:2px;padding:8px 12px 0}',
@@ -569,6 +581,8 @@ window.__ModuleLoader__.load({
         var [busy, setBusy] = useState(false)
         var [pickerFor, setPickerFor] = useState('')
         var [pickerQuery, setPickerQuery] = useState('')
+        var [mode, setMode] = useState('simple')
+        var [notice, setNotice] = useState('')
         var selected = state.teams.find(function (team) { return team.id === selectedId }) || state.teams[0] || null
         var working = draft || selected
 
@@ -642,6 +656,44 @@ window.__ModuleLoader__.load({
           }
         }
 
+        async function autoFill() {
+          if (!working) return
+          setBusy(true)
+          setError('')
+          setNotice('')
+          try {
+            var result = await api('team/autofill', { id: working.id })
+            var changes = (result && result.changes) || []
+            setDraft(null)
+            await props.reload()
+            setNotice(changes.length ? '自动补齐：' + changes.slice(0, 4).join('；') + (changes.length > 4 ? ' …' : '') : '已经是完整的，没需要补的')
+          } catch (failure) {
+            setError(failure.message)
+          } finally {
+            setBusy(false)
+          }
+        }
+
+        async function exportSkill(replace) {
+          if (!working) return
+          setBusy(true)
+          setError('')
+          setNotice('')
+          try {
+            var result = await api('team/export', { id: working.id, replace: replace === true })
+            setNotice('已导出 ' + result.skill + ' → ' + result.path + (result.replaced ? '（旧版在 ' + result.backup + '）' : ''))
+          } catch (failure) {
+            if (/已存在/.test(failure.message) && !replace) {
+              setError('已存在同名 skill，再点一次「覆盖导出」就会把旧版移到 _trash')
+              setNotice('EXPORT_EXISTS')
+            } else {
+              setError(failure.message)
+            }
+          } finally {
+            setBusy(false)
+          }
+        }
+
         async function createTeam() {
           setBusy(true)
           setError('')
@@ -681,10 +733,133 @@ window.__ModuleLoader__.load({
 
         return h(
           'div',
-          { className: 'sh-split' },
+          null,
+                  h(
+          'div',
+          { className: 'sh-card', style: { marginTop: '8px' } },
           h(
-            'aside',
-            { className: 'sh-rail' },
+            'div',
+            { className: 'sh-row', style: { gap: '8px' } },
+            h('div', { className: 'sh-label', style: { minWidth: 0 } }, '分工与流程'),
+            h('span', { className: 'sh-spacer', style: { flex: 1 } }),
+            h(
+              'button',
+              { type: 'button', className: 'sh-btn', disabled: busy, onClick: autoFill, title: '把空着的职责/交付物/负责人/铁律自动补齐' },
+              '自动整理',
+            ),
+            h(
+              'button',
+              {
+                type: 'button',
+                className: 'sh-btn',
+                disabled: busy,
+                onClick: function () { exportSkill(false) },
+                title: '导出成 ~/.agents/skills/team-<id>/SKILL.md，Codex / WorkBuddy / Claude 都能直接用',
+              },
+              '导出为 skill',
+            ),
+            h(
+              'button',
+              { type: 'button', className: 'sh-btn' + (mode === 'simple' ? ' primary' : ''), onClick: function () { setMode(mode === 'simple' ? 'detail' : 'simple') } },
+              mode === 'simple' ? '简易' : '详细',
+            ),
+          ),
+          notice && notice !== 'EXPORT_EXISTS'
+            ? h('div', { className: 'sh-hint', style: { color: 'var(--dsw-alias-state-success-primary,#15803d)' } }, notice)
+            : null,
+          notice === 'EXPORT_EXISTS'
+            ? h(
+                'div',
+                { className: 'sh-row', style: { justifyContent: 'flex-end', gap: '8px' } },
+                h('button', { type: 'button', className: 'sh-btn danger', disabled: busy, onClick: function () { exportSkill(true) } }, '覆盖导出（旧版进 _trash）'),
+              )
+            : null,
+          mode === 'simple'
+            ? h('div', { className: 'sh-hint' }, '简易模式：改名字、负责人、产出就够了；职责 / skill 绑定 / 铁律在「详细」里。')
+            : null,
+          h(
+            'div',
+            { className: 'sh-sumtables' },
+            h(
+              'div',
+              { className: 'sh-sumtable' },
+              h('div', { className: 'sh-sumhead' }, '分工 · ' + working.roles.length + ' 个角色'),
+              working.roles.map(function (role, index) {
+                var stages = working.stages.filter(function (st) { return (st.roleIds || []).indexOf(role.id) >= 0 })
+                return h(
+                  'div',
+                  { key: 'sum-r-' + role.id + index, className: 'sh-sumrow' },
+                  mode === 'simple'
+                    ? h('input', {
+                        className: 'sh-input sh-tiny',
+                        value: role.title,
+                        onChange: function (event) { patchRole(index, 'title', event.target.value) },
+                      })
+                    : h('span', { className: 'sh-sumname' }, role.title || '未命名'),
+                  h('span', { className: 'sh-summeta' }, (role.skills || []).length ? (role.skills || []).length + ' skill' : '无 skill'),
+                  mode === 'detail'
+                    ? h('span', { className: 'sh-summeta' }, stages.length ? stages.length + ' 阶段' : '未出场')
+                    : null,
+                  h('span', { className: 'sh-summeta ellipsis', title: role.deliverable || '' }, role.deliverable || '无交付物'),
+                )
+              }),
+            ),
+            h(
+              'div',
+              { className: 'sh-sumtable' },
+              h('div', { className: 'sh-sumhead' }, '流程 · ' + working.stages.length + ' 步'),
+              working.stages.map(function (stage, index) {
+                var owners = (stage.roleIds || []).map(function (id) {
+                  var found = working.roles.filter(function (r) { return r.id === id })[0]
+                  return found ? found.title : id
+                })
+                return h(
+                  'div',
+                  { key: 'sum-s-' + stage.id + index, className: 'sh-sumrow' },
+                  h('span', { className: 'sh-sumidx' }, String(index + 1)),
+                  mode === 'simple'
+                    ? h('input', {
+                        className: 'sh-input sh-tiny',
+                        value: stage.title,
+                        onChange: function (event) { patchStage(index, 'title', event.target.value) },
+                      })
+                    : h('span', { className: 'sh-sumname' }, stage.title || '未命名'),
+                  mode === 'simple'
+                    ? h(
+                        'select',
+                        {
+                          className: 'sh-select sh-tiny',
+                          value: (stage.roleIds || [])[0] || '',
+                          onChange: function (event) {
+                            var value = event.target.value
+                            patchStage(index, 'roleIds', value ? [value] : [])
+                          },
+                        },
+                        h('option', { value: '' }, '未指派'),
+                        working.roles.map(function (role) {
+                          return h('option', { key: role.id, value: role.id }, role.title)
+                        }),
+                      )
+                    : h('span', { className: 'sh-summeta' }, owners.join(' + ') || '未指派'),
+                  mode === 'simple'
+                    ? h('input', {
+                        className: 'sh-input sh-tiny',
+                        value: stage.deliverable,
+                        placeholder: '产出',
+                        onChange: function (event) { patchStage(index, 'deliverable', event.target.value) },
+                      })
+                    : h('span', { className: 'sh-summeta ellipsis', title: stage.deliverable || '' }, stage.deliverable || '未定义'),
+                )
+              }),
+            ),
+          ),
+        ),
+        h(
+          'div',
+          { className: 'sh-split' },
+            h(
+              'aside',
+              { className: 'sh-rail' },
             state.teams.map(function (team) {
               return h(
                 'button',
@@ -750,7 +925,7 @@ window.__ModuleLoader__.load({
             ),
             h(
               'div',
-              null,
+              { style: { display: mode === 'detail' ? '' : 'none' } },
               h(
                 'div',
                 { className: 'sh-secthead' },
@@ -908,7 +1083,7 @@ window.__ModuleLoader__.load({
             ),
             h(
               'div',
-              null,
+              { style: { display: mode === 'detail' ? '' : 'none' } },
               h(
                 'div',
                 { className: 'sh-secthead' },
@@ -1029,7 +1204,7 @@ window.__ModuleLoader__.load({
             ),
             h(
               'div',
-              null,
+              { style: { display: mode === 'detail' ? '' : 'none' } },
               h(
                 'div',
                 { className: 'sh-secthead' },
@@ -1071,6 +1246,7 @@ window.__ModuleLoader__.load({
               ),
             ),
           ),
+        ),
         )
       }
 
@@ -1887,8 +2063,66 @@ window.__ModuleLoader__.load({
       }
     }
 
-    // The composer entry: search a skill and insert its invocation + prompt,
-    // pick a team role and insert that role's brief, or jump to the hub itself.
+    // Prompt text the user actually sends. Tested against real skill descriptions
+    // (see tests/client.test.mjs): keeps the slash command first so the composer
+    // recognises it, then one actionable line derived from the skill description.
+    function hasCJK(text) {
+      return /[\u4e00-\u9fa5]/.test(String(text || ''))
+    }
+
+    // Cut one readable sentence. Naive [.!?] splitting breaks domains ("inference.sh")
+    // and versions ("Image 2.5"), which used to cut English prompts mid-word.
+    var ABBREV = /^(e\.g|i\.e|etc|vs|cf|al|mr|ms|dr|no|fig)$/i
+
+    function firstSentence(text, max) {
+      var one = String(text || '').replace(/\s+/g, ' ').trim()
+      if (!one) return ''
+      var cut = ''
+      var cjk = one.search(/[。！？]/)
+      if (cjk >= 0) {
+        cut = one.slice(0, cjk + 1)
+      } else {
+        var re = /[.!?](?=\s+[A-Z"“‘（(]|\s*$)/g
+        var match = re.exec(one)
+        while (match) {
+          var at = match.index
+          var word = one.slice(0, at).split(' ').pop() || ''
+          var endsHere = true
+          if (/\d$/.test(word)) endsHere = false
+          else if (ABBREV.test(word.replace(/\.$/, ''))) endsHere = false
+          else if (word.indexOf('.') < 0 && /[A-Za-z]$/.test(word) && /[A-Za-z]/.test(one[at - 2] || '')) endsHere = false
+          if (endsHere) {
+            cut = one.slice(0, at + 1)
+            break
+          }
+          match = re.exec(one)
+        }
+        if (!cut) cut = one
+      }
+      return cut.length > max ? cut.slice(0, max - 1) + '…' : cut
+    }
+
+    function buildSkillPrompt(skill, sentence) {
+      var name = String((skill && skill.name) || '').trim()
+      var desc = String(sentence || '').trim()
+      if (!name) return ''
+      if (!desc) return '/' + name + ' '
+      return hasCJK(desc)
+        ? '/' + name + ' 用这个 skill 完成：' + desc
+        : '/' + name + ' Use this skill to: ' + desc
+    }
+
+    function buildRolePrompt(team, role) {
+      var skills = (role && role.skills) || []
+      var lines = ['按「' + (team && team.title ? team.title : '专家团') + '」里「' + (role && role.title) + '」这个角色来做。']
+      if (role && role.duty) lines.push('职责：' + role.duty)
+      if (role && role.deliverable) lines.push('交付物：' + role.deliverable)
+      if (skills.length) lines.push('先用这些 skill（按顺序）：' + skills.join(' → '))
+      lines.push('做完按三条自检：①产出能独立交付 ②没把推测写成事实 ③缺的输入向上游要。')
+      return lines.join('\n')
+    }
+
+
     function makeHubMenu(react, slots) {
       var h = react.createElement
       var useState = react.useState
@@ -1920,12 +2154,6 @@ window.__ModuleLoader__.load({
           return 'inserted'
         } catch (error) {}
         return 'none'
-      }
-
-      function firstSentence(text, max) {
-        var one = String(text || '').replace(/\s+/g, ' ').trim()
-        var cut = one.split(/(?<=[。.!?！？])\s*/)[0] || one
-        return cut.length > max ? cut.slice(0, max - 1) + '…' : cut
       }
 
       return function HubMenu() {
@@ -1962,7 +2190,7 @@ window.__ModuleLoader__.load({
           var next = !open
           if (next && buttonRef.current) {
             var rect = buttonRef.current.getBoundingClientRect()
-            setPos({ left: Math.max(12, Math.min(rect.left, window.innerWidth - 440)), bottom: window.innerHeight - rect.top + 10 })
+            setPos({ left: Math.max(12, Math.min(rect.left, window.innerWidth - 580)), bottom: window.innerHeight - rect.top + 10 })
           }
           setOpen(next)
           setFlash('')
@@ -1970,11 +2198,9 @@ window.__ModuleLoader__.load({
         }
 
         function useSkill(skill, withPrompt) {
-          var text = '/' + skill.name + ' '
-          if (withPrompt) {
-            var sentence = firstSentence(skill.description, 180)
-            if (sentence) text += sentence
-          }
+          var text = withPrompt
+            ? buildSkillPrompt(skill, firstSentence(skill.description, 160))
+            : '/' + skill.name + ' '
           var outcome = insertText(text)
           if (outcome === 'inserted') {
             setFlash('已插入 /' + skill.name)
@@ -1985,11 +2211,7 @@ window.__ModuleLoader__.load({
         }
 
         function useRole(team, role) {
-          var skills = (role.skills || []).join('、')
-          var text = '按「' + team.title + '」里「' + role.title + '」这个角色来做。\n'
-            + (role.duty ? '职责：' + role.duty + '\n' : '')
-            + (role.deliverable ? '交付物：' + role.deliverable + '\n' : '')
-            + (skills ? '可用 skill：' + skills + '\n' : '')
+          var text = buildRolePrompt(team, role)
           var outcome = insertText(text)
           if (outcome === 'inserted') {
             setFlash('已插入「' + role.title + '」的任务书')
@@ -2014,12 +2236,18 @@ window.__ModuleLoader__.load({
             type: 'button',
             ref: buttonRef,
             className: 'sh-dockbtn' + (open ? ' on' : ''),
-            title: '技能中枢：插入 skill、选专家团角色、或打开设置',
+            title: '技能中枢：插入 skill、按角色插入任务书、或打开设置',
+            'aria-label': '技能中枢',
             onMouseDown: function (event) { event.preventDefault() },
             onClick: function (event) { event.preventDefault(); event.stopPropagation(); toggle() },
           },
+          h(
+            'svg',
+            { viewBox: '0 0 16 16', fill: 'none', 'aria-hidden': 'true' },
+            h('path', { d: 'M3 3h4v4H3zM9 3h4v4H9zM3 9h4v4H3zM9 9h4v4H9z', stroke: 'currentColor', 'stroke-width': '1.3', rx: '1' }),
+          ),
           '技能',
-          h('span', { style: { opacity: 0.55, fontSize: '10px' } }, '▴'),
+          h('span', { className: 'sh-dockbtn-caret' }, '▴'),
         )
 
         if (!open) return button
@@ -2231,6 +2459,7 @@ window.__ModuleLoader__.load({
       })
     }
 
+    exports.__prompts = { skill: buildSkillPrompt, role: buildRolePrompt, sentence: firstSentence }
     exports.apply = apply
     exports.inject = []
     return module.exports
