@@ -37,7 +37,7 @@ skill 目录是分裂的：`~/.dsh/skills`、`~/.agents/skills`、`~/.claude/ski
 
 做一条带货视频的链路是：选题 → 口播稿 → 分镜 → 素材/成片 → 复盘。每一步该加载哪个 skill、交给哪个「角色」、交付物是什么、哪几条红线不能碰 —— 这些知识每次会话都要重新组织一遍，还经常漏步骤。
 
-**这个插件**：把这类链路固化成**专家团**（团队 = 目标 + 角色 + 阶段 + 铁律 + 每角色绑定的 skill）。内置四个：
+**这个插件**：把这类链路固化成**专家团**（团队 = 目标 + 角色 + 阶段 + 铁律 + 每角色绑定的 skill）。内置七个：
 
 | 专家团 | 链路 |
 |---|---|
@@ -45,6 +45,14 @@ skill 目录是分裂的：`~/.dsh/skills`、`~/.agents/skills`、`~/.claude/ski
 | `kepu-video` 科普视频团 | 选题 → 事实核查 → 稿子 → 成片 |
 | `app-builder` 应用开发团 | 说清楚 → 定方案 → 拆任务 → 实现 → 提交 |
 | `xhs-ops` 小红书运营团 | 定位 → 选题 → 图文/视频 → 发布复盘 |
+
+另外三团是给 [JimLiu/baoyu-skills](https://github.com/JimLiu/baoyu-skills) 这一套视觉/内容 skill 专门配的（本机已装满 21 个）：
+
+| 专家团 | 链路 |
+|---|---|
+| 📰 `baoyu-wechat-article` 长文与公众号团 | 选题素材（url-to-markdown / youtube-transcript / wechat-summary）→ 写作（copywriting / format-markdown）→ 配图（cover-image / article-illustrator / infographic）→ 排版发布（markdown-to-html / post-to-wechat） |
+| 🧠 `baoyu-visual-explain` 图解与知识漫画团 | 概念拆解（diagram）→ 知识漫画（comic）/ 信息图（infographic）→ 幻灯片（slide-deck） |
+| 📡 `baoyu-multichannel` 一稿多平台分发团 | 母稿（url-to-markdown / x-to-markdown / youtube-transcript）→ 平台改写（copywriting / translate）+ 图文卡片（xhs-images / cover-image）→ 分发（post-to-wechat / post-to-weibo / post-to-x） |
 
 agent 侧一句话 `skill_hub_team({team:"daohuo-video"})` 就拿到完整 SOP，然后按阶段装载绑定的 skill。绑定的 skill 本机没有，界面和 agent 两侧都会标 ⚠️。
 
@@ -82,10 +90,10 @@ echo 'export WEREAD_API_KEY=wrk-abcdefg' >> ~/.zshrc
 | 页签 | 做什么 |
 |---|---|
 | **技能总览** | 扫描 + 去重 + 容器/遮蔽标记；关键词搜索、分类筛选、按类计数 |
-| **分类整理** | 按类分组的**多列看板**，每张卡直接下拉改类，可「恢复自动」 |
+| **分类整理** | 11 类**折叠看板**（默认全收起，只看每类多少条）；点开某一类才展开成卡片网格，卡上直接下拉改类 |
 | **专家团** | 单列自上而下：顶部选团 → 基本信息 → 分工/流程总览 → 角色（可增删、可自由绑定 skill）→ 流程 → 铁律；`自动整理` 补齐空项，`导出为 skill` 让 Codex/WorkBuddy 直接用 |
-| **Key 管理** | 选 skill → 自动找变量名 → 填 key → 生成入匙命令；登记 key 元数据；一键生成「加载全部 key」的 shell 片段 |
-| **安装 skill** | 贴一个 GitHub 地址或 `owner/repo`，预览仓库里的 skill，勾选装进 `~/.agents/skills` |
+| **Key 管理** | 选 skill → 自动找变量名 → 填 key → 生成入匙命令；**一键在终端里执行**（终端自己打开、你只按回车，首次 macOS 问是否允许控制 Terminal）；登记 key 元数据 |
+| **安装 skill** | 贴一个 GitHub 地址或 `owner/repo`，预览仓库里的 skill，勾选装进 `~/.agents/skills`；输入框旁还有个 **`装`** 按钮，直接跳到这套流程 |
 
 **快捷键**：`⇧⌘K`（Windows/Linux 为 `Ctrl+Shift+K`）在任意界面直接打开「技能中枢」，不用先开设置再点左栏。默认键位可以在 设置 → 通用设置 → 快捷键 里改；如果首选键位被别的插件占了，插件会依次试 `⇧⌘J`、`⇧⌘H`…，全被占才退化成「无默认键位」（面板里手动分配），界面不会挂。
 

@@ -139,6 +139,14 @@ window.__ModuleLoader__.load({
       '.sh-basic-emoji{grid-column:1}',
       '.sh-picker{margin-top:8px;border:1px solid var(--dsw-alias-border-l1,#e6e8eb);border-radius:10px;padding:8px;background:var(--dsw-alias-bg-base,#fff)}',
       '.sh-note.ok{color:var(--dsw-alias-state-success-primary,#15803d)}',
+      '.sh-runbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0 4px}',
+      '.sh-menu-form{display:flex;gap:6px;align-items:center}',
+      '.sh-dockgroup{display:inline-flex;align-items:center;gap:4px}',
+      '.sh-dockbtn-mini{height:26px;padding:0 7px;border-radius:7px;border:1px solid var(--dsw-alias-border-l1,#d8dbe0);background:var(--dsw-alias-bg-layer-1,#fff);color:var(--dsw-alias-label-secondary,#5b636e);font:inherit;font-size:11.5px;cursor:pointer;transition:background .16s var(--sh-ease),border-color .16s var(--sh-ease)}',
+      '.sh-dockbtn-mini:hover{background:var(--dsw-alias-bg-layer-2,#f2f4f7);border-color:var(--dsw-alias-border-l2,#c9ced6)}',
+      '.sh-dockbtn-mini.on{background:var(--dsw-alias-brand-primary,#2f6bff);border-color:transparent;color:#fff}',
+      '.sh-menu-form .sh-input{flex:1;min-width:0}',
+      '.sh-check{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--dsw-alias-label-secondary,#6b7280);cursor:pointer}',
       '.sh-root :focus-visible{outline:2px solid var(--dsw-alias-brand-primary,#2f6bff);outline-offset:1px}',
       '@media (prefers-reduced-motion: reduce){.sh-fade{animation:none!important}}',
       '.sh-linkbtn{border:0;background:none;color:var(--dsw-alias-label-secondary,#6b7280);font:inherit;font-size:11px;cursor:pointer;padding:2px 4px;border-radius:6px}',
@@ -154,7 +162,12 @@ window.__ModuleLoader__.load({
       '.sh-empty{padding:28px 8px;text-align:center;color:var(--dsw-alias-label-secondary,#6b7280);font-size:12.5px}',
       '.sh-board{display:grid;grid-template-columns:repeat(auto-fill,minmax(236px,1fr));gap:10px;align-items:start}',
       '.sh-col{display:flex;flex-direction:column;min-width:0;border:1px solid var(--dsw-alias-border-l1,#e6e8eb);border-radius:14px;background:var(--dsw-alias-bg-layer-1,#fff);box-shadow:0 1px 2px rgba(16,24,40,.04)}',
-      '.sh-col-head{display:flex;align-items:center;gap:8px;padding:11px 12px 10px;border-bottom:1px solid var(--dsw-alias-border-l1,#eef0f3);position:sticky;top:0;z-index:2;background:var(--dsw-alias-bg-layer-1,#fff);border-radius:14px 14px 0 0}',
+      '.sh-col-head{display:flex;width:100%;align-items:center;gap:8px;padding:11px 12px 10px;border:0;border-bottom:1px solid var(--dsw-alias-border-l1,#eef0f3);position:sticky;top:0;z-index:2;background:var(--dsw-alias-bg-layer-1,#fff);border-radius:14px 14px 0 0;font:inherit;color:inherit;cursor:pointer;text-align:left;transition:background .16s var(--sh-ease)}',
+      '.sh-col-head:hover{background:var(--dsw-alias-bg-layer-2,#f4f5f7)}',
+      '.sh-col-head.on{border-bottom-color:transparent}',
+      '.sh-col-caret{margin-left:auto;font-size:10px;color:var(--dsw-alias-label-secondary,#6b7280)}',
+      '.sh-col.on{grid-column:1 / -1}',
+      '.sh-col.on .sh-col-body{display:grid;grid-template-columns:repeat(auto-fill,minmax(208px,1fr));gap:8px;padding:8px;max-height:min(46vh,430px);overflow:auto}',
       '.sh-col-emoji{font-size:15px;line-height:1}',
       '.sh-col-name{font-size:13px;font-weight:600;letter-spacing:.01em}',
       '.sh-col-count{margin-left:auto;font-size:11px;font-variant-numeric:tabular-nums;color:var(--dsw-alias-label-secondary,#6b7280);background:var(--dsw-alias-bg-layer-2,#f4f6f8);border-radius:999px;padding:1px 8px}',
@@ -499,6 +512,15 @@ window.__ModuleLoader__.load({
         var [busy, setBusy] = useState('')
         var [error, setError] = useState('')
         var [query, setQuery] = useState('')
+        // 每列默认收起：先看见「有哪几类、各多少条」，需要时再展开
+        var [open, setOpen] = useState({})
+        function toggle(id) {
+          setOpen(function (prev) {
+            var next = Object.assign({}, prev)
+            next[id] = !next[id]
+            return next
+          })
+        }
         var groups = useMemo(function () {
           var needle = query.trim().toLowerCase()
           return state.categories
@@ -547,15 +569,21 @@ window.__ModuleLoader__.load({
             groups.map(function (group) {
               return h(
                 'section',
-                { key: group.cat.id, className: 'sh-col sh-fade' },
+                { key: group.cat.id, className: 'sh-col sh-fade' + (open[group.cat.id] ? ' on' : '') },
                 h(
-                  'header',
-                  { className: 'sh-col-head' },
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'sh-col-head' + (open[group.cat.id] ? ' on' : ''),
+                    onClick: function () { toggle(group.cat.id) },
+                    'aria-expanded': open[group.cat.id] ? 'true' : 'false',
+                  },
                   h('span', { className: 'sh-col-emoji' }, group.cat.emoji || '·'),
                   h('span', { className: 'sh-col-name' }, group.cat.zh),
                   h('span', { className: 'sh-col-count' }, String(group.items.length)),
+                  h('span', { className: 'sh-col-caret' }, open[group.cat.id] ? '▾' : '▸'),
                 ),
-                h(
+                open[group.cat.id] ? h(
                   'div',
                   { className: 'sh-col-body' },
                   group.items.map(function (skill) {
@@ -606,7 +634,7 @@ window.__ModuleLoader__.load({
                       ),
                     )
                   }),
-                ),
+                ) : null,
               )
             }),
           ),
@@ -1241,6 +1269,8 @@ window.__ModuleLoader__.load({
 
       function Keys(props) {
         var state = props.state
+        var [runBusy, setRunBusy] = useState(false)
+        var [runMsg, setRunMsg] = useState('')
         var platformLabel = '未知平台'
         for (var i = 0; i < state.platforms.length; i += 1) {
           if (state.platforms[i].id === state.platform) platformLabel = state.platforms[i].label
@@ -1295,6 +1325,27 @@ window.__ModuleLoader__.load({
           setDetected(null)
           setQuery('')
           setError('')
+        }
+
+        async function launch(withKey) {
+          setRunBusy(true)
+          setRunMsg('')
+          try {
+            var data = await api('keys/run', {
+              env: form.env.trim(),
+              service: form.service.trim() || form.env.trim().toLowerCase().replace(/_/g, '-'),
+              account: form.account.trim(),
+              note: form.note.trim(),
+              platform: state.platform,
+              shell: shell,
+              secret: withKey === true ? secret : '',
+            })
+            setRunMsg('已在 ' + (data.how || '终端') + ' 打开：' + (withKey === true ? '命令里带密钥，回车即可' : '会提示你粘贴密钥，回车确认'))
+          } catch (failure) {
+            setRunMsg('没能打开终端：' + failure.message)
+          } finally {
+            setRunBusy(false)
+          }
         }
 
         async function generate() {
@@ -1526,6 +1577,26 @@ window.__ModuleLoader__.load({
                 { className: 'sh-card' },
                 h('h4', null, (result.removed ? '移除 ' : '入匙命令 · ') + (result.key && result.key.env ? result.key.env : '')),
                 h('p', null, result.script.note),
+                result.removed
+                  ? null
+                  : h(
+                      'div',
+                      { className: 'sh-runbar' },
+                      h(
+                        'button',
+                        { type: 'button', className: 'sh-btn primary', disabled: runBusy, onClick: function () { launch(false) } },
+                        runBusy ? '打开中…' : '在终端里执行（推荐）',
+                      ),
+                      secret
+                        ? h(
+                            'button',
+                            { type: 'button', className: 'sh-btn', disabled: runBusy, onClick: function () { launch(true) }, title: '密钥会写进这一条命令，会留在 shell history' },
+                            '带密钥执行',
+                          )
+                        : null,
+                      h('span', { className: 'sh-hint', style: { flex: 1, minWidth: 0 } }, '按下按钮后终端会自己打开并填好命令，你只需回车（第一次 macOS 会问是否允许控制 Terminal，点允许）'),
+                    ),
+                runMsg ? h('div', { className: 'sh-note ok' }, runMsg) : null,
                 result.removed
                   ? block('从钥匙串删除', result.script.remove)
                   : h(
@@ -2194,7 +2265,14 @@ window.__ModuleLoader__.load({
         var [flash, setFlash] = useState('')
         var [pos, setPos] = useState(null)
         var [teamId, setTeamId] = useState('')
+        var [installSource, setInstallSource] = useState('')
+        var [installPreview, setInstallPreview] = useState(null)
+        var [installPicked, setInstallPicked] = useState({})
+        var [installReplace, setInstallReplace] = useState(true)
+        var [installBusy, setInstallBusy] = useState(false)
+        var [installMsg, setInstallMsg] = useState('')
         var buttonRef = useRef(null)
+        var installRef = useRef(null)
 
         useEffect(function () {
           if (!open) return undefined
@@ -2251,6 +2329,44 @@ window.__ModuleLoader__.load({
           }
         }
 
+        async function previewInstall(source) {
+          setInstallBusy(true)
+          setInstallMsg('')
+          try {
+            var payload = await api('skills/preview', { source: source || installSource })
+            setInstallPreview(payload)
+            var picked = {}
+            ;(payload.candidates || []).forEach(function (item) { picked[item.name] = true })
+            setInstallPicked(picked)
+            setInstallMsg('')
+          } catch (failure) {
+            setInstallMsg(failure.message)
+            setInstallPreview(null)
+          } finally {
+            setInstallBusy(false)
+          }
+        }
+
+        async function doInstall() {
+          setInstallBusy(true)
+          setInstallMsg('')
+          try {
+            var names = Object.keys(installPicked).filter(function (name) { return installPicked[name] })
+            var result = await api('skills/install', { source: installSource, names: names, replace: installReplace })
+            var lines = []
+            ;(result.installed || []).forEach(function (item) {
+              lines.push((item.action === 'replaced' ? '↻ ' : '＋ ') + item.name + ' → ' + item.path + (item.backup ? '（旧版在 ' + item.backup + '）' : ''))
+            })
+            ;(result.skipped || []).forEach(function (item) { lines.push('跳过 ' + item.name + '：' + item.reason) })
+            setInstallMsg(lines.join(' / ') || '没有要装的')
+            setInstallPreview(null)
+          } catch (failure) {
+            setInstallMsg(failure.message)
+          } finally {
+            setInstallBusy(false)
+          }
+        }
+
         function useRole(team, role) {
           var text = buildRolePrompt(team, role)
           var outcome = insertText(text)
@@ -2268,7 +2384,7 @@ window.__ModuleLoader__.load({
         var matches = skills.filter(function (skill) {
           if (needle === '') return true
           return (skill.name + ' ' + (skill.description || '')).toLowerCase().indexOf(needle) >= 0
-        }).slice(0, 40)
+        })
         var currentTeam = teams.filter(function (team) { return team.id === teamId })[0] || teams[0] || null
 
         var button = h(
@@ -2291,7 +2407,33 @@ window.__ModuleLoader__.load({
           h('span', { className: 'sh-dockbtn-caret' }, '▴'),
         )
 
-        if (!open) return button
+        var installButton = h(
+          'button',
+          {
+            type: 'button',
+            className: 'sh-dockbtn-mini' + (open && tab === 'install' ? ' on' : ''),
+            title: '按技能中枢规则安装 skill（真实目录 / 同名替换进 _trash）',
+            'aria-label': '安装 skill',
+            onMouseDown: function (event) { event.preventDefault() },
+            onClick: function (event) {
+              event.preventDefault()
+              event.stopPropagation()
+              if (open && tab === 'install') { setOpen(false); return }
+              if (!open && buttonRef.current) {
+                var rect = buttonRef.current.getBoundingClientRect()
+                setPos({ left: Math.max(12, Math.min(rect.left, window.innerWidth - 580)), bottom: window.innerHeight - rect.top + 10 })
+              }
+              setTab('install')
+              setOpen(true)
+              setFlash('')
+            },
+          },
+          '装',
+        )
+
+        var group = h('span', { className: 'sh-dockgroup' }, button, installButton)
+
+        if (!open) return group
 
         var panel = h(
           'div',
@@ -2324,6 +2466,11 @@ window.__ModuleLoader__.load({
               'button',
               { type: 'button', className: 'sh-menu-tab' + (tab === 'team' ? ' on' : ''), onClick: function () { setTab('team') } },
               '专家团',
+            ),
+            h(
+              'button',
+              { type: 'button', className: 'sh-menu-tab' + (tab === 'install' ? ' on' : ''), onClick: function () { setTab('install') } },
+              '安装',
             ),
           ),
           h(
@@ -2370,7 +2517,8 @@ window.__ModuleLoader__.load({
                     }),
                   ),
                 )
-              : h(
+              : tab === 'team'
+                ? h(
                   'div',
                   null,
                   h(
@@ -2458,6 +2606,75 @@ window.__ModuleLoader__.load({
                         }),
                       )
                     : h('div', { className: 'sh-empty' }, data === null ? '读取中…' : '还没有专家团'),
+                )
+              : h(
+                  'div',
+                  null,
+                  h('div', { className: 'sh-menu-section' }, '按技能中枢规则安装'),
+                  h('p', { className: 'sh-hint', style: { margin: '0 0 8px' } },
+                    '装进 ~/.agents/skills（真实目录，不用软链）；同名已存在只能替换，旧版进 _trash；装完即用，当前会话重启后可见。'),
+                  h('div', { className: 'sh-menu-form' },
+                    h('input', {
+                      className: 'sh-input sh-mini',
+                      placeholder: 'owner/repo 或 https://github.com/owner/repo',
+                      value: installSource,
+                      onChange: function (event) { setInstallSource(event.target.value) },
+                    }),
+                    h('button', {
+                      type: 'button',
+                      className: 'sh-btn',
+                      disabled: installBusy || installSource.trim() === '',
+                      onClick: function () { previewInstall(installSource.trim()) },
+                    }, installBusy ? '处理中…' : '预览'),
+                  ),
+                  installPreview
+                    ? h(
+                        'div',
+                        { className: 'sh-menu-card', style: { marginTop: '8px' } },
+                        h('div', { className: 'sh-menu-cardhead' },
+                          h('div', null,
+                            h('div', { className: 'sh-menu-row-name' },
+                              installPreview.source + '（' + (installPreview.candidates || []).length + ' 个 skill'
+                              + (installPreview.duplicateCount ? '；仓库里有 ' + installPreview.duplicateCount + ' 份同名副本，已择一' : '') + '）'),
+                            h('div', { className: 'sh-menu-row-desc' }, '目标：' + (installPreview.target || '')),
+                          ),
+                          h('button', {
+                            type: 'button',
+                            className: 'sh-btn primary',
+                            disabled: installBusy,
+                            onClick: function () { doInstall() },
+                          }, '安装'),
+                        ),
+                        (installPreview.candidates || []).map(function (item) {
+                          var has = (installPreview.existing || []).indexOf(item.name) >= 0
+                          return h(
+                            'label',
+                            { key: 'inst-' + item.name, className: 'sh-menu-line', style: { cursor: 'pointer' } },
+                            h('input', {
+                              type: 'checkbox',
+                              checked: installPicked[item.name] !== false,
+                              onChange: function (event) {
+                                var next = Object.assign({}, installPicked)
+                                next[item.name] = event.target.checked
+                                setInstallPicked(next)
+                              },
+                            }),
+                            h('span', { className: 'sh-menu-line-name' }, item.name),
+                            h('span', { className: 'sh-menu-line-meta' },
+                              (has ? '主库已有 · ' : '') + (item.skills || []).length + ' 个文件 · ' + item.relPath),
+                          )
+                        }),
+                        h('label', { className: 'sh-check', style: { marginTop: '6px' } },
+                          h('input', {
+                            type: 'checkbox',
+                            checked: installReplace,
+                            onChange: function (event) { setInstallReplace(event.target.checked) },
+                          }),
+                          '替换主库里同名的（旧目录进 _trash，可回退）',
+                        ),
+                      )
+                    : null,
+                  installMsg ? h('div', { className: 'sh-note ok', style: { marginTop: '8px' } }, installMsg) : null,
                 ),
           ),
           h(
@@ -2470,14 +2687,18 @@ window.__ModuleLoader__.load({
               {
                 type: 'button',
                 className: 'sh-btn',
-                onClick: function () { setOpen(false); openSection(slots) },
+                onClick: function () {
+                  var opened = openSection(slots)
+                  if (opened) setOpen(false)
+                  else setFlash('打不开设置：按 ⇧⌘K，或手动 设置 → 技能中枢')
+                },
               },
               '打开设置',
             ),
           ),
         )
 
-        return react.createElement(react.Fragment, null, button, panel)
+        return react.createElement(react.Fragment, null, group, panel)
       }
     }
 

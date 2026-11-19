@@ -10,6 +10,9 @@ import {
   addKey, removeKey, keyScript, detectSkillKeys, previewInstall, installFromPreview,
 } from './lib/hub.js'
 import { auditLibrary } from './lib/audit.js'
+import { buildKeyScript } from './lib/keygen.js'
+import { runInTerminal } from './lib/terminal.js'
+import { hubDir } from './lib/store.js'
 
 export const name = 'skill-hub'
 export const inject = ['tools']
@@ -448,6 +451,15 @@ async function dispatch(method, sub, body) {
       return { status: 200, body: await removeKey({ env: body.env }) }
     case 'keys/script':
       return { status: 200, body: keyScript(body) }
+    case 'keys/run': {
+      // The command is rebuilt here from validated fields — the browser never
+      // gets to send a free-form shell string into the user's terminal.
+      const built = keyScript(body)
+      const useSecret = typeof body.secret === 'string' && body.secret !== ''
+      const command = useSecret ? built.add : built.addPrompt
+      const opened = await runInTerminal({ script: command, dir: hubDir(), platform: body.platform })
+      return { status: 200, body: { ok: true, ...opened, command, withSecret: useSecret } }
+    }
     case 'skills/preview':
       return { status: 200, body: await previewInstall({ source: body.source }) }
     case 'skills/install':
