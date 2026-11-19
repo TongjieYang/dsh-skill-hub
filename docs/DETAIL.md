@@ -130,3 +130,10 @@ MIT
 - 入匙命令分两条：默认可交互（`security add-generic-password … -U -w` 由 `security` 隐藏输入地向你要值，密钥不进 argv，也就不进 `~/.zsh_history`），另附一条带值的版本并写明它会留在 history 里。
 - 说明插件不碰任何 shell 配置文件；要自动导出就写进 `~/.zshenv`（`.zshrc` 只对交互 shell 生效，agent 跑的非交互 shell 读不到）。
 - **0.2.5 · 按 shell 出正确的命令**：新增 `lib/shell.js`，覆盖主流 shell（zsh / bash / posix sh / fish / PowerShell / cmd）。每种 shell 有自己的 `export` 语法与持久化文件——fish 用 `set -gx … (…)`、PowerShell 用 `$env:K = …`、cmd 只能 `for /f` 现读或用 `setx`；`~/.zshenv`、`~/.bashrc`、`~/.profile`、`~/.config/fish/config.fish`、`$PROFILE` 各自对应。shell 由 `$SHELL` 自动识别，界面上可切换；平台与 shell 不匹配时退回 POSIX，不生成跑不通的命令。
+
+## 0.2.6 新增
+
+- **全局快捷键**：注册 `skill-hub.open` 命令，默认 `Mod+Alt+K`（macOS `⌘⌥K`），桌面三个平台与 Web 的 macOS/Windows 都绑上；Linux Web 受快捷键服务的组合限制，故意不绑默认值，可在面板里自选。
+- 触发后直接打开设置并选中「技能中枢」：通过 `sidebar.settings` 槽发布的根 store 调 `openSection('skill-hub')`，不导入别的插件的模块。
+- 在输入框里也能触发（`regions: ['page','editable','terminal']`），但别的弹窗打开时不抢键（`modals: ['settings']`）。
+- 默认键位若与别的插件冲突，捕获注册异常后改注册「无默认键位」，仍可在快捷键面板里分配——不让一个键位把整个客户端半边拖挂。

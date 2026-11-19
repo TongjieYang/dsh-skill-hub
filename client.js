@@ -1258,6 +1258,7 @@ window.__ModuleLoader__.load({
                   ? state.skills.length + ' 个 skill · ' + state.teams.length + ' 个专家团 · ' + state.keys.length + ' 个已登记 key'
                   : '正在读取本机 skill 库',
               ),
+              h('p', { className: 'sh-sub' }, '快捷键 ' + shortcutLabel() + ' 在任意界面直接打开这里'),
             ),
             h(
               'div',
@@ -1351,6 +1352,78 @@ window.__ModuleLoader__.load({
       return withBoundary(SkillHubSection)
     }
 
+
+    // -------------------------------------------------------------------------
+    // Global shortcut: jump straight to 技能中枢 from anywhere.
+    // The settings shell owns section selection through a root store that the
+    // `sidebar.settings` slot publishes; we reach it through that slot rather
+    // than importing another plugin's modules.
+    // -------------------------------------------------------------------------
+
+    function shortcutLabel() {
+      var nav = typeof navigator !== 'undefined' && navigator ? String(navigator.platform || '') : ''
+      var mac = /mac/i.test(nav)
+      return mac ? '\u2318\u2325K' : 'Ctrl+Alt+K'
+    }
+
+    function openSection(slots) {
+      try {
+        var entries = (slots && typeof slots.entries === 'function' ? slots.entries('sidebar.settings') : null) || []
+        var entry = entries[0]
+        var handle = entry && entry.options ? entry.options.store : null
+        var store = handle && typeof handle.create === 'function' ? handle.create() : handle
+        var actions = store && store.actions
+        if (actions && typeof actions.openSection === 'function') {
+          actions.openSection('skill-hub')
+          return true
+        }
+        if (actions && typeof actions.open === 'function') {
+          actions.open()
+          if (typeof actions.select === 'function') actions.select('skill-hub')
+          return true
+        }
+      } catch (error) {
+        console.error('[skill-hub] 打开设置失败: ' + error)
+      }
+      return false
+    }
+
+    function registerShortcut(ctx, slots) {
+      if (!ctx || !ctx.shortcuts || typeof ctx.shortcuts.register !== 'function') return null
+      var bind = { code: 'KeyK', modifiers: ['primary', 'alt'] }
+      var command = {
+        id: 'skill-hub.open',
+        label: shortcutLabelLine,
+        aliases: ['skills', 'skill hub', '\u6280\u80fd\u4e2d\u67a2'],
+        defaults: {
+          'desktop:macos': bind,
+          'desktop:windows': bind,
+          'desktop:linux': bind,
+          'web:macos': bind,
+          'web:windows': bind,
+        },
+        regions: ['page', 'editable', 'terminal'],
+        modals: ['settings'],
+        resolve: function (context) {
+          var modal = context ? context.modal : null
+          if (modal !== null && modal !== 'settings') return { status: 'blocked', reason: 'modal' }
+          return { status: 'handled', run: function () { openSection(slots) } }
+        },
+      }
+      try {
+        return ctx.shortcuts.register(command)
+      } catch (error) {
+        // A default that collides with another plugin must not take the whole
+        // client half down: fall back to an unbound command the user can assign.
+        console.error('[skill-hub] 快捷键默认值冲突，改为无默认键位: ' + error)
+        return ctx.shortcuts.register(Object.assign({}, command, { defaults: {} }))
+      }
+    }
+
+    function shortcutLabelLine() {
+      return '\u6253\u5f00\u6280\u80fd\u4e2d\u67a2\uff08' + shortcutLabel() + '\uff09'
+    }
+
     function apply(ctx) {
       ensureStyles()
 
@@ -1386,6 +1459,18 @@ window.__ModuleLoader__.load({
             Icon,
           )
         })
+
+        // Shortcut lives in its own injection: if the shortcuts service is
+        // absent the settings UI must still mount.
+        if (typeof scope.inject === 'function') {
+          scope.inject(['shortcuts'], function (keys) {
+            if (typeof keys.effect === 'function') {
+              keys.effect(function () { return registerShortcut(keys, scope.slots) }, 'skill-hub: shortcut')
+            } else {
+              registerShortcut(keys, scope.slots)
+            }
+          })
+        }
       })
     }
 

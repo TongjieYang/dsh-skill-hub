@@ -61,39 +61,59 @@ test('factory returns a cordis plugin with apply + inject', () => {
   assert.ok(Array.isArray(exportsObject.inject))
 })
 
-test('apply registers the settings section and its icon', () => {
+function mountPlugin(options = {}) {
   const { definition } = loadBundle()
   const plugin = definition.factory(() => REACT_STUB)
-
   const slots = []
   const injected = []
+  const commands = []
+  const opened = []
+  const shellStore = { actions: { openSection: (id) => opened.push(id), open: () => opened.push('<open>') } }
+  const slotsService = {
+    entries: (name) => (name === 'sidebar.settings' ? [{ options: { store: { create: () => shellStore } } }] : []),
+    inject: (name, generator) => {
+      const iterator = generator()
+      let step = iterator.next()
+      while (!step.done) {
+        slots.push({ name, value: step.value })
+        step = iterator.next()
+      }
+    },
+    register: (opts, component) => ({ options: opts, component }),
+  }
+  const shortcutsService = {
+    register: (command) => {
+      if (options.conflict && options.conflict(command)) throw new Error('overlapping default binding')
+      commands.push(command)
+      return () => {}
+    },
+  }
   const ctx = {
     effect: (factory) => factory(),
     inject: (services, callback) => {
       injected.push(services)
       if (services.includes('slots')) {
         callback({
-          slots: {
-            inject: (name, generator) => {
-              const iterator = generator()
-              let step = iterator.next()
-              while (!step.done) {
-                slots.push({ name, value: step.value })
-                step = iterator.next()
-              }
-            },
-            register: (options, component) => ({ options, component }),
+          slots: slotsService,
+          inject: (nested, next) => {
+            // a cordis scope exposes the injected service as a property
+            next({ shortcuts: shortcutsService, effect: (factory) => factory() })
           },
         })
       }
     },
   }
-
   plugin.apply(ctx)
+  return { slots, injected, commands, opened, shortcutsService }
+}
+
+test('apply registers the settings section and its icon', () => {
+  const { slots, injected } = mountPlugin()
 
   assert.equal(injected.length, 1, '只注入一个服务组')
-  assert.equal(injected[0].length, 1)
-  assert.equal(injected[0][0], 'slots', '只注入 slots，避免被 locale 等可选服务拖死')
+  // arrays built inside the vm have a different realm prototype: compare item by item
+  assert.equal(injected[0].length, 1, '直接注入只列 slots，避免被可选服务拖死')
+  assert.equal(injected[0][0], 'slots')
 
   const section = slots.find((item) => item.name === 'settings.section')
   const icon = slots.find((item) => item.name === 'settings.section.icon')
@@ -108,6 +128,43 @@ test('apply registers the settings section and its icon', () => {
 
   assert.equal(icon.value.options.id, section.value.options.id, 'icon 的 id 必须等于 section 的 id')
   assert.equal(typeof icon.value.component, 'function')
+})
+
+test('注册一个能直接跳到技能中枢的全局快捷键', () => {
+  const { commands, opened } = mountPlugin()
+  assert.equal(commands.length, 1, '应当注册且只注册一个命令')
+  const command = commands[0]
+  assert.equal(command.id, 'skill-hub.open')
+  assert.match(String(command.label()), /技能中枢/)
+  assert.ok(command.aliases.includes('skills'))
+  // 默认键位：Mod+Alt+K，桌面与 Web 的 macOS/Windows 都绑上（Linux Web 由服务端限制，故意不绑）
+  for (const profile of ['desktop:macos', 'desktop:windows', 'desktop:linux', 'web:macos', 'web:windows']) {
+    const binding = command.defaults[profile]
+    assert.ok(binding, `${profile} 应当有默认键位`)
+    assert.equal(binding.code, 'KeyK', profile)
+    assert.equal(binding.modifiers.length, 2, profile)
+    assert.equal(binding.modifiers[0], 'primary', profile)
+    assert.equal(binding.modifiers[1], 'alt', profile)
+  }
+  assert.equal(command.defaults['web:linux'], undefined)
+  // 在输入框里也能用，但不能在别的弹窗上抢键
+  assert.equal(command.regions.join(','), 'page,editable,terminal')
+  assert.equal(command.modals.join(','), 'settings')
+
+  const handled = command.resolve({ modal: null, region: 'editable' })
+  assert.equal(handled.status, 'handled')
+  handled.run()
+  assert.equal(opened.length, 1)
+  assert.equal(opened[0], 'skill-hub', '运行时应当打开设置并选中 skill-hub')
+
+  const blocked = command.resolve({ modal: 'other', region: 'page' })
+  assert.equal(blocked.status, 'blocked')
+})
+
+test('快捷键默认值和别的插件冲突时退化为无键位，而不是拖死整个界面', () => {
+  const { commands } = mountPlugin({ conflict: (command) => command.id === 'skill-hub.open' && Object.keys(command.defaults).length > 0 })
+  assert.equal(commands.length, 1)
+  assert.equal(Object.keys(commands[0].defaults).length, 0, '冲突后应当改注册无默认键位，用户仍可在快捷键面板里分配')
 })
 
 test('style tag is injected once and removed by the effect disposer', () => {

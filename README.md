@@ -87,6 +87,9 @@ echo 'export WEREAD_API_KEY=wrk-abcdefg' >> ~/.zshrc
 | **Key 管理** | 选 skill → 自动找变量名 → 填 key → 生成入匙命令；登记 key 元数据；一键生成「加载全部 key」的 shell 片段 |
 | **安装 skill** | 贴一个 GitHub 地址或 `owner/repo`，预览仓库里的 skill，勾选装进 `~/.agents/skills` |
 
+**快捷键**：`⌘⌥K`（Windows/Linux 为 `Ctrl+Alt+K`）在任意界面直接打开「技能中枢」，不用先开设置再点左栏。默认键位可以在 设置 → 通用设置 → 快捷键 里改；如果和别的插件撞了，插件会自动退化成「无默认键位」，你手动分配即可，界面不会挂。
+
+
 ### Agent 侧工具
 
 | 工具 | 用途 |
