@@ -153,7 +153,10 @@ rank 小的先见者生效；同名的后来者记为「遮蔽」。可在 `conf
 
 - **同一个 skill 被仓库发到多个 agent 目录只算一份**：`impeccable` 这类仓库会把 skill 同时放进 `.agents/skills`、`.claude/skills`、`plugin/skills`、`cursor-plugin/skills` 等 20 多个目录，预览时按本机布局优先（`.agents/skills` > `.dsh/skills` > 顶层 `skills` > `plugin/skills`）只保留一份，并提示「另合并 N 份同名副本」。
 - **分类扩到 12 类**：新增「智能体与工作流」（子智能体、编排、交接、验收）与「商业与决策」（诊断、增长、定价、决策）；`other` 从 51 个降到 0。关键词匹配支持复数（`video` 命中 `videos`）。
-- **技能库体检**：技能总览页新增体检卡片，或让 agent 调 `skill_hub_audit`。它按本机约定检查，**只读不改**：主库（`~/.agents/skills`）里出现软链＝严重；`~/.dsh/skills` 非空＝严重（rank 400，会遮蔽主库）；端侧（`~/.claude/skills` 等）存了真实目录＝注意（应软链到主库）；目录名与 `SKILL.md` 的 name 不一致、没有 description、容器目录、未分类＝提示。
+- **技能库体检**：技能总览页新增体检卡片，或让 agent 调 `skill_hub_audit`。它按本机约定检查，**只读不改**：
+
+  > 关于软链：DSH 的 provider 会跟随符号链接（`nodeEntryKind` 对 symlink 做 `stat`，链接目录按普通目录处理），所以「端侧放软链」在 DSH/Claude/WorkBuddy 上都是可用形态；被禁止的只有「主库内部出现软链」和「端侧存真实副本」。
+主库（`~/.agents/skills`）里出现软链＝严重；`~/.dsh/skills` 里有条目＝注意（软链本身合法，但该根 rank 400 会覆盖同名主库条目）；端侧（`~/.claude/skills` 等）存了真实目录＝注意（应软链到主库）；目录名与 `SKILL.md` 的 name 不一致、没有 description、容器目录、未分类＝提示。
 
 **这个插件拦不住别的安装器写盘**——其他插件直接写文件，所以体检是事后审计：它告诉你结果合不合规，但不阻止写。要真正拦截，只能改 DSH 的安装链路本身。
 

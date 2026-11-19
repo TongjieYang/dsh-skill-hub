@@ -45,14 +45,16 @@ async function fixture() {
   return { root, hub }
 }
 
-test('主库里的软链、DSH 端非空都是严重问题', async () => {
+test('主库里的软链是严重问题，DSH 端的条目是覆盖、不是错误', async () => {
   const { root, hub } = await fixture()
   try {
     const report = await auditLibrary({ dir: hub })
     const kinds = report.findings.map((item) => `${item.severity}:${item.kind}`)
     assert.ok(kinds.includes('high:master-symlink'), `应报主库软链，实际：${kinds.join(', ')}`)
-    assert.ok(kinds.includes('high:dsh-not-empty'), `应报 DSH 端不空，实际：${kinds.join(', ')}`)
-    assert.equal(report.bySeverity.high, 2)
+    // A link inside ~/.dsh/skills is legal (the provider follows it); only the
+    // shadowing consequence is worth mentioning, so it stays at "注意".
+    assert.ok(kinds.includes('middle:dsh-shadow'), `应报 DSH 端覆盖，实际：${kinds.join(', ')}`)
+    assert.equal(report.bySeverity.high, 1)
     assert.equal(report.clean, false)
   } finally {
     await rm(root, { recursive: true, force: true })
