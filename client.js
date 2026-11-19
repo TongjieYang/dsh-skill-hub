@@ -907,6 +907,9 @@ window.__ModuleLoader__.load({
                 onChange: function (event) { update('account', event.target.value) },
               })),
               h('div', { className: 'sh-field' }, h('label', null, '平台（自动识别）'), h('div', { className: 'sh-fixed' }, platformLabel)),
+              state.keyTool && state.keyTool.available === false
+                ? h('p', { className: 'sh-error' }, '这台机器上没有 ' + state.keyTool.tool + '：' + state.keyTool.hint)
+                : null,
               h('div', { className: 'sh-field' }, h('label', null, 'shell（决定 export 怎么写、加进哪个文件）'),
                 h('select', {
                   className: 'sh-input',

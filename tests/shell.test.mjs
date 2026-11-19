@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 
 import { SHELLS, SHELL_LIST, detectShell, persistFor, shellFromPath } from '../lib/shell.js'
-import { buildKeyScript, buildLoadAll } from '../lib/keygen.js'
+import { buildKeyScript, buildLoadAll, keyToolInfo } from '../lib/keygen.js'
 
 test('mainstream shells are covered, with a label each', () => {
   const ids = SHELL_LIST.map((s) => s.id)
@@ -99,4 +99,17 @@ test('buildLoadAll exports every key in the requested shell', () => {
   const zsh = buildLoadAll(keys, 'darwin', 'zsh')
   assert.ok(zsh.script.startsWith('#!/bin/sh'))
   assert.equal((zsh.script.match(/export /g) ?? []).length, 2)
+})
+
+test('keyToolInfo reports whether the platform tool is installed', () => {
+  const mac = keyToolInfo('darwin', { exists: () => true })
+  assert.equal(mac.tool, 'security')
+  assert.equal(mac.available, true)
+
+  const win = keyToolInfo('win32', { exists: () => true })
+  assert.equal(win.tool, 'powershell')
+
+  const linuxMissing = keyToolInfo('linux', { exists: () => false })
+  assert.equal(linuxMissing.available, false)
+  assert.match(linuxMissing.hint, /libsecret|secret-tool/)
 })
