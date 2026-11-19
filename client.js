@@ -1114,10 +1114,12 @@ window.__ModuleLoader__.load({
                 { className: 'sh-card' },
                 h('h4', null, preview.source.owner + '/' + preview.source.repo + '（' + preview.total + ' 个 skill'
                   + (preview.duplicateCount ? '；仓库里有 ' + (preview.duplicateCount + 1) + ' 份同名副本，已择一，其余忽略' : '') + '）'),
-                h('div', { className: 'sh-muted' },
-                  'clone 用时 ' + ((preview.cloneMs || 0) / 1000).toFixed(1) + 's'
-                  + (preview.modeLabel ? ' · ' + preview.modeLabel : '')
-                  + (preview.fallbackFrom ? ' · 另一条路失败后换的这条' : '')),
+                typeof preview.cloneMs === 'number'
+                  ? h('div', { className: 'sh-muted' },
+                      'clone 用时 ' + (preview.cloneMs / 1000).toFixed(1) + 's'
+                      + (preview.modeLabel ? ' · ' + preview.modeLabel : '')
+                      + (preview.fallbackFrom ? ' · 另一条路失败后换的这条' : ''))
+                  : null,
                 h(
                   'div',
                   { className: 'sh-list' },
