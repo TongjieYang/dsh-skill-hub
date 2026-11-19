@@ -1,4 +1,5 @@
 node_modules/
 .tmp-test-hub/
 *.log
+!docs/spec/**/*.log
 .DS_Store

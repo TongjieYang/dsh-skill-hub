@@ -1,0 +1,133 @@
+✔ name prefix rules win (1.056166ms)
+✔ known content skills land in content-video (0.233791ms)
+✖ keyword scoring on description (0.829875ms)
+✔ defaults to other (0.128333ms)
+✔ categoryCounts returns every category in declaration order (0.777791ms)
+✔ every category has zh label and 10 buckets exist (0.099041ms)
+✔ buildState composes skills, categories, teams, keys (17.057584ms)
+✔ searchSkills filters by query and category (3.453834ms)
+✔ setOverride persists and overrides classification (3.930417ms)
+✔ setOverride rejects unknown category (0.914625ms)
+✔ saveTeam / deleteTeam round trip (175.070667ms)
+✔ saveTeam requires a title (1.341125ms)
+✔ renderTeam prints roles, stages, guardrails, missing skills (1.788042ms)
+✔ addKey records metadata and returns placeholder script; secret never stored (2.282042ms)
+✔ addKey rejects invalid env and duplicates collapse to one (1.795917ms)
+✔ removeKey drops metadata and returns the removal script (1.611542ms)
+✔ keyScript works for an unregistered key (0.101625ms)
+✔ front matter: plain, quoted, folded (0.986417ms)
+✔ front matter: multi-line quoted description (0.133625ms)
+✔ splitFrontmatter returns body and tolerates missing block (0.127584ms)
+✔ scan: leaf skills, containers, shadowed, warnings (19.429459ms)
+✔ scan: missing root is reported, not thrown (0.279291ms)
+✔ scan: overrides win over auto category (1.3535ms)
+✔ defaultRoots points at the three known libraries (0.116375ms)
+✔ builtin teams: four, unique ids, roles bound to skills (0.903958ms)
+✔ user team overrides builtin by id; others append (0.166875ms)
+✖ mergeTeams tolerates garbage (0.812292ms)
+✔ missingSkills reports only absent names (0.104041ms)
+✔ normalizeTeam fills ids and defaults (0.113917ms)
+✔ slugify is filesystem safe and non-empty (0.063167ms)
+✔ emptyTeam is editable (0.719292ms)
+✔ key script: macOS uses security and keeps the placeholder only (0.920875ms)
+✔ key script: windows DPAPI and linux secret-tool (0.214875ms)
+✔ key script: rejects bad env names and shell metacharacters (0.118125ms)
+✖ key script: single quotes in service are escaped (0.129416ms)
+✖ loadAll stitches export lines for registered keys only (4.653334ms)
+✔ ENV_RE accepts the documented shape (0.057792ms)
+ℹ tests 37
+ℹ suites 0
+ℹ pass 33
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 308.841709
+
+✖ failing tests:
+
+test at tests/classify.test.mjs:22:1
+✖ keyword scoring on description (0.829875ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'writing'
+  - 'commerce-ops'
+  
+      at TestContext.<anonymous> (file:///Users/ytj/ai-project-hub/dsh-skill-hub/tests/classify.test.mjs:23:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'writing',
+    expected: 'commerce-ops',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/teams.test.mjs:40:1
+✖ mergeTeams tolerates garbage (0.812292ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  6 !== 5
+  
+      at TestContext.<anonymous> (file:///Users/ytj/ai-project-hub/dsh-skill-hub/tests/teams.test.mjs:42:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 6,
+    expected: 5,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/teams.test.mjs:103:1
+✖ key script: single quotes in service are escaped (0.129416ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  false !== true
+  
+      at TestContext.<anonymous> (file:///Users/ytj/ai-project-hub/dsh-skill-hub/tests/teams.test.mjs:105:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/teams.test.mjs:109:1
+✖ loadAll stitches export lines for registered keys only (4.653334ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(!all.script.includes('BAD'))
+  
+      at TestContext.<anonymous> (file:///Users/ytj/ai-project-hub/dsh-skill-hub/tests/teams.test.mjs:112:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
