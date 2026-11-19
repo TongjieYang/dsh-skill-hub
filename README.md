@@ -142,6 +142,10 @@ teams/*.json    # 自建或改过的专家团
 
 rank 小的先见者生效；同名的后来者记为「遮蔽」。可在 `config.json` 的 `roots` 里改。
 
+**不在扫描范围**：`~/.workbuddy/skills`、`~/.codex/skills`。前者是按需挂载的软链视图（116 条），后者当前有 26 个实体副本、计划重装后再接——两者都不进统计，避免把「端侧视图」当成额外的 skill。
+
+**软链是合法形态**：DSH 的 provider 对 symlink 做 `stat` 跟随，链接目录按普通目录处理（`nodeEntryKind`），所以端侧放软链在 DSH / Claude / WorkBuddy 上都成立。被禁止的只有两种：主库内部出现软链、端侧存自带 `SKILL.md` 的真实副本。
+
 ## 安全边界
 
 - 密钥永不离开浏览器：不上传、不落盘、不进日志、不进会话
