@@ -253,6 +253,27 @@ test('prompt builders produce directly usable text (checked on real descriptions
   assert.ok(sentence('Browser automation via inference.sh. Navigate pages.', 160).endsWith('inference.sh.'))
   assert.ok(sentence('AI image generation with GPT Image 2.5, Azure OpenAI.', 160).includes('2.5'))
   assert.ok(sentence('第一句。第二句。', 160) === '第一句。')
+
+  // 团队整本任务书：一次点击就含全部角色/流程/skill/铁律
+  const teamPrompt = mod.__prompts.team({
+    title: '示例团',
+    goal: '把输入做成成品。',
+    roles: [
+      { id: 'r1', title: '甲', duty: '做第一步。', deliverable: '稿子', skills: ['a', 'b'] },
+      { id: 'r2', title: '乙', duty: '', deliverable: '', skills: [] },
+    ],
+    stages: [
+      { id: 's1', title: '开工', deliverable: '稿子', roleIds: ['r1'] },
+      { id: 's2', title: '收尾', deliverable: '成片', roleIds: ['r2'] },
+    ],
+    guardrails: ['不许编造'],
+  })
+  assert.ok(teamPrompt.includes('按「示例团」这个专家团来做'))
+  assert.ok(teamPrompt.includes('甲：做第一步；交付：稿子；用这些 skill：a → b'))
+  assert.ok(!teamPrompt.includes('。；'), '职责末尾的句号要先去掉再拼接')
+  assert.ok(teamPrompt.includes('1. 开工 — 负责人：甲；产出：稿子'))
+  assert.ok(teamPrompt.includes('铁律：不许编造'))
+  assert.ok(teamPrompt.includes('三条自检'))
   assert.equal(skillPrompt({}, 'abc'), '')
 
   const role = rolePrompt(

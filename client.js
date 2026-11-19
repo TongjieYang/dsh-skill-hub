@@ -177,6 +177,16 @@ window.__ModuleLoader__.load({
       '.sh-menu-row-main{min-width:0;flex:1}',
       '.sh-menu-row-name{font-size:12.5px;font-weight:560;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
       '.sh-menu-row-desc{margin-top:1px;font-size:11px;line-height:1.4;color:var(--dsw-alias-label-secondary,#6b7280);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}',
+      '.sh-menu-card{border:1px solid var(--dsw-alias-border-l1,#e6e8eb);border-radius:12px;padding:10px 11px;background:var(--dsw-alias-bg-layer-1,#fff)}',
+      '.sh-menu-cardhead{display:flex;align-items:center;gap:10px;justify-content:space-between;margin-bottom:8px}',
+      '.sh-menu-goal{font-size:11.5px;line-height:1.5;color:var(--dsw-alias-label-secondary,#6b7280);margin-bottom:8px}',
+      '.sh-menu-section{font-size:10.5px;font-weight:600;letter-spacing:.04em;color:var(--dsw-alias-label-secondary,#8b93a1);margin:8px 0 4px}',
+      '.sh-menu-line{display:flex;align-items:center;gap:8px;min-height:22px;font-size:11.5px;color:var(--dsw-alias-label-primary,#111827)}',
+      '.sh-menu-line-name{flex:0 0 auto;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+      '.sh-menu-line-meta{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-secondary,#8b93a1);font-size:11px}',
+      '.sh-menu-idx{flex:0 0 auto;width:16px;height:16px;border-radius:50%;background:var(--dsw-alias-bg-layer-2,#eef2f7);color:var(--dsw-alias-label-secondary,#6b7280);font-size:10px;display:inline-flex;align-items:center;justify-content:center}',
+      '.sh-linkbtn{border:0;background:none;padding:0;font:inherit;font-size:10.5px;color:var(--dsw-alias-brand-primary,#2563eb);cursor:pointer;opacity:.75;flex:0 0 auto}',
+      '.sh-linkbtn:hover{opacity:1;text-decoration:underline}',
       '.sh-menu-foot{display:flex;align-items:center;gap:8px;padding:9px 12px;border-top:1px solid var(--dsw-alias-border-l1,#eef0f3);background:var(--dsw-alias-bg-layer-1,#fbfcfd)}',
       '.sh-flash{font-size:11.5px;color:var(--dsw-alias-state-success-primary,#15803d)}',
       '.sh-fade{animation:sh-fade .22s var(--sh-ease,cubic-bezier(.16,1,.3,1))}',
@@ -2117,6 +2127,47 @@ window.__ModuleLoader__.load({
         : '/' + name + ' Use this skill to: ' + desc
     }
 
+    // One click on a team inserts the whole task book: every role, every skill in
+    // order, the flow, the review checklist and the guardrails. Per-role inserts
+    // stay available, but the default path is a single click.
+    function buildTeamPrompt(team) {
+      if (!team) return ''
+      var title = team.title || '专家团'
+      var roles = Array.isArray(team.roles) ? team.roles : []
+      var stages = Array.isArray(team.stages) ? team.stages : []
+      var nameOf = function (id) {
+        var hit = roles.filter(function (r) { return r.id === id })[0]
+        return hit ? hit.title : id
+      }
+      var lines = ['按「' + title + '」这个专家团来做。']
+      if (team.goal) lines.push('目标：' + team.goal)
+      if (roles.length) {
+        lines.push('', '分工：')
+        roles.forEach(function (role, index) {
+          var skills = (role.skills || []).length ? '；用这些 skill：' + (role.skills || []).join(' → ') : ''
+          var deliver = role.deliverable ? '；交付：' + role.deliverable : ''
+          var duty = String(role.duty || '').replace(/[。.!！?？,，;；\s]+$/, '') || '按角色名执行'
+          lines.push(index + 1 + '. ' + role.title + '：' + duty + deliver + skills)
+        })
+      }
+      if (stages.length) {
+        lines.push('', '流程：')
+        stages.forEach(function (stage, index) {
+          var owners = (stage.roleIds || []).map(nameOf).join(' + ') || '未指派'
+          lines.push(index + 1 + '. ' + (stage.title || '未命名') + ' — 负责人：' + owners + (stage.deliverable ? '；产出：' + stage.deliverable : ''))
+        })
+      }
+      lines.push(
+        '',
+        '执行要求：',
+        '- 每步先按顺序装载该角色绑定的 skill，再动手；本地没装的 skill 先用同名能力替代并说明。',
+        '- 每步产出落到文件或明确交付物，再进入下一步，不要跳步。',
+        '- 收尾按三条自检：①产出能独立交付 ②没把推测写成事实 ③缺的输入向上游要。',
+      )
+      if ((team.guardrails || []).length) lines.push('- 铁律：' + team.guardrails.join(' / '))
+      return lines.join('\n')
+    }
+
     function buildRolePrompt(team, role) {
       var skills = (role && role.skills) || []
       var lines = ['按「' + (team && team.title ? team.title : '专家团') + '」里「' + (role && role.title) + '」这个角色来做。']
@@ -2212,6 +2263,17 @@ window.__ModuleLoader__.load({
             setTimeout(function () { setOpen(false) }, 420)
           } else {
             setFlash('没找到输入框，手动输入 /' + skill.name)
+          }
+        }
+
+        function useTeam(team) {
+          var text = buildTeamPrompt(team)
+          var outcome = insertText(text)
+          if (outcome === 'inserted') {
+            setFlash('已插入「' + team.title + '」的完整任务书')
+            setTimeout(function () { setOpen(false) }, 560)
+          } else {
+            setFlash('没找到输入框')
           }
         }
 
@@ -2356,28 +2418,68 @@ window.__ModuleLoader__.load({
                   currentTeam
                     ? h(
                         'div',
-                        null,
-                        currentTeam.goal ? h('div', { className: 'sh-menu-row-desc', style: { margin: '0 0 6px' } }, currentTeam.goal) : null,
+                        { className: 'sh-menu-card' },
+                        h(
+                          'div',
+                          { className: 'sh-menu-cardhead' },
+                          h(
+                            'div',
+                            null,
+                            h('div', { className: 'sh-menu-row-name' },
+                              (currentTeam.emoji || '·') + ' ' + currentTeam.title),
+                            h('div', { className: 'sh-menu-row-desc' },
+                              (currentTeam.roles || []).length + ' 个角色 · ' + (currentTeam.stages || []).length + ' 步'),
+                          ),
+                          h(
+                            'button',
+                            {
+                              type: 'button',
+                              className: 'sh-btn primary',
+                              style: { flexShrink: 0 },
+                              onClick: function () { useTeam(currentTeam) },
+                            },
+                            '插入完整任务书',
+                          ),
+                        ),
+                        currentTeam.goal
+                          ? h('div', { className: 'sh-menu-goal' }, currentTeam.goal)
+                          : null,
+                        h('div', { className: 'sh-menu-section' }, '分工'),
                         (currentTeam.roles || []).map(function (role) {
+                          var skillCount = (role.skills || []).length
                           return h(
                             'div',
-                            { key: role.id, className: 'sh-menu-row' },
-                            h(
-                              'div',
-                              { className: 'sh-menu-row-main', onClick: function () { useRole(currentTeam, role) } },
-                              h('div', { className: 'sh-menu-row-name' }, role.title),
-                              h('div', { className: 'sh-menu-row-desc' }, firstSentence(role.duty, 90) || role.deliverable || ''),
-                            ),
+                            { key: 'role-' + role.id, className: 'sh-menu-line' },
+                            h('span', { className: 'sh-menu-line-name' }, role.title),
+                            h('span', { className: 'sh-menu-line-meta' },
+                              (skillCount ? skillCount + ' skill' : '无 skill') +
+                                (role.deliverable ? ' · ' + role.deliverable : '')),
                             h(
                               'button',
                               {
                                 type: 'button',
-                                className: 'sh-btn',
-                                style: { padding: '1px 7px', fontSize: '10.5px', flexShrink: 0 },
-                                onClick: function (event) { event.stopPropagation(); useRole(currentTeam, role) },
+                                className: 'sh-linkbtn',
+                                onClick: function () { useRole(currentTeam, role) },
                               },
-                              '插入任务书',
+                              '只插入该角色',
                             ),
+                          )
+                        }),
+                        (currentTeam.stages || []).length
+                          ? h('div', { className: 'sh-menu-section' }, '流程')
+                          : null,
+                        (currentTeam.stages || []).map(function (stage, index) {
+                          var owners = (stage.roleIds || []).map(function (id) {
+                            var hit = (currentTeam.roles || []).filter(function (role) { return role.id === id })[0]
+                            return hit ? hit.title : id
+                          })
+                          return h(
+                            'div',
+                            { key: 'stage-' + stage.id + index, className: 'sh-menu-line' },
+                            h('span', { className: 'sh-menu-idx' }, String(index + 1)),
+                            h('span', { className: 'sh-menu-line-name' }, stage.title || '未命名'),
+                            h('span', { className: 'sh-menu-line-meta' },
+                              (owners.join(' + ') || '未指派') + (stage.deliverable ? ' → ' + stage.deliverable : '')),
                           )
                         }),
                       )
@@ -2464,7 +2566,7 @@ window.__ModuleLoader__.load({
       })
     }
 
-    exports.__prompts = { skill: buildSkillPrompt, role: buildRolePrompt, sentence: firstSentence }
+    exports.__prompts = { skill: buildSkillPrompt, role: buildRolePrompt, team: buildTeamPrompt, sentence: firstSentence }
     exports.apply = apply
     exports.inject = []
     return module.exports
