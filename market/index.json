@@ -71,7 +71,7 @@
           "source": {
             "type": "git",
             "url": "https://github.com/TongjieYang/dsh-skill-hub",
-            "commit": "435412f4ef9b95842b917425d724fbd57f5e6d9a"
+            "commit": "dd2a6511a815327b1acc8b3766fc5df6d115c06c"
           },
           "engines": {
             "dsh": ">=0.2.2"
