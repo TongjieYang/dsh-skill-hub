@@ -1,3 +1,14 @@
+## 0.3.8 三件事：弹层交给 CSS、图标换矢量、补上界面审核测试
+
+这一版修的是「看着不对」而不是「功能没做」：
+
+- **弹层不再用 JS 算像素**。`client.js` 里 `computeLayout()` / `fitMenu()` / `pos` 状态全部删掉，尺寸与位置改由一条 CSS 决定：
+  `left:50%; transform:translateX(-50%); bottom:clamp(84px,12vh,170px); width:clamp(320px,46vw,640px); max-height:min(68vh,640px)`。
+  另外两条兜底：`@media (max-height:620px)` 贴底、`@media (max-width:520px)` 满宽。窗口怎么变都在视口里。
+- **图标改单色矢量**。emoji 会跟着系统字体渲染成彩色位图，任何主题都可能撞色；现在统一用 16×16 的 `stroke:currentColor` 路径（18 个图形），分类与专家团按 id 映射，颜色永远跟着文字色走。专家团的「图标」输入框改成只读的「自动」图标框。
+- **新增界面审核测试** `tests/ui-audit.test.mjs`（15 条，无新依赖）：弹层必须 `clamp()` + 百分比、JS 里不许再出现几何计算、动画/过渡时长只能来自 `--sh-d1|d2|d3`、关键帧只能有两三个且带 `prefers-reduced-motion`、图标槽位不许有 emoji、每个分类/专家团都要能映射到图标、两套主题的文字对比度过 WCAG AA、`className` 必须有样式、图标只能以 `glyph(id, kind)` 形式调用（这条是补上一个真实 bug：`glyph(h, …)` 让设置页整块抛 `h is not a function`）。
+- 业务逻辑测试仍是 `tests/*.test.mjs` 的另外 99 条，合计 **114**。
+
 # 技能中枢 · Skill Hub
 
 > 给 DeepSeek Harness 装一个「技能中枢」：一眼看全本机 skill、自动归纳分类、把常用 skill 编成专家团、第三方 key 收进系统钥匙串（入匙命令给你自己跑）。

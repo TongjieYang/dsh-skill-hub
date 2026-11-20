@@ -1,3 +1,8 @@
+### 0.3.8
+- 弹层尺寸/位置改为纯 CSS（百分比 + clamp + 居中），删除 JS 几何计算与 resize 监听。
+- 分类与专家团图标改为单色线性 SVG（currentColor），不再使用 emoji，避免与主题撞色。
+- 新增 `tests/ui-audit.test.mjs`：把「弹层几何、动效 token、图标形式、主题对比度、类名覆盖、图标调用约定」变成可回归的断言。
+
 # 技能中枢 · Skill Hub
 
 一个 DeepSeek Harness 插件，把「本机到底有哪些 skill / 它们该怎么归类 / 这一单活该由哪几个 skill 组队干 / 第三方 key 放哪」这四件分散的事收进同一个设置页。
