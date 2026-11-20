@@ -1,3 +1,26 @@
+## 0.3.9 页签切换不再跳高度
+
+`技能 / 专家团 / 安装` 三页的内容量差很多，之前弹层高度由内容撑开，切页签时会"啪"地跳一下。现在改成**固定长度 + CSS 过渡**：
+
+| 页签 | 高度 | 为什么 |
+|---|---|---|
+| 技能 | `min(64vh, 560px)` | 列表最长，是基准高度 |
+| 专家团 | `min(70vh, 600px)` | 团详情 + 角色/流程，比列表更长 |
+| 安装 | `min(40vh, 360px)` | 只有一个输入框和预览按钮 |
+
+```css
+.sh-menu{ height:min(64vh,560px); transition:height var(--sh-d3) var(--sh-ease) }
+.sh-menu[data-tab="teams"]{ height:min(70vh,600px) }
+.sh-menu[data-tab="install"]{ height:min(40vh,360px) }
+@media (prefers-reduced-motion: reduce){ .sh-menu{ transition:none!important } }
+```
+
+为什么不直接 `transition: height` 到 `auto`：`auto` 没有可插值的端点（CSS 规范如此），浏览器会当成离散变化，看起来还是跳。所以给每页一个**长度值**，高度差在长度之间插值；内容区 `.sh-menu-body` 用 `flex:1 1 auto; min-height:0; overflow:auto` 吃掉剩余空间并自己滚动，面板本身不再滚。
+
+`tests/ui-audit.test.mjs` 新增 3 条守这件事：弹层必须是长度高度且 `transition` 含 `height`、每个页签都要有 `[data-tab]` 高度规则、`prefers-reduced-motion` 必须关掉过渡、正文区必须 `flex:1 1 auto + min-height:0 + overflow:auto`。
+
+---
+
 ## 0.3.8 三件事：弹层交给 CSS、图标换矢量、补上界面审核测试
 
 这一版修的是「看着不对」而不是「功能没做」：

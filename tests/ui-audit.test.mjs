@@ -244,3 +244,36 @@ test('图标调用只传 id/kind/extra，不传 React，也不超过三个参数
   assert.match(SOURCE, /function glyph\(id, kind, extraClass\)/, 'glyph 的签名必须是 (id, kind, extraClass)')
   assert.match(SOURCE, /var h = GLYPH_EL/, 'glyph 必须用工厂里捕获的 createElement')
 })
+
+// ---------------------------------------------------------------------------
+// 7. 页签切换的高度过渡：三个页的内容高度差很大，弹层必须在固定长度之间插值，
+//    不能用 auto（auto 没有可插值的端点，切页签会直接跳）。
+// ---------------------------------------------------------------------------
+test('弹层高度是长度值并可过渡，三个页签各有一个高度', () => {
+  const menuRule =
+    [...CSS.matchAll(/\.sh-menu\{([^}]*)\}/g)]
+      .map((m) => m[1])
+      .find((body) => /position:fixed/.test(body)) || ''
+  assert.match(menuRule, /height:min\(|height:clamp\(/, '弹层必须给定长度 height，不能是 auto')
+  assert.match(menuRule, /transition:[^;]*height/, '弹层 transition 必须包含 height')
+  assert.match(SOURCE, /'data-tab': tab/, '面板要带上当前页签，供 CSS 选高度')
+
+  const perTab = [...SOURCE.matchAll(/\.sh-menu\[data-tab="([a-z]+)"\]\{height:([^}]+)\}/g)]
+  assert.ok(perTab.length >= 2, `至少要有两个页签的高度规则，现在 ${perTab.length} 条`)
+  for (const [, name, value] of perTab) {
+    assert.ok(/^(min|clamp)\(/.test(value.trim()), `页签 ${name} 的高度必须是长度表达式：${value}`)
+  }
+})
+
+test('reduced-motion 下关掉高度过渡', () => {
+  const block = CSS.match(/@media \(prefers-reduced-motion: reduce\)\{([^@]*)\}/)?.[1] || ''
+  assert.ok(block.length > 0, '必须存在 prefers-reduced-motion 块')
+  assert.match(block, /\.sh-menu\{[^}]*transition:none/, 'reduced-motion 必须把弹层过渡关掉')
+})
+
+test('弹层正文区用 flex 撑满并自己滚动，不在面板上再套一层滚动', () => {
+  const body = CSS.match(/\.sh-menu-body\{([^}]*)\}/)?.[1] || ''
+  assert.match(body, /flex:1 1 auto/, '正文区必须 flex:1 1 auto 才能吃满固定高度')
+  assert.match(body, /min-height:0/, '正文区必须 min-height:0，否则 flex 子项不肯收缩')
+  assert.match(body, /overflow:auto/, '正文区必须自己滚动')
+})

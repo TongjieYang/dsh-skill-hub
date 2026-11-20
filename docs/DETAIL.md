@@ -1,3 +1,10 @@
+### 0.3.9
+
+- 弹层高度改为按页签给固定长度（技能 `min(64vh,560px)` / 专家团 `min(70vh,600px)` / 安装 `min(40vh,360px)`），`transition:height` 在长度间插值，切页签平滑过渡。
+- 面板挂 `data-tab` 供 CSS 选高度；`.sh-menu-body` 改 `flex:1 1 auto;min-height:0;overflow:auto`，面板本身不再滚动。
+- `prefers-reduced-motion` 下高度过渡一并关闭。
+- `tests/ui-audit.test.mjs` +3 条（长度高度与 transition、逐页签高度规则、reduced-motion 关闭、正文 flex 契约）→ 117/117。
+
 ### 0.3.8
 - 弹层尺寸/位置改为纯 CSS（百分比 + clamp + 居中），删除 JS 几何计算与 resize 监听。
 - 分类与专家团图标改为单色线性 SVG（currentColor），不再使用 emoji，避免与主题撞色。
