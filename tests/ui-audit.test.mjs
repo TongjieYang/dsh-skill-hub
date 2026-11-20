@@ -277,3 +277,29 @@ test('弹层正文区用 flex 撑满并自己滚动，不在面板上再套一�
   assert.match(body, /min-height:0/, '正文区必须 min-height:0，否则 flex 子项不肯收缩')
   assert.match(body, /overflow:auto/, '正文区必须自己滚动')
 })
+
+// ---------------------------------------------------------------------------
+// 8. 输入框里的入口必须是**一个**模块：技能与安装共用一个边框，
+//    安装是图标段，不是第二个独立按钮。
+// ---------------------------------------------------------------------------
+test('技能与安装是同一个分段控件，安装是图标段', () => {
+  const group = CSS.match(/\.sh-dockgroup\{([^}]*)\}/)?.[1] || ''
+  assert.match(group, /display:inline-flex/, '分段控件必须是 inline-flex')
+  assert.match(group, /border:1px solid/, '两个分段要共用一圈边框，才像一个模块')
+  assert.match(group, /overflow:hidden/, '共用边框需要 overflow:hidden 才不会出现双线')
+
+  const seg = CSS.match(/\.sh-dockseg\{([^}]*)\}/)?.[1] || ''
+  assert.match(seg, /border:0/, '分段自身不能再画边框')
+  assert.ok(/\.sh-dockseg \+ \.sh-dockseg\{border-left:/.test(CSS), '分段之间用一条分隔线')
+
+  // 图标尺寸要对齐输入框里的其它按钮，不能再是 13px 的小一号
+  const icon = CSS.match(/\.sh-dockseg svg\{([^}]*)\}/)?.[1] || ''
+  assert.match(icon, /width:14px/, `入口图标应与其他按钮同档（14px），现在是：${icon}`)
+
+  assert.match(SOURCE, /className: 'sh-dockseg sh-dockseg-icon'/, '安装段必须同时带分段与图标段样式')
+  assert.ok(!/sh-dockbtn-mini/.test(SOURCE), '旧的两个独立按钮（sh-dockbtn-mini）必须移除')
+  assert.ok(
+    !/className: 'sh-dockbtn'/.test(SOURCE),
+    '旧的独立技能按钮（sh-dockbtn）必须移除，改由分段控件承载',
+  )
+})

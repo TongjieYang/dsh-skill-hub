@@ -47,11 +47,14 @@ window.__ModuleLoader__.load({
       '.sh-teamname{display:inline-flex;align-items:center;gap:6px}',
       '.sh-title{margin:0;font-size:17px;font-weight:600;letter-spacing:.2px}',
       '.sh-sub{margin:3px 0 0;color:var(--dsw-alias-label-secondary,#6b7280);font-size:12px}',
-      '.sh-dockbtn{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 8px;border:1px solid var(--dsw-alias-border-l1,#e3e6ea);border-radius:7px;background:var(--dsw-alias-bg-layer-1,#fff);color:var(--dsw-alias-label-primary,#1f2328);font:inherit;font-size:12px;line-height:1;cursor:pointer;transition:background var(--sh-d1) var(--sh-ease),border-color var(--sh-d1) var(--sh-ease)}',
-      '.sh-dockbtn:hover{background:var(--dsw-alias-bg-layer-2,#f4f5f7)}',
-      '.sh-dockbtn.on{background:var(--dsw-alias-bg-layer-2,#f4f5f7);border-color:var(--dsw-alias-border-l2,#d5d9e0)}',
-      '.sh-dockbtn svg{width:13px;height:13px;flex:0 0 auto;opacity:.8}',
-      '.sh-dockbtn-caret{font-size:9px;line-height:1;color:var(--dsw-alias-label-secondary,#8b93a1)}',
+      '.sh-dockgroup{display:inline-flex;align-items:stretch;height:28px;border:1px solid var(--dsw-alias-border-l1,#e3e6ea);border-radius:8px;background:var(--dsw-alias-bg-layer-1,#fff);overflow:hidden}',
+      '.sh-dockseg{display:inline-flex;align-items:center;gap:5px;height:100%;padding:0 9px;border:0;background:transparent;color:var(--dsw-alias-label-primary,#1f2328);font:inherit;font-size:12.5px;line-height:1;cursor:pointer;transition:background var(--sh-d1) var(--sh-ease)}',
+      '.sh-dockseg + .sh-dockseg{border-left:1px solid var(--dsw-alias-border-l1,#e3e6ea)}',
+      '.sh-dockseg:hover{background:var(--dsw-alias-bg-layer-2,#f4f5f7)}',
+      '.sh-dockseg.on{background:var(--dsw-alias-bg-layer-2,#f4f5f7)}',
+      '.sh-dockseg svg{width:14px;height:14px;flex:0 0 auto;opacity:.82}',
+      '.sh-dockseg-icon{padding:0 7px}',
+      '.sh-dockseg-caret{font-size:9px;line-height:1;color:var(--dsw-alias-label-secondary,#8b93a1)}',
       '.sh-tabs{display:flex;gap:2px;border-bottom:1px solid var(--dsw-alias-border-l1,#e6e8eb);margin-bottom:12px;flex-wrap:wrap}',
       '.sh-tab{appearance:none;background:none;border:0;border-bottom:2px solid transparent;padding:7px 11px;margin-bottom:-1px;cursor:pointer;color:var(--dsw-alias-label-secondary,#6b7280);font-size:13px;font-family:inherit}',
       '.sh-tab:hover{color:var(--dsw-alias-label-primary,#1a1a1a)}',
@@ -163,10 +166,7 @@ window.__ModuleLoader__.load({
       '.sh-note.ok{color:var(--dsw-alias-state-success-primary,#15803d)}',
       '.sh-runbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0 4px}',
       '.sh-menu-form{display:flex;gap:6px;align-items:center}',
-      '.sh-dockgroup{display:inline-flex;align-items:center;gap:4px}',
-      '.sh-dockbtn-mini{height:26px;padding:0 7px;border-radius:7px;border:1px solid var(--dsw-alias-border-l1,#d8dbe0);background:var(--dsw-alias-bg-layer-1,#fff);color:var(--dsw-alias-label-secondary,#5b636e);font:inherit;font-size:11.5px;cursor:pointer;transition:background var(--sh-d1) var(--sh-ease),border-color var(--sh-d1) var(--sh-ease)}',
-      '.sh-dockbtn-mini:hover{background:var(--dsw-alias-bg-layer-2,#f2f4f7);border-color:var(--dsw-alias-border-l2,#c9ced6)}',
-      '.sh-dockbtn-mini.on{background:var(--dsw-alias-brand-primary,#2f6bff);border-color:transparent;color:#fff}',
+
       '.sh-menu-form .sh-input{flex:1;min-width:0}',
       '.sh-check{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--dsw-alias-label-secondary,#6b7280);cursor:pointer}',
       '.sh-root :focus-visible{outline:2px solid var(--dsw-alias-brand-primary,#2f6bff);outline-offset:1px}',
@@ -2499,12 +2499,15 @@ window.__ModuleLoader__.load({
         })
         var currentTeam = teams.filter(function (team) { return team.id === teamId })[0] || teams[0] || null
 
+        // One control, two segments: 「技能」opens the panel, the icon segment jumps
+        // straight to the install tab. They share one border so they read as a
+        // single module in the composer toolbar instead of two loose chips.
         var button = h(
           'button',
           {
             type: 'button',
             ref: buttonRef,
-            className: 'sh-dockbtn' + (open ? ' on' : ''),
+            className: 'sh-dockseg' + (open ? ' on' : ''),
             title: '技能中枢：插入 skill、按角色插入任务书、或打开设置',
             'aria-label': '技能中枢',
             onMouseDown: function (event) { event.preventDefault() },
@@ -2513,18 +2516,18 @@ window.__ModuleLoader__.load({
           h(
             'svg',
             { viewBox: '0 0 16 16', fill: 'none', 'aria-hidden': 'true' },
-            h('path', { d: 'M3 3h4v4H3zM9 3h4v4H9zM3 9h4v4H3zM9 9h4v4H9z', stroke: 'currentColor', 'stroke-width': '1.3', rx: '1' }),
+            h('path', { d: 'M2.5 2.5h4.2v4.2H2.5zM9.3 2.5h4.2v4.2H9.3zM2.5 9.3h4.2v4.2H2.5zM9.3 9.3h4.2v4.2H9.3z', stroke: 'currentColor', 'stroke-width': '1.3', 'stroke-linejoin': 'round' }),
           ),
           '技能',
-          h('span', { className: 'sh-dockbtn-caret' }, '▴'),
+          h('span', { className: 'sh-dockseg-caret' }, '▴'),
         )
 
         var installButton = h(
           'button',
           {
             type: 'button',
-            className: 'sh-dockbtn-mini' + (open && tab === 'install' ? ' on' : ''),
-            title: '按技能中枢规则安装 skill（真实目录 / 同名替换进 _trash）',
+            className: 'sh-dockseg sh-dockseg-icon' + (open && tab === 'install' ? ' on' : ''),
+            title: '安装 skill（真实目录 / 同名替换进 _trash）',
             'aria-label': '安装 skill',
             onMouseDown: function (event) { event.preventDefault() },
             onClick: function (event) {
@@ -2534,10 +2537,14 @@ window.__ModuleLoader__.load({
               openMenu('install')
             },
           },
-          '装',
+          h(
+            'svg',
+            { viewBox: '0 0 16 16', fill: 'none', 'aria-hidden': 'true' },
+            h('path', { d: 'M8 2.2v6.6M5.3 6.2 8 8.9l2.7-2.7M2.6 11.4v1.4a1 1 0 0 0 1 1h8.8a1 1 0 0 0 1-1v-1.4', stroke: 'currentColor', 'stroke-width': '1.3', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }),
+          ),
         )
 
-        var group = h('span', { className: 'sh-dockgroup' }, button, installButton)
+        var group = h('span', { className: 'sh-dockgroup', role: 'group', 'aria-label': '技能中枢' }, button, installButton)
 
         if (!open) return group
 
