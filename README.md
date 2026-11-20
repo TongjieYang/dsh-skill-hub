@@ -254,6 +254,18 @@ dsh plugin add git+https://github.com/TongjieYang/dsh-skill-hub.git
 `@deepseek-ai/dsh-plugin-market-index` 的 `parseMarketIndex` 验证过
 （`plugins[0].versions[0]` 会解成 `git+https://…git#<40 位 commit>`）。
 
+## 演示视频
+
+![技能中枢演示](docs/demo.mp4)
+
+26 秒，覆盖三件事：**输入框分段控件入口 → 技能页点一行直接把 skill 提示词插进输入框 →
+专家团页「插入完整任务书」把整本 SOP 一次贴进对话框**。
+
+> v0 用 macOS 自带 `screencapture -v` 录制（脚本见 [docs/demo-script.md](docs/demo-script.md)）。
+> Recordly 已装好并能启动（从命令行启动它必须 `env -u ELECTRON_RUN_AS_NODE`，否则会以
+> Node 模式静默退出），但它的录制按钮需要 macOS「屏幕录制」授权，授权后可重录带缩放/光标
+> 润色的版本，直接覆盖 `docs/demo.mp4` 即可。
+
 ## 安装
 
 ```bash
