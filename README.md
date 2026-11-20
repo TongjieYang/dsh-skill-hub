@@ -198,6 +198,34 @@ echo 'export WEREAD_API_KEY=wrk-abcdefg' >> ~/.zshrc
 4. `git clone` 只落到临时目录，装完即删，不把整套仓库留在磁盘上；
 5. 每次安装写一行到 `~/.agents/skill-hub/install.log`（时间 / 来源 / 名字 / 落点），方便以后回滚。
 
+## 按书名拉「全部版本封面」（和橱窗对版本用）
+
+同一本书在微信读书上有十几个版本，搜索结果按热度排序；`publishTime` 最新那一条
+**不一定是真在卖的版本**（可能是 `publisher`/`isbn` 全空、封面是白底模板的未上架
+预备条目）。做读书号内容前先跑一次这个脚本，把每一版摊开核对：
+
+```bash
+python3 scripts/weread-editions.py "自卑与超越"
+# 也可以直接给 bookId
+python3 scripts/weread-editions.py 3300129930
+```
+
+产物落在 `~/Desktop/weread-editions/<书名>/`：
+
+| 文件 | 内容 |
+|---|---|
+| `sheet.jpg` | 全部版本封面拼图，每格标注「出版时间 · bookId · 评价数/评分 · 出版社/ISBN 缺失标记 · 书名」 |
+| `editions.json` | 每版的 `bookId / publishTime / publisher / isbn / wordCount / rating / ratingCount / cover / readerLink / deepLink / flags` |
+| `covers/<bookId>.jpg` | 最大档封面（`t9_`，没有就退 `t6_/t5_/t3_/s_`） |
+
+判读规则：
+
+- **`无出版社 / 无ISBN`** → 大概率是模板或未上架条目，别用它做封面。
+- 用户书架上那本可以在 `GET /shelf/sync` 里按书名找 `bookId` 对齐，避免“橱窗与读书号不是一个版本”。
+- 封面 URL 的域名与形态不统一（`cdn.weread.qq.com/weread/cover/…`、`/outpic/…`、`myqcloud.com/cover/…`），
+  只能替换 `s_/t1_–t6_/t9_` 前缀，**不能自己拼**；`t9_` 也不是统一尺寸（有 428×653，也有 428×616）。
+- 密钥：`WEREAD_API_KEY` 环境变量优先，否则读 macOS 钥匙串（`service=weread`），全程不落盘、不打印。
+
 ## 安装
 
 ```bash
