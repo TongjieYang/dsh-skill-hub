@@ -1,0 +1,83 @@
+{
+  "format": 1,
+  "title": {
+    "en": "Skill Hub Index",
+    "zh": "技能中枢插件索引"
+  },
+  "description": {
+    "en": "Plugins by TongjieYang for DeepSeek Harness.",
+    "zh": "TongjieYang 的 DeepSeek Harness 插件索引。"
+  },
+  "metadata": {
+    "categories": {
+      "skills": {
+        "title": {
+          "en": "Skills & workflow",
+          "zh": "技能与工作流"
+        }
+      },
+      "keys": {
+        "title": {
+          "en": "Secrets & keys",
+          "zh": "密钥管理"
+        }
+      }
+    },
+    "labels": {
+      "official-ish": {
+        "title": {
+          "en": "Author maintained",
+          "zh": "作者自维护"
+        }
+      }
+    },
+    "sortKeys": {}
+  },
+  "plugins": [
+    {
+      "name": "dsh-skill-hub",
+      "title": {
+        "en": "Skill Hub",
+        "zh": "技能中枢"
+      },
+      "description": {
+        "en": "Browse, classify and compose your local Agent skills; assemble teams; keep third-party API keys in the OS keychain; install skills straight from GitHub.",
+        "zh": "罗列与分类本机 skill、自由编排专家团、把第三方 Key 收进系统钥匙串、直接从 GitHub 安装 skill。"
+      },
+      "icon": "../icon.svg",
+      "author": "TongjieYang",
+      "homepage": "https://github.com/TongjieYang/dsh-skill-hub#readme",
+      "repository": {
+        "url": "https://github.com/TongjieYang/dsh-skill-hub"
+      },
+      "metadata": {
+        "category": "skills",
+        "keywords": [
+          "skills",
+          "agents",
+          "keychain",
+          "teams",
+          "dsh-plugin"
+        ],
+        "labels": [
+          "official-ish"
+        ],
+        "sortKeys": {}
+      },
+      "versions": [
+        {
+          "version": "0.3.10",
+          "publishTimestamp": 1795190447,
+          "source": {
+            "type": "git",
+            "url": "https://github.com/TongjieYang/dsh-skill-hub",
+            "commit": "435412f4ef9b95842b917425d724fbd57f5e6d9a"
+          },
+          "engines": {
+            "dsh": ">=0.2.2"
+          }
+        }
+      ]
+    }
+  ]
+}

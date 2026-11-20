@@ -232,6 +232,28 @@ python3 scripts/weread-editions.py 3300129930
   只能替换 `s_/t1_–t6_/t9_` 前缀，**不能自己拼**；`t9_` 也不是统一尺寸（有 428×653，也有 428×616）。
 - 密钥：`WEREAD_API_KEY` 环境变量优先，否则读 macOS 钥匙串（`service=weread`），全程不落盘、不打印。
 
+## 从 DSH 插件市场安装（推荐）
+
+本仓库自带一份插件索引，任何人把下面的 URL 加进 DSH 就能在「设置 → 发现」里装：
+
+```
+https://raw.githubusercontent.com/TongjieYang/dsh-skill-hub/main/market/index.json
+```
+
+步骤：设置 → **插件市场** → 「发现」页 → 添加索引 URL（上面这条）→ 搜 `skill hub` → 安装。
+索引里的版本用 **Git 源 + 固定 commit** 安装（`git+https://github.com/TongjieYang/dsh-skill-hub.git#<commit>`），
+所以装到的一定是我校验过的那次提交，不是浮动的 `main`。
+
+也可以直接命令行装：
+
+```bash
+dsh plugin add git+https://github.com/TongjieYang/dsh-skill-hub.git
+```
+
+索引格式是 DSH 的 `format 1`，本仓库用官方校验器
+`@deepseek-ai/dsh-plugin-market-index` 的 `parseMarketIndex` 验证过
+（`plugins[0].versions[0]` 会解成 `git+https://…git#<40 位 commit>`）。
+
 ## 安装
 
 ```bash
