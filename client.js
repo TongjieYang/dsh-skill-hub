@@ -1727,7 +1727,7 @@ window.__ModuleLoader__.load({
                 'p',
                 { className: 'sh-sub' },
                 state
-                  ? state.skills.length + ' 个 skill · ' + state.teams.length + ' 个专家团 · ' + state.keys.length + ' 个已登记 key'
+                  ? state.skills.length + ' 个 skill · ' + state.teams.length + ' 个专家团'
                   : '正在读取本机 skill 库',
               ),
               h('p', { className: 'sh-sub' },

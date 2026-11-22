@@ -1,3 +1,5 @@
+
+
 // UI 与动效审核：不依赖浏览器，直接审 client.js 里的样式表与渲染代码。
 // 这一组测试盯的是「用户能看见的东西」：弹层几何、动效时长、图标形式、配色对比度。
 import assert from 'node:assert/strict'
@@ -319,4 +321,13 @@ test('HTTP 路由先过 DSH 的连接信任校验，再走 sec-fetch-site 兜底
     assert.match(src, /const rejection = trustRejection\(req\)/, 'handler 开头要先判信任')
     assert.match(src, /sec-fetch-site/, '保留跨站兜底')
   })
+})
+
+test('Key 管理已移除：客户端不再读 state.keys / loadAll / keyTool', () => {
+  const src = SOURCE
+  for (const dead of ['state.keys', 'state.loadAll', 'state.keyTool', 'Key 管理']) {
+    assert.equal(src.includes(dead), false, `客户端仍在引用已删除的 key 管理：${dead}`)
+  }
+  const tabs = src.match(/var TABS = \[([\s\S]*?)\]/)[1]
+  assert.equal(/id: 'keys'/.test(tabs), false, 'TABS 里不应再有 keys 页签')
 })
