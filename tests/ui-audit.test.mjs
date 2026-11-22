@@ -303,3 +303,11 @@ test('技能与安装是同一个分段控件，安装是图标段', () => {
     '旧的独立技能按钮（sh-dockbtn）必须移除，改由分段控件承载',
   )
 })
+
+test('安装页在「仓库里 0 个 skill」时给出可操作的空态说明', () => {
+  const src = SOURCE
+  assert.match(src, /preview\.total === 0/, '需要判断 total===0')
+  assert.match(src, /这个仓库里没有 SKILL\.md/, '要说明这不是 skill 仓库')
+  assert.match(src, /brew install yt-dlp/, '要给出命令行的正确装法示例')
+  assert.match(src, /owner\/repo\/tree\/<branch>\/<子目录>/, '要说明子目录写法')
+})

@@ -80,6 +80,47 @@ plugin_manager({ action: "install_bundle", target: "~/ai-project-hub/dsh-skill-h
 | `skill_hub_team` | 取某个专家团的完整 SOP（可只看某一阶段） |
 | `skill_hub_key_script` | 生成入匙命令模板（只含 `__SECRET__`，拿不到真实密钥） |
 
+## 给已有工具包一层 skill
+
+不是所有工具都该「装成 skill」。`yt-dlp`、`ffmpeg`、`gh` 这类是命令行程序，正确做法是先装程序本身，再写一层薄薄的 `SKILL.md` 告诉 agent 怎么调用它。
+
+```bash
+# 1) 先装工具本身（不要用技能中枢）
+brew install yt-dlp
+
+# 2) 再包一层 skill
+mkdir -p ~/.agents/skills/yt-dlp
+cat > ~/.agents/skills/yt-dlp/SKILL.md <<'EOF'
+---
+name: yt-dlp
+description: 下载视频/音频（YouTube、B 站等）。Use when the user asks to download a video or extract audio from a URL.
+---
+
+# yt-dlp
+
+调用本机已安装的 `yt-dlp`：
+
+```bash
+# 最高画质视频
+yt-dlp -f "bv*+ba/b" "<URL>" -o "%(title)s.%(ext)s"
+
+# 只要音频
+yt-dlp -x --audio-format mp3 "<URL>"
+```
+
+要点：
+- 先 `which yt-dlp` 确认已安装，没有就提示用户 `brew install yt-dlp`
+- 输出目录用工作区，不要写进 skill 目录
+- 需要登录的站点让用户自己登录，不代填账号密码
+EOF
+```
+
+判断标准：
+
+| 仓库里有 `SKILL.md` | 用技能中枢 `安装 skill` |
+| 仓库里有 `bin/`、`pyproject.toml`、`Cargo.toml` 但没 `SKILL.md` | 先装程序，再按上面模板包一层 |
+| 只有 README 的纯文档仓库 | 不需要 skill；直接把 README 读进来当参考 |
+
 ## 数据落点
 
 `~/.agents/skill-hub/`（可用 `DSH_SKILL_HUB_DIR` 覆盖）：

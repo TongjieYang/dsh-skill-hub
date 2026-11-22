@@ -1809,6 +1809,24 @@ window.__ModuleLoader__.load({
                 { className: 'sh-card' },
                 h('h4', null, preview.source.owner + '/' + preview.source.repo + '（' + preview.total + ' 个 skill'
                   + (preview.duplicateCount ? '；仓库里有 ' + (preview.duplicateCount + 1) + ' 份同名副本，已择一，其余忽略' : '') + '）'),
+                preview.total === 0
+                  ? h(
+                      'div',
+                      { className: 'sh-note warn' },
+                      h('strong', null, '这个仓库里没有 SKILL.md，所以它不是 skill 仓库。'),
+                      h('br'),
+                      '如果是命令行工具（比如 yt-dlp、ffmpeg），直接装工具本身就行，不要走这里：',
+                      h('br'),
+                      h('code', null, 'brew install yt-dlp'),
+                      ' 装好后如果想让 agent 会用，再写一个薄薄的 SKILL.md 把它包起来（见 docs/DETAIL.md「给已有工具包一层 skill」）。',
+                      h('br'),
+                      '如果 skill 在子目录里，地址要用 ',
+                      h('code', null, 'owner/repo/tree/<branch>/<子目录>'),
+                      ' 的形式，例如 ',
+                      h('code', null, 'anthropics/skills/tree/main/skills/pdf'),
+                      '。',
+                    )
+                  : null,
                 typeof preview.cloneMs === 'number'
                   ? h('div', { className: 'sh-muted' },
                       'clone 用时 ' + (preview.cloneMs / 1000).toFixed(1) + 's'
