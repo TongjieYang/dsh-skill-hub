@@ -66,12 +66,12 @@
       },
       "versions": [
         {
-          "version": "0.3.10",
+          "version": "0.3.11",
           "publishTimestamp": 1795190447,
           "source": {
             "type": "git",
             "url": "https://github.com/TongjieYang/dsh-skill-hub",
-            "commit": "dd2a6511a815327b1acc8b3766fc5df6d115c06c"
+            "commit": "2a75ea9128b1743cb40f983816012b8861660380"
           },
           "engines": {
             "dsh": ">=0.2.2"
