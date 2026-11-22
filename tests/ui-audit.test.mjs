@@ -311,3 +311,12 @@ test('安装页在「仓库里 0 个 skill」时给出可操作的空态说明',
   assert.match(src, /brew install yt-dlp/, '要给出命令行的正确装法示例')
   assert.match(src, /owner\/repo\/tree\/<branch>\/<子目录>/, '要说明子目录写法')
 })
+
+test('HTTP 路由先过 DSH 的连接信任校验，再走 sec-fetch-site 兜底', () => {
+  return readFile(new URL('../index.js', import.meta.url), 'utf8').then((src) => {
+    assert.match(src, /ctx\.inject\(\['connection'\]/, '要注入 connection 服务')
+    assert.match(src, /connection\.requestRejection\(req\)/, '要调用 requestRejection')
+    assert.match(src, /const rejection = trustRejection\(req\)/, 'handler 开头要先判信任')
+    assert.match(src, /sec-fetch-site/, '保留跨站兜底')
+  })
+})

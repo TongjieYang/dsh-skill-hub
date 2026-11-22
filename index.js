@@ -472,11 +472,25 @@ async function dispatch(method, sub, body) {
   }
 }
 
+// `ctx.connection.requestRejection(req)` 是 DSH 自带的连接信任校验（devtools
+// 路由同样的用法）：通过返回 `undefined`，不通过返回 401/403。老宿主没有这个
+// 服务时保持 `undefined`，退回下面的 sec-fetch-site 检查。
+let trustRejection = () => undefined
+
 async function serve(req, res) {
   try {
-    // Cross-site writes are refused: the route is loopback-only and carries no
-    // credentials of its own, so a browser page on another origin must not be
-    // able to register keys or rewrite teams.
+    // DSH's own trust check: the same gate its devtools route uses. A request
+    // that did not come from the harness UI (no valid session/origin) gets a
+    // 401 before we touch anything, so a page in the user's browser cannot
+    // drive these routes even from the same machine.
+    const rejection = trustRejection(req)
+    if (rejection !== undefined) {
+      send(res, rejection, { ok: false, error: '调用方未通过 DSH 连接信任校验' })
+      return
+    }
+
+    // Belt and braces for older hosts without `ctx.connection`: refuse the one
+    // header a cross-origin page cannot forge.
     const site = req.headers['sec-fetch-site']
     if (typeof site === 'string' && site.toLowerCase() === 'cross-site') {
       send(res, 403, { ok: false, error: '跨站请求被拒绝' })
@@ -515,6 +529,22 @@ async function serve(req, res) {
 
 export function apply(ctx) {
   for (const tool of TOOLS) ctx.tools.register(tool)
+
+  // 有 connection 服务就用它做信任校验（DSH 0.2.2+ 都有；没有就保持放行 +
+  // sec-fetch-site 兜底，不能因为缺服务把整个插件弄挂）。
+  ctx.inject(['connection'], (connectionCtx) => {
+    const connection = connectionCtx.connection
+    if (connection && typeof connection.requestRejection === 'function') {
+      trustRejection = (req) => {
+        try {
+          const verdict = connection.requestRejection(req)
+          return typeof verdict === 'number' ? verdict : undefined
+        } catch {
+          return undefined
+        }
+      }
+    }
+  })
 
   ctx.inject(['webServer'], (webCtx) => {
     webCtx.effect(
