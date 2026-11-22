@@ -326,7 +326,11 @@ const TOOLS = [
         '',
         `shell：${persist?.label ?? script.shell}（要改成别的 shell 就带 \`shell\` 参数：zsh / bash / posix / fish / powershell / cmd）`,
         '',
-        '推荐这样存（`security` 会隐藏输入地向你要密钥，密钥不进 argv，也就不进 shell history）：',
+        script.store === 'file'
+          ? '推荐这样存（让你在终端里粘贴一次，密钥不进 argv、也不进 shell history）：'
+          : script.store === 'dotfile'
+            ? '明文写法（密钥会留在启动文件里；能换「私有文件」就别用这个）：'
+            : '推荐这样存（`security` 会隐藏输入地向你要密钥，密钥不进 argv，也就不进 shell history）：',
         '```bash',
         script.addPrompt,
         '```',
