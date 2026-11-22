@@ -4,7 +4,7 @@ import { mkdtemp, mkdir, writeFile, readFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { buildState, searchSkills, renderTeam, setOverride, saveTeam, deleteTeam, addKey, removeKey, keyScript, exportTeamSkill, autoFillTeam } from '../lib/hub.js'
+import { buildState, searchSkills, renderTeam, setOverride, saveTeam, deleteTeam, exportTeamSkill, autoFillTeam } from '../lib/hub.js'
 import { loadConfig } from '../lib/store.js'
 
 async function fixture() {
@@ -108,67 +108,11 @@ test('renderTeam prints roles, stages, guardrails, missing skills', async () => 
   assert.ok(staged.includes('当前阶段'))
 })
 
-test('addKey records metadata and returns placeholder script; secret never stored', async () => {
-  const { dir } = await fixture()
-  const res = await addKey({ dir, key: { env: 'WEREAD_API_KEY', service: 'weread', account: 'ytj', note: '微信读书' }, platform: 'darwin' })
-  assert.equal(res.ok, true)
-  assert.ok(res.script.add.includes('__SECRET__'))
-  const config = await loadConfig(dir)
-  assert.equal(config.keys.length, 1)
-  assert.equal(config.keys[0].env, 'WEREAD_API_KEY')
-  assert.equal(config.keys[0].service, 'skill-hub:weread')
-  assert.equal(JSON.stringify(config).includes('wrk-'), false)
-  assert.deepEqual(Object.keys(config.keys[0]).sort(), ['account', 'createdAt', 'env', 'note', 'platform', 'service', 'shell', 'store'])
-  // the shell we generated for is remembered, so a later re-print stays correct
-  assert.equal(config.keys[0].shell, 'zsh')
-  assert.equal(config.keys[0].store, 'keychain')
-})
 
-test('store=file 用 ~/.agents/secrets 而不是钥匙串', async () => {
-  const { dir } = await fixture()
-  const res = await addKey({ dir, key: { env: 'WEREAD_API_KEY', service: 'weread', store: 'file' }, platform: 'darwin' })
-  assert.equal(res.ok, true)
-  assert.equal(res.script.store, 'file')
-  assert.ok(res.script.add.includes('~/.agents/secrets/weread'))
-  assert.ok(res.script.persist.line.includes('cat ~/.agents/secrets/weread'))
-  assert.equal(res.script.add.includes('security add-generic-password'), false)
-})
 
-test('store=dotfile 是明文写启动文件，并在条目里记住', async () => {
-  const { dir } = await fixture()
-  const legacy = await addKey({ dir, key: { env: 'AMAP_KEY', service: 'amap', store: 'dotfile' }, platform: 'darwin' })
-  assert.equal(legacy.ok, true)
-  assert.equal(legacy.script.store, 'dotfile')
-  assert.ok(legacy.script.persist.line.startsWith('export AMAP_KEY='))
-  assert.equal(legacy.script.persist.line.includes('$(', ), false)
-  const config = await loadConfig(dir)
-  assert.equal(config.keys[0].store, 'dotfile')
-})
 
-test('addKey rejects invalid env and duplicates collapse to one', async () => {
-  const { dir } = await fixture()
-  assert.equal((await addKey({ dir, key: { env: 'bad name' } })).ok, false)
-  await addKey({ dir, key: { env: 'A_KEY', service: 'a' }, platform: 'darwin' })
-  await addKey({ dir, key: { env: 'A_KEY', service: 'a2' }, platform: 'darwin' })
-  const config = await loadConfig(dir)
-  assert.equal(config.keys.length, 1)
-  assert.equal(config.keys[0].service, 'skill-hub:a2')
-})
 
-test('removeKey drops metadata and returns the removal script', async () => {
-  const { dir } = await fixture()
-  await addKey({ dir, key: { env: 'A_KEY', service: 'a' }, platform: 'darwin' })
-  const res = await removeKey({ dir, env: 'A_KEY' })
-  assert.equal(res.ok, true)
-  assert.ok(res.script.remove.includes('delete-generic-password'))
-  assert.equal((await loadConfig(dir)).keys.length, 0)
-})
 
-test('keyScript works for an unregistered key', async () => {
-  const res = keyScript({ env: 'AMAP_KEY', service: 'amap', platform: 'linux' })
-  assert.equal(res.ok, true)
-  assert.ok(res.add.includes('secret-tool'))
-})
 
 test('exportTeamSkill writes a skill folder, refuses overwrite, replaces into trash', async () => {
   const { dir } = await fixture()

@@ -2,7 +2,6 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 
 import { SHELLS, SHELL_LIST, detectShell, persistFor, shellFromPath } from '../lib/shell.js'
-import { buildKeyScript, buildLoadAll, keyToolInfo } from '../lib/keygen.js'
 
 test('mainstream shells are covered, with a label each', () => {
   const ids = SHELL_LIST.map((s) => s.id)
@@ -55,61 +54,7 @@ test('persist names the right file per shell', () => {
   assert.equal(persistFor({ shell: 'fish', env: 'K', read: 'r', home }).file, '/home/u/.config/fish/config.fish')
 })
 
-test('key script follows the chosen shell on macOS', () => {
-  const zsh = buildKeyScript({ env: 'WEREAD_API_KEY', service: 'weread', account: 'ytj', platform: 'darwin', shell: 'zsh' })
-  assert.match(zsh.export, /^export WEREAD_API_KEY="\$\(security find-generic-password/)
-  assert.equal(zsh.persist.fileLabel, '~/.zshenv')
-  assert.equal(zsh.shell, 'zsh')
 
-  const fish = buildKeyScript({ env: 'WEREAD_API_KEY', service: 'weread', account: 'ytj', platform: 'darwin', shell: 'fish' })
-  assert.match(fish.export, /^set -gx WEREAD_API_KEY \(security find-generic-password/)
-  assert.equal(fish.persist.fileLabel, '~/.config/fish/config.fish')
-  // the add/verify commands are shell-independent — they stay the same
-  assert.equal(fish.addPrompt, zsh.addPrompt)
-})
 
-test('key script follows the chosen shell on Windows', () => {
-  const ps = buildKeyScript({ env: 'ARK_API_KEY', service: 'ark', account: 'u', platform: 'win32', shell: 'powershell' })
-  assert.match(ps.export, /^\$env:ARK_API_KEY = /)
-  assert.equal(ps.persist.fileLabel, '$PROFILE')
 
-  const cmd = buildKeyScript({ env: 'ARK_API_KEY', service: 'ark', account: 'u', platform: 'win32', shell: 'cmd' })
-  assert.match(cmd.export, /^for \/f "usebackq delims=" %A in \(`powershell -NoProfile -Command "/)
-  assert.match(cmd.export, /do set "ARK_API_KEY=%A"$/)
-  assert.equal(cmd.persist.fileLabel, '')
-})
 
-test('a Windows-only shell choice on macOS falls back to POSIX instead of emitting nonsense', () => {
-  const odd = buildKeyScript({ env: 'WEREAD_API_KEY', service: 'weread', account: 'ytj', platform: 'darwin', shell: 'powershell' })
-  assert.match(odd.export, /^export WEREAD_API_KEY="\$\(security find-generic-password/)
-  assert.equal(odd.shell, 'posix')
-})
-
-test('buildLoadAll exports every key in the requested shell', () => {
-  const keys = [
-    { env: 'WEREAD_API_KEY', service: 'skill-hub:weread', account: 'ytj' },
-    { env: 'ARK_API_KEY', service: 'skill-hub:ark', account: 'ytj' },
-  ]
-  const fish = buildLoadAll(keys, 'darwin', 'fish')
-  assert.equal(fish.ok, true)
-  assert.equal((fish.script.match(/set -gx /g) ?? []).length, 2)
-  assert.ok(!fish.script.includes('export '))
-  assert.ok(!fish.script.startsWith('#!/bin/sh'))
-
-  const zsh = buildLoadAll(keys, 'darwin', 'zsh')
-  assert.ok(zsh.script.startsWith('#!/bin/sh'))
-  assert.equal((zsh.script.match(/export /g) ?? []).length, 2)
-})
-
-test('keyToolInfo reports whether the platform tool is installed', () => {
-  const mac = keyToolInfo('darwin', { exists: () => true })
-  assert.equal(mac.tool, 'security')
-  assert.equal(mac.available, true)
-
-  const win = keyToolInfo('win32', { exists: () => true })
-  assert.equal(win.tool, 'powershell')
-
-  const linuxMissing = keyToolInfo('linux', { exists: () => false })
-  assert.equal(linuxMissing.available, false)
-  assert.match(linuxMissing.hint, /libsecret|secret-tool/)
-})

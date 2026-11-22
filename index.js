@@ -7,12 +7,10 @@
 
 import {
   buildState, searchSkills, renderTeam, setOverride, saveTeam, deleteTeam, autoFillTeam, exportTeamSkill,
-  addKey, removeKey, keyScript, keychainCheck, STORES, detectSkillKeys, previewInstall, installFromPreview,
+  previewInstall, installFromPreview,
   profileState, profileBatch, profileApply, profileReset, updateCheck, updateApply,
 } from './lib/hub.js'
 import { auditLibrary } from './lib/audit.js'
-import { buildKeyScript } from './lib/keygen.js'
-import { runInTerminal } from './lib/terminal.js'
 import { hubDir } from './lib/store.js'
 
 export const name = 'skill-hub'
@@ -246,124 +244,6 @@ const TOOLS = [
     },
   },
   {
-    name: 'skill_hub_key_script',
-    description: [
-      '生成把一个第三方 API key 存进系统钥匙串（macOS security / Windows DPAPI / Linux secret-tool）的命令。',
-      '这些命令里带的是占位符 __SECRET__，真实密钥必须由用户在设置面板「技能中枢 → Key 管理」里自己填，',
-      '再在终端自己执行 —— 不要向用户索取密钥，也不要把密钥写进任何文件、环境变量或 skill 正文。',
-      '当用户要给某个服务配 key（微信读书 / 高德 / 百度地图 / 第三方 AI）时调用，然后把命令原样交给用户。',
-    ].join(''),
-    parameters: {
-      type: 'object',
-      additionalProperties: false,
-      properties: {
-        skill: { type: 'string', description: '本机已安装的 skill 名；给了它就自动从该 skill 的正文里找变量名，不用猜。' },
-        env: { type: 'string', description: '环境变量名，如 WEREAD_API_KEY。给了 skill 且 env 留空时自动取检测到的那一个。' },
-        service: { type: 'string', description: '钥匙串里的服务名，如 weread / amap / baidu-map / openai。' },
-        account: { type: 'string', description: '钥匙串里的账号名，默认取当前用户名。' },
-        platform: {
-          type: 'string',
-          enum: ['darwin', 'win32', 'linux'],
-          description: '目标平台，留空按当前系统。',
-        },
-        note: { type: 'string', description: '一句话备注，方便以后认出这是谁的 key。' },
-        shell: {
-          type: 'string',
-          enum: ['zsh', 'bash', 'posix', 'fish', 'powershell', 'cmd'],
-          description: '用户的 shell，留空按 $SHELL 自动判断。决定 export 那一行怎么写、以及该加进哪个配置文件。',
-        },
-        store: {
-          type: 'string',
-          enum: ['keychain', 'file', 'dotfile'],
-          description:
-            '存哪里：keychain=系统钥匙串（默认，最稳）、file=~/.agents/secrets/ 私有文件（钥匙串不可用时的替代）、dotfile=明文写进 shell 启动文件（最不安全）。',
-        },
-      },
-      required: [],
-    },
-    output: STRING_OUTPUT,
-    async execute(args) {
-      let env = String(args?.env ?? '').trim()
-      let service = String(args?.service ?? '').trim()
-      let note = String(args?.note ?? '').trim()
-      let detected = null
-
-      if (!env && args?.skill) {
-        detected = await detectSkillKeys({ skill: args.skill, platform: args.platform })
-        if (!detected.ok) return `检测失败：${detected.error}`
-        if (detected.vars.length === 0) {
-          return `skill \`${detected.skill.name}\` 的正文里没有出现形如 $FOO_KEY 的变量名，请把 env 直接给它。`
-        }
-        if (detected.vars.length > 1) {
-          return [
-            `skill \`${detected.skill.name}\` 里找到 ${detected.vars.length} 个变量，选一个再把 env 传给我：`,
-            '',
-            ...detected.vars.map((item) => `- \`${item.env}\`（出现 ${item.hits} 次，建议服务名 ${item.service}）`),
-          ].join('\n')
-        }
-        env = detected.vars[0].env
-        service = service || detected.vars[0].service
-        note = note || `来自 skill ${detected.skill.name}`
-      }
-
-      if (!env) return '缺少 env：要么直接给环境变量名，要么给一个可用 skill 让它自动检测。'
-
-      const script = keyScript({
-        env,
-        service,
-        account: args?.account,
-        platform: args?.platform,
-        shell: args?.shell,
-        note,
-        store: args?.store,
-      })
-      if (!script.ok) return `无法生成脚本：${script.error}`
-      const fence =
-        script.shell === 'fish' ? 'fish' : script.shell === 'powershell' ? 'powershell' : script.shell === 'cmd' ? 'bat' : 'bash'
-      const persist = script.persist
-      return [
-        `## ${script.env} → ${script.service}`,
-        '',
-        `shell：${persist?.label ?? script.shell}（要改成别的 shell 就带 \`shell\` 参数：zsh / bash / posix / fish / powershell / cmd）`,
-        '',
-        script.store === 'file'
-          ? '推荐这样存（让你在终端里粘贴一次，密钥不进 argv、也不进 shell history）：'
-          : script.store === 'dotfile'
-            ? '明文写法（密钥会留在启动文件里；能换「私有文件」就别用这个）：'
-            : '推荐这样存（`security` 会隐藏输入地向你要密钥，密钥不进 argv，也就不进 shell history）：',
-        '```bash',
-        script.addPrompt,
-        '```',
-        '',
-        '或者一条命令带值（`__SECRET__` 换成真实密钥；会留在 shell history 里，介意就用上面那条）：',
-        '```bash',
-        script.add,
-        '```',
-        '',
-        '验证（不要打印密钥）：',
-        '```bash',
-        script.verify,
-        '```',
-        '',
-        '临时取回环境变量（只对当前 shell 会话有效）：',
-        '```' + fence,
-        script.export,
-        '```',
-        '',
-        persist?.fileLabel
-          ? `要一直带着，就把同一行加进 ${persist.fileLabel}（${persist.note}）：`
-          : `要一直带着：${persist?.note ?? ''}`,
-        '```' + fence,
-        persist?.fileLabel ? persist.line : persist?.line ?? script.export,
-        '```',
-        '',
-        script.note,
-        '',
-        '提示：真实密钥请让用户在设置面板里填，它会留在浏览器里、只用于拼命令。',
-      ].join('\n')
-    },
-  },
-  {
     name: 'skill_hub_install_skill',
     description: [
       '把一个开源 skill 从 GitHub 装进本机共享技能库 ~/.agents/skills。',
@@ -529,31 +409,6 @@ async function dispatch(method, sub, body) {
         status: 200,
         body: await exportTeamSkill({ id: body.id, target: body.target, replace: body.replace === true }),
       }
-    case 'keys/detect':
-      return { status: 200, body: await detectSkillKeys({ skill: body.skill }) }
-    case 'keys/add':
-      return { status: 200, body: await addKey({ key: body.key ?? body }) }
-    case 'keys/remove':
-      return { status: 200, body: await removeKey({ env: body.env }) }
-    case 'keys/script': {
-      const built = keyScript(body)
-      return { status: 200, body: { ...built, keychain: keychainCheck({ platform: body.platform }) } }
-    }
-    case 'keys/keychain':
-      return { status: 200, body: { ok: true, ...keychainCheck({ platform: body.platform }) } }
-    case 'keys/run': {
-      // The command is rebuilt here from validated fields — the browser never
-      // gets to send a free-form shell string into the user's terminal.
-      const built = keyScript(body)
-      const useSecret = typeof body.secret === 'string' && body.secret !== ''
-      const command = useSecret ? built.add : built.addPrompt
-      const kc = keychainCheck({ platform: body.platform })
-      if (built.store === 'keychain' && !kc.ready) {
-        return { status: 200, body: { ok: false, error: kc.hint, keychain: kc, command } }
-      }
-      const opened = await runInTerminal({ script: command, dir: hubDir(), platform: body.platform })
-      return { status: 200, body: { ok: true, ...opened, command, withSecret: useSecret } }
-    }
     case 'profile/apply':
       return { status: 200, body: await profileApply({ items: body.items }) }
     case 'profile/reset':

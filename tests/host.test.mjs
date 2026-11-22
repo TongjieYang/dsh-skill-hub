@@ -66,7 +66,6 @@ test('注册六个工具，且 schema 只用受支持的键', () => {
     'skill_hub_scan',
     'skill_hub_team',
     'skill_hub_team_export',
-    'skill_hub_key_script',
     'skill_hub_install_skill',
   ])
   for (const tool of tools) {
@@ -162,7 +161,7 @@ test('GET /state 返回 200 JSON', async () => {
   assert.match(String(response.headers['content-type']), /application\/json/)
   assert.ok(Array.isArray(response.body.skills))
   assert.ok(Array.isArray(response.body.teams))
-  assert.ok(Array.isArray(response.body.keys))
+  assert.equal('keys' in response.body, false, 'key 管理整块已移除，state 不再带 keys')
   assert.ok(Array.isArray(response.body.categories))
   assert.equal(response.body.categories.length, 12)
 })
@@ -185,54 +184,8 @@ test('HEAD/其它方法打 /audit 一律 405', async () => {
   assert.equal(response.status, 405)
 })
 
-test('POST /keys/add 登记元数据并给出占位符脚本', async () => {
-  const { ctx, routes } = fakeCtx()
-  mod.apply(ctx)
-  const response = await callRoute(routes[0], {
-    method: 'POST',
-    path: '/skill-hub/api/keys/add',
-    headers: { 'content-type': 'application/json' },
-    body: { key: { env: 'WEREAD_API_KEY', service: 'weread', account: 'tester', platform: 'darwin' } },
-  })
-  assert.equal(response.status, 200)
-  assert.equal(response.body.ok, true)
-  assert.match(response.body.script.add, /__SECRET__/)
-  assert.doesNotMatch(response.body.script.addPrompt, /__SECRET__/)
-  assert.match(response.body.script.add, /security add-generic-password/)
-  assert.equal(response.body.key.env, 'WEREAD_API_KEY')
-  assert.ok(!('secret' in response.body.key), '登记项里不能出现 secret 字段')
-})
 
-test('POST /keys/add 带上 shell 时按该 shell 生成 export 与持久化文件', async () => {
-  const { ctx, routes } = fakeCtx()
-  mod.apply(ctx)
-  const response = await callRoute(routes[0], {
-    method: 'POST',
-    path: '/skill-hub/api/keys/add',
-    headers: { 'content-type': 'application/json' },
-    body: { key: { env: 'WEREAD_API_KEY', service: 'weread', account: 'tester', platform: 'darwin', shell: 'fish' } },
-  })
-  assert.equal(response.status, 200)
-  assert.match(response.body.script.export, /^set -gx WEREAD_API_KEY /)
-  assert.equal(response.body.script.persist.fileLabel, '~/.config/fish/config.fish')
-  assert.equal(response.body.key.shell, 'fish')
-})
 
-test('POST /keys/script 接受 shell 且返回 persist 块', async () => {
-  const { ctx, routes } = fakeCtx()
-  mod.apply(ctx)
-  const response = await callRoute(routes[0], {
-    method: 'POST',
-    path: '/skill-hub/api/keys/script',
-    headers: { 'content-type': 'application/json' },
-    body: { env: 'ARK_API_KEY', service: 'ark', account: 'tester', platform: 'darwin', shell: 'zsh' },
-  })
-  assert.equal(response.status, 200)
-  assert.equal(response.body.ok, true)
-  // /keys/script flattens the script onto the response (ok + env + export + …)
-  assert.match(response.body.export, /^export ARK_API_KEY="\$\(security find-generic-password/)
-  assert.equal(response.body.persist.fileLabel, '~/.zshenv')
-})
 
 test('POST /classify 写入分类覆盖', async () => {
   const { ctx, routes } = fakeCtx()
@@ -266,79 +219,7 @@ test('未知接口 404、错方法 405、跨站 403、坏 JSON 400', async () =>
   assert.equal(crossSite.status, 403)
 })
 
-test('真实 http 上 POST 也能拿到 200（不只是假 req/res）', async () => {
-  const { ctx, routes } = fakeCtx()
-  mod.apply(ctx)
-  const route = routes[0]
-  const server = http.createServer((req, res) => route.handler(req, res))
-  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve))
-  const { port } = server.address()
-  const base = `http://127.0.0.1:${port}/skill-hub/api`
 
-  try {
-    const added = await fetch(`${base}/keys/add`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', 'sec-fetch-site': 'same-origin' },
-      body: JSON.stringify({ key: { env: 'AMAP_KEY', service: 'amap', account: 'tester', platform: 'darwin' } }),
-    })
-    assert.equal(added.status, 200)
-    const body = await added.json()
-    assert.equal(body.ok, true)
-    assert.match(body.script.add, /__SECRET__/)
-
-    const state = await fetch(`${base}/state`).then((r) => r.json())
-    assert.ok(state.keys.some((entry) => entry.env === 'AMAP_KEY'))
-
-    const removed = await fetch(`${base}/keys/remove`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ env: 'AMAP_KEY' }),
-    })
-    assert.equal(removed.status, 200)
-  } finally {
-    await new Promise((resolve) => server.close(resolve))
-  }
-})
-
-test('POST /keys/detect：从选中 skill 的正文里找出变量名', async () => {
-  const hubDir = process.env.DSH_SKILL_HUB_DIR
-  const fixture = join(hubDir, 'fixture-root')
-  await mkdir(join(fixture, 'demo-skill'), { recursive: true })
-  await writeFile(join(fixture, 'demo-skill', 'SKILL.md'), '---\nname: demo-skill\ndescription: 用来测检测\n---\n\n先 export FIXTURE_API_KEY=xxx\n', 'utf8')
-  await writeFile(join(hubDir, 'config.json'), JSON.stringify({
-    version: 1,
-    overrides: {},
-    roots: [{ path: fixture, label: 'test', rank: 100, title: '测试根' }],
-    keys: [],
-    settings: {},
-  }), 'utf8')
-
-  try {
-    const { ctx, routes } = fakeCtx()
-    mod.apply(ctx)
-    const response = await callRoute(routes[0], {
-      method: 'POST',
-      path: '/skill-hub/api/keys/detect',
-      body: { skill: 'demo-skill' },
-    })
-    assert.equal(response.status, 200)
-    assert.equal(response.body.ok, true)
-    assert.equal(response.body.skill.name, 'demo-skill')
-    assert.ok(response.body.vars.some((item) => item.env === 'FIXTURE_API_KEY'))
-    assert.ok(response.body.vars[0].service, '应给出建议的服务名')
-
-    const missing = await callRoute(routes[0], {
-      method: 'POST',
-      path: '/skill-hub/api/keys/detect',
-      body: { skill: 'not-here' },
-    })
-    assert.equal(missing.body.ok, false)
-    assert.match(missing.body.error, /没有这个 skill/)
-  } finally {
-    await rm(join(hubDir, 'config.json'), { force: true })
-    await rm(fixture, { recursive: true, force: true })
-  }
-})
 
 test('POST /skills/preview 拒绝本地路径；/skills/install 没预览就报错', async () => {
   const { ctx, routes } = fakeCtx()

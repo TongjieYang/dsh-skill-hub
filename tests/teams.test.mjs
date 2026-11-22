@@ -4,7 +4,6 @@ import {
   BUILTIN_TEAMS, mergeTeams, missingSkills, normalizeTeam, builtinTeam, slugify, emptyTeam,
   autoCompose, renderTeamSkill,
 } from '../lib/teams.js'
-import { buildKeyScript, buildLoadAll, PLACEHOLDER, ENV_RE } from '../lib/keygen.js'
 
 test('builtin teams: nine, unique ids, roles bound to skills', () => {
   assert.equal(BUILTIN_TEAMS.length, 9)
@@ -76,52 +75,11 @@ test('emptyTeam is editable', () => {
   assert.deepEqual(t.stages, [])
 })
 
-test('key script: macOS uses security and keeps the placeholder only', () => {
-  const s = buildKeyScript({ env: 'WEREAD_API_KEY', service: 'weread', account: 'ytj', platform: 'darwin' })
-  assert.equal(s.ok, true)
-  assert.ok(s.add.includes('security add-generic-password'))
-  assert.ok(s.add.includes(PLACEHOLDER))
-  assert.ok(s.add.includes("-s 'skill-hub:weread'"))
-  assert.ok(s.add.includes("-a 'ytj'"))
-  // 交互式那条不能把值塞进 argv：没有 __SECRET__，`-w` 在末尾等输入
-  assert.ok(!s.addPrompt.includes(PLACEHOLDER))
-  assert.ok(s.addPrompt.endsWith('-U -w'))
-  assert.ok(s.export.startsWith('export WEREAD_API_KEY="$(security find-generic-password'))
-  assert.ok(s.remove.includes('delete-generic-password'))
-  assert.ok(!JSON.stringify(s).includes('wrk-'), 'no real secret shape')
-})
 
-test('key script: windows DPAPI and linux secret-tool', () => {
-  const win = buildKeyScript({ env: 'AMAP_KEY', service: 'amap', platform: 'win32' })
-  assert.ok(win.add.includes('ConvertTo-SecureString'))
-  assert.ok(win.add.includes('ConvertFrom-SecureString'))
-  assert.ok(win.export.includes('$env:AMAP_KEY'))
-  const linux = buildKeyScript({ env: 'BAIDU_MAP_KEY', service: 'baidu-map', platform: 'linux' })
-  assert.ok(linux.add.includes('secret-tool store'))
-  assert.ok(linux.export.includes('export BAIDU_MAP_KEY='))
-})
 
-test('key script: rejects bad env names and shell metacharacters', () => {
-  assert.equal(buildKeyScript({ env: 'lower_case' }).ok, false)
-  assert.equal(buildKeyScript({ env: 'OK_KEY', service: 'a;rm -rf /' }).ok, false)
-  assert.equal(buildKeyScript({ env: 'OK_KEY', account: '$(whoami)' }).ok, false)
-})
 
-test('key script: quotes in service are refused outright', () => {
-  const s = buildKeyScript({ env: 'OK_KEY', service: "we'ird" })
-  assert.equal(s.ok, false)
-})
 
-test('loadAll stitches export lines for registered keys only', () => {
-  const all = buildLoadAll([{ env: 'A_KEY', service: 'a' }, { env: 'bad-env', service: 'b' }], 'darwin')
-  assert.ok(all.script.includes('export A_KEY='))
-  assert.ok(!all.script.includes('bad-env'))
-})
 
-test('ENV_RE accepts the documented shape', () => {
-  assert.ok(ENV_RE.test('WEREAD_API_KEY'))
-  assert.ok(!ENV_RE.test('WEREAD-KEY'))
-})
 
 test('autoCompose fills blanks: stage owners, duties, deliverables, guardrails', () => {
   const raw = {
