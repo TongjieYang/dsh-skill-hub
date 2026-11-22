@@ -66,6 +66,8 @@ window.__ModuleLoader__.load({
       '.sh-btn.primary:hover{opacity:.9;color:#fff}',
       '.sh-btn.danger{color:var(--dsw-alias-state-error-primary,#dc2626);border-color:var(--dsw-alias-border-l2,#d5d9e0)}',
       '.sh-btn:disabled{opacity:.45;cursor:not-allowed}',
+      '.sh-textarea{width:100%;box-sizing:border-box;font:inherit;font-size:12.5px;line-height:1.55;padding:8px 10px;border-radius:8px;border:1px solid var(--dsw-alias-border-l2,#d5d9e0);background:var(--dsw-alias-bg-layer-1,#fff);color:inherit;resize:vertical}',
+      '.sh-textarea:focus{outline:none;border-color:var(--dsw-alias-brand-primary,#2563eb)}',
       '.sh-input,.sh-select,.sh-area{width:100%;box-sizing:border-box;font-family:inherit;font-size:13px;padding:6px 9px;border-radius:6px;border:1px solid var(--dsw-alias-border-l2,#d5d9e0);background:var(--dsw-alias-bg-layer-1,#fff);color:inherit}',
       '.sh-input:focus,.sh-area:focus,.sh-select:focus{outline:none;border-color:var(--dsw-alias-brand-primary,#2563eb)}',
       '.sh-area{min-height:300px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.5;resize:vertical}',
@@ -377,9 +379,97 @@ window.__ModuleLoader__.load({
         var shown = filtered.slice(0, 300)
 
         var severityLabel = { high: '严重', middle: '注意', low: '提示' }
+        var [profile, setProfile] = useState(null)
+        var [profileBusy, setProfileBusy] = useState('')
+        var [profileText, setProfileText] = useState('')
+        var [profileError, setProfileError] = useState('')
+        useEffect(function () {
+          api('profile').then(setProfile, function () {})
+        }, [])
+        var runProfileNext = async function () {
+          setProfileBusy('next')
+          setProfileError('')
+          try {
+            var result = await api('profile/batch?offset=0&limit=20')
+            setProfile(result)
+            setProfileText(result.prompt || '')
+            if (navigator.clipboard && result.prompt) navigator.clipboard.writeText(result.prompt).catch(function () {})
+          } catch (error) {
+            setProfileError(String(error && error.message ? error.message : error))
+          } finally {
+            setProfileBusy('')
+          }
+        }
+        var runProfileApply = async function () {
+          setProfileBusy('apply')
+          setProfileError('')
+          try {
+            var parsed
+            try { parsed = JSON.parse(profileText) } catch (error) { throw new Error('粘贴进来的是 JSON 数组，形如 [{"name":"…","purpose":"…"}]') }
+            var items = Array.isArray(parsed) ? parsed : parsed.items
+            var result = await api('profile/apply', { method: 'POST', body: { items: items } })
+            setProfile({ ok: true, status: result.status, items: {} })
+            setProfileError('已写入 ' + result.applied + ' 条' + (result.skipped.length ? '，跳过 ' + result.skipped.length + ' 条' : ''))
+            setProfileText('')
+          } catch (error) {
+            setProfileError(String(error && error.message ? error.message : error))
+          } finally {
+            setProfileBusy('')
+          }
+        }
+        var runProfileReset = async function () {
+          setProfileBusy('reset')
+          try {
+            setProfile(await api('profile/reset', { method: 'POST' }))
+            setProfileText('')
+          } catch (error) {
+            setProfileError(String(error && error.message ? error.message : error))
+          } finally {
+            setProfileBusy('')
+          }
+        }
+        var status = profile && profile.status
+        var ready = status && status.ready
         return h(
           'div',
           null,
+          h(
+            'div',
+            { className: 'sh-card', style: { marginBottom: '12px', padding: '10px 12px' } },
+            h(
+              'div',
+              { className: 'sh-row' },
+              h('div', { className: 'sh-label' }, status ? '初始化 · ' + status.profiled + '/' + status.total : '初始化'),
+              h(
+                'button',
+                { type: 'button', className: 'sh-btn primary', disabled: profileBusy !== '', onClick: runProfileNext },
+                profileBusy === 'next' ? '正在取…' : ready ? '再来一批' : '生成初始化任务书',
+              ),
+            ),
+            h(
+              'div',
+              { className: 'sh-hint' },
+              ready
+                ? '已完成：每个 skill 都有「干什么 / 什么场景用 / 和谁搭配」，专家团和提示词直接读它。'
+                : '先让 agent 把 skill 认一遍：点按钮得到任务书（已复制），粘到对话框发给 agent；它分析完会调 skill_hub_profile 写回。',
+            ),
+            profileError ? h('div', { className: 'sh-error' }, profileError) : null,
+            h('textarea', {
+              className: 'sh-textarea',
+              style: { minHeight: '96px', marginTop: '8px' },
+              placeholder: '初始化任务书（自动复制），或把 agent 返回的 JSON 画像粘到这里再点导入',
+              value: profileText,
+              onChange: function (event) { setProfileText(event.target.value) },
+            }),
+            h(
+              'div',
+              { className: 'sh-rowline' },
+              h('button', { type: 'button', className: 'sh-btn', disabled: profileBusy !== '' || !profileText.trim(), onClick: runProfileApply },
+                profileBusy === 'apply' ? '写入中…' : '导入画像 JSON'),
+              h('button', { type: 'button', className: 'sh-btn', disabled: profileBusy !== '' || !status || !status.started, onClick: runProfileReset }, '清空重来'),
+              status && status.updatedAt ? h('span', { className: 'sh-muted' }, '上次：' + status.updatedAt.slice(0, 16).replace('T', ' ')) : null,
+            ),
+          ),
           h(
             'div',
             { className: 'sh-card', style: { marginBottom: '12px', padding: audit ? '10px 12px' : '10px 12px' } },
@@ -1692,6 +1782,38 @@ window.__ModuleLoader__.load({
         // Cloning a big repo over a mirror can take a minute; a frozen button
         // reads as "挂了", so count the seconds out loud.
         var [elapsed, setElapsed] = useState(0)
+        var [updatePlan, setUpdatePlan] = useState(null)
+        var [updateBusy, setUpdateBusy] = useState('')
+        var [updateError, setUpdateError] = useState('')
+        var checkUpdates = async function () {
+          setUpdateBusy('check')
+          setUpdateError('')
+          try {
+            setUpdatePlan(await api('updates'))
+          } catch (error) {
+            setUpdateError(String(error && error.message ? error.message : error))
+          } finally {
+            setUpdateBusy('')
+          }
+        }
+        var applyUpdates = async function (names) {
+          setUpdateBusy('apply')
+          setUpdateError('')
+          try {
+            var result = await api('updates/apply', { method: 'POST', body: { names: names || null } })
+            setUpdatePlan(null)
+            setDone({
+              installed: result.updated.map(function (item) { return { name: item.name, path: item.source, action: 'updated', backup: item.backup } }),
+              skipped: result.skipped,
+              target: '',
+            })
+            setUpdateError(result.failed.length ? '部分失败：' + result.failed.map(function (item) { return item.source }).join('、') : '')
+          } catch (error) {
+            setUpdateError(String(error && error.message ? error.message : error))
+          } finally {
+            setUpdateBusy('')
+          }
+        }
         // A skill can only be replaced, never merged: when something in the
         // library already has this name, swapping it is the whole point.
         var [replaceOn, setReplaceOn] = useState(true)
@@ -1781,6 +1903,52 @@ window.__ModuleLoader__.load({
             '装到 ~/.agents/skills/<name>：真实目录、不用软链，身份取 SKILL.md 的 name。同名已存在时只能替换、不能合并——旧目录先移到 ~/.agents/_trash/<日期>/skill-hub/，再装新版，随时可回退。安装时 git clone 到临时目录，装完即删。',
           ),
           error ? h('div', { className: 'sh-note err' }, error) : null,
+          h(
+            'div',
+            { className: 'sh-card', style: { marginBottom: '12px', padding: '10px 12px' } },
+            h(
+              'div',
+              { className: 'sh-row' },
+              h('div', { className: 'sh-label' }, '一键更新'),
+              h(
+                'button',
+                { type: 'button', className: 'sh-btn', disabled: updateBusy !== '', onClick: checkUpdates },
+                updateBusy === 'check' ? '正在检查…' : '检查更新',
+              ),
+            ),
+            h('div', { className: 'sh-hint' }, '只更新这个插件装过的 skill（install.log 里记着来源），手装的 skill 不动。变了才替换，旧版进 _trash 可回退。'),
+            updateError ? h('div', { className: 'sh-note warn' }, updateError) : null,
+            updatePlan
+              ? h(
+                  'div',
+                  { style: { marginTop: '8px' } },
+                  h('div', { className: 'sh-sub' },
+                    '跟踪 ' + updatePlan.tracked + ' 个 · 有新版 ' + updatePlan.updatable.length + ' 个 · 已最新 ' + updatePlan.unchanged.length + ' 个'
+                    + (updatePlan.missing.length ? ' · 上游已删 ' + updatePlan.missing.length + ' 个' : '')
+                    + (updatePlan.failed.length ? ' · 拉取失败 ' + updatePlan.failed.length + ' 个' : '')),
+                  updatePlan.updatable.length
+                    ? h('div', { className: 'sh-note' }, updatePlan.updatable.map(function (item) { return item.name }).join('、'))
+                    : h('div', { className: 'sh-hint' }, '都是最新的。'),
+                  updatePlan.failed.length
+                    ? h('div', { className: 'sh-hint' }, '失败：' + updatePlan.failed.map(function (item) { return item.source }).join('、'))
+                    : null,
+                  h(
+                    'div',
+                    { className: 'sh-rowline', style: { marginTop: '8px' } },
+                    h(
+                      'button',
+                      {
+                        type: 'button',
+                        className: 'sh-btn primary',
+                        disabled: updateBusy !== '' || updatePlan.updatable.length === 0,
+                        onClick: function () { applyUpdates(updatePlan.updatable.map(function (item) { return item.name })) },
+                      },
+                      updateBusy === 'apply' ? '正在更新…' : '全部更新（' + updatePlan.updatable.length + '）',
+                    ),
+                  ),
+                )
+              : null,
+          ),
           h(
             'div',
             { className: 'sh-card' },

@@ -57,10 +57,11 @@ test('导出契约：name / inject / apply', () => {
   assert.equal(typeof mod.apply, 'function')
 })
 
-test('注册五个工具，且 schema 只用受支持的键', () => {
+test('注册六个工具，且 schema 只用受支持的键', () => {
   const { ctx, tools } = fakeCtx()
   mod.apply(ctx)
   assert.deepEqual(tools.map((t) => t.name), [
+    'skill_hub_profile',
     'skill_hub_audit',
     'skill_hub_scan',
     'skill_hub_team',

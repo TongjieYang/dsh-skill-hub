@@ -8,6 +8,7 @@
 import {
   buildState, searchSkills, renderTeam, setOverride, saveTeam, deleteTeam, autoFillTeam, exportTeamSkill,
   addKey, removeKey, keyScript, detectSkillKeys, previewInstall, installFromPreview,
+  profileState, profileBatch, profileApply, profileReset, updateCheck, updateApply,
 } from './lib/hub.js'
 import { auditLibrary } from './lib/audit.js'
 import { buildKeyScript } from './lib/keygen.js'
@@ -25,6 +26,68 @@ const output = (schema) => ({ schema, render: (_args, value) => text(value) })
 const STRING_OUTPUT = output({ type: 'string' })
 
 const TOOLS = [
+  {
+    name: 'skill_hub_profile',
+    description: [
+      '技能库初始化（画像）：给每个 skill 写「干什么 / 什么场景用 / 和谁搭配」，专家团与提示词都读它。',
+      'action=status 看进度；action=next 取一批待分析的 skill（含可粘贴的任务书）；',
+      'action=apply 把分析结果写回（items: [{name, purpose, whenToUse, pairs}]）。',
+      '用户说「初始化技能中枢」「把 skill 都认一遍」「为什么专家团不知道怎么配」时用它。',
+    ].join(''),
+    parameters: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        action: { type: 'string', enum: ['status', 'next', 'apply'], description: '要做什么' },
+        offset: { type: 'number', description: 'next：从第几个开始，默认 0' },
+        limit: { type: 'number', description: 'next：这批多少个，默认 20，上限 50' },
+        items: {
+          type: 'array',
+          description: 'apply：画像条目',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              name: { type: 'string' },
+              purpose: { type: 'string', description: '一句话说清解决什么问题' },
+              whenToUse: { type: 'string', description: '什么场景该想起它' },
+              pairs: { type: 'array', items: { type: 'string' }, description: '适合一起用的 skill 名，0–3 个' },
+            },
+            required: ['name'],
+          },
+        },
+      },
+      required: ['action'],
+    },
+    output: STRING_OUTPUT,
+    async execute(args) {
+      const action = String(args?.action ?? 'status')
+      if (action === 'next') {
+        const result = await profileBatch({ offset: Number(args?.offset ?? 0) || 0, limit: Number(args?.limit ?? 20) || 20 })
+        return [
+          `## 待分析 ${result.batch.items.length} 个（已画像 ${result.status.profiled}/${result.status.total}）`,
+          '',
+          result.prompt,
+        ].join('\n')
+      }
+      if (action === 'apply') {
+        const result = await profileApply({ items: Array.isArray(args?.items) ? args.items : [] })
+        return [
+          `## 已写入 ${result.applied} 条`,
+          '',
+          `进度：${result.status.profiled}/${result.status.total}` + (result.status.ready ? '（初始化完成）' : ''),
+          result.skipped.length > 0 ? `跳过 ${result.skipped.length} 条：${result.skipped.map((item) => item.name).join('、')}` : '',
+        ].filter(Boolean).join('\n')
+      }
+      const state = await profileState()
+      return [
+        `## 初始化进度：${state.status.profiled}/${state.status.total}`,
+        '',
+        state.status.ready ? '已初始化完成，专家团和提示词可以直接用画像了。' : `还差 ${state.status.missingCount} 个未分析。`,
+        state.status.updatedAt ? `上次更新：${state.status.updatedAt}` : '还没开始。',
+      ].join('\n')
+    },
+  },
   {
     name: 'skill_hub_audit',
     description: [
@@ -425,6 +488,18 @@ async function dispatch(method, sub, body) {
     if (sub === 'audit') return { status: 200, body: await auditLibrary() }
     return { status: 200, body: await buildState() }
   }
+  if (sub === 'profile') {
+    if (method !== 'GET' && method !== 'HEAD') return { status: 405, body: { ok: false, error: '该接口只支持 GET' } }
+    return { status: 200, body: await profileState() }
+  }
+  if (sub === 'profile/batch') {
+    if (method !== 'GET' && method !== 'HEAD') return { status: 405, body: { ok: false, error: '该接口只支持 GET' } }
+    return { status: 200, body: await profileBatch({ offset: Number(body?.offset ?? 0) || 0, limit: Number(body?.limit ?? 20) || 20 }) }
+  }
+  if (sub === 'updates') {
+    if (method !== 'GET' && method !== 'HEAD') return { status: 405, body: { ok: false, error: '该接口只支持 GET' } }
+    return { status: 200, body: await updateCheck() }
+  }
   if (method !== 'POST') return { status: 405, body: { ok: false, error: '该接口只支持 POST' } }
 
   switch (sub) {
@@ -460,6 +535,12 @@ async function dispatch(method, sub, body) {
       const opened = await runInTerminal({ script: command, dir: hubDir(), platform: body.platform })
       return { status: 200, body: { ok: true, ...opened, command, withSecret: useSecret } }
     }
+    case 'profile/apply':
+      return { status: 200, body: await profileApply({ items: body.items }) }
+    case 'profile/reset':
+      return { status: 200, body: await profileReset() }
+    case 'updates/apply':
+      return { status: 200, body: await updateApply({ names: Array.isArray(body.names) ? body.names : null }) }
     case 'skills/preview':
       return { status: 200, body: await previewInstall({ source: body.source }) }
     case 'skills/install':
