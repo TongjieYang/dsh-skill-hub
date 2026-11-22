@@ -7,7 +7,7 @@
 
 import {
   buildState, searchSkills, renderTeam, setOverride, saveTeam, deleteTeam, autoFillTeam, exportTeamSkill,
-  addKey, removeKey, keyScript, detectSkillKeys, previewInstall, installFromPreview,
+  addKey, removeKey, keyScript, keychainCheck, STORES, detectSkillKeys, previewInstall, installFromPreview,
   profileState, profileBatch, profileApply, profileReset, updateCheck, updateApply,
 } from './lib/hub.js'
 import { auditLibrary } from './lib/audit.js'
@@ -272,6 +272,12 @@ const TOOLS = [
           enum: ['zsh', 'bash', 'posix', 'fish', 'powershell', 'cmd'],
           description: '用户的 shell，留空按 $SHELL 自动判断。决定 export 那一行怎么写、以及该加进哪个配置文件。',
         },
+        store: {
+          type: 'string',
+          enum: ['keychain', 'file', 'dotfile'],
+          description:
+            '存哪里：keychain=系统钥匙串（默认，最稳）、file=~/.agents/secrets/ 私有文件（钥匙串不可用时的替代）、dotfile=明文写进 shell 启动文件（最不安全）。',
+        },
       },
       required: [],
     },
@@ -309,6 +315,7 @@ const TOOLS = [
         platform: args?.platform,
         shell: args?.shell,
         note,
+        store: args?.store,
       })
       if (!script.ok) return `无法生成脚本：${script.error}`
       const fence =
@@ -524,14 +531,22 @@ async function dispatch(method, sub, body) {
       return { status: 200, body: await addKey({ key: body.key ?? body }) }
     case 'keys/remove':
       return { status: 200, body: await removeKey({ env: body.env }) }
-    case 'keys/script':
-      return { status: 200, body: keyScript(body) }
+    case 'keys/script': {
+      const built = keyScript(body)
+      return { status: 200, body: { ...built, keychain: keychainCheck({ platform: body.platform }) } }
+    }
+    case 'keys/keychain':
+      return { status: 200, body: { ok: true, ...keychainCheck({ platform: body.platform }) } }
     case 'keys/run': {
       // The command is rebuilt here from validated fields — the browser never
       // gets to send a free-form shell string into the user's terminal.
       const built = keyScript(body)
       const useSecret = typeof body.secret === 'string' && body.secret !== ''
       const command = useSecret ? built.add : built.addPrompt
+      const kc = keychainCheck({ platform: body.platform })
+      if (built.store === 'keychain' && !kc.ready) {
+        return { status: 200, body: { ok: false, error: kc.hint, keychain: kc, command } }
+      }
       const opened = await runInTerminal({ script: command, dir: hubDir(), platform: body.platform })
       return { status: 200, body: { ok: true, ...opened, command, withSecret: useSecret } }
     }

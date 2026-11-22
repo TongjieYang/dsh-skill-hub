@@ -131,7 +131,8 @@ window.__ModuleLoader__.load({
       '.sh-pickrow-desc{flex:1;min-width:0;color:var(--dsw-alias-label-secondary,#6b7280);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
       '.sh-keyrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--dsw-alias-border-l1,#eef0f3)}',
       '.sh-keyrow:last-child{border-bottom:0}',
-      '.sh-keyrow-env{font-family:var(--dsw-code-font-family,ui-monospace,SFMono-Regular,monospace);font-size:12px}',
+      '.sh-keyrow-env{font-family:var(--dsw-code-font-family,ui-monospace,SFMono-Regular,monospace);font-size:12px;display:flex;align-items:center;gap:6px}',
+      '.sh-tag{font-family:var(--dsw-font-family,system-ui);font-size:11px;padding:1px 6px;border-radius:999px;border:1px solid var(--dsw-alias-border-l2,#e2e5ea);color:var(--dsw-alias-label-secondary,#5b6371)}',
       '.sh-done-row{padding:5px 0;color:var(--dsw-alias-state-success-primary,#15803d)}',
       '.sh-skip-row{padding:5px 0;color:var(--dsw-alias-label-secondary,#6b7280)}',
       '.sh-scroll-x{overflow-x:auto}',
@@ -1399,6 +1400,13 @@ window.__ModuleLoader__.load({
         var [detecting, setDetecting] = useState(false)
         var [form, setForm] = useState({ env: '', service: '', account: '', note: '' })
         var [shell, setShell] = useState(state.shell || 'zsh')
+        var [store, setStore] = useState('keychain')
+        var [kc, setKc] = useState(null)
+        useEffect(function () {
+          api('keys/keychain', { platform: state.platform })
+            .then(setKc)
+            .catch(function () { setKc(null) })
+        }, [])
         var [secret, setSecret] = useState('')
         var [result, setResult] = useState(null)
         var [error, setError] = useState('')
@@ -1455,6 +1463,7 @@ window.__ModuleLoader__.load({
               note: form.note.trim(),
               platform: state.platform,
               shell: shell,
+              store: store,
               secret: withKey === true ? secret : '',
             })
             setRunMsg('已在 ' + (data.how || '终端') + ' 打开：' + (withKey === true ? '命令里带密钥，回车即可' : '会提示你粘贴密钥，回车确认'))
@@ -1477,6 +1486,7 @@ window.__ModuleLoader__.load({
               note: form.note.trim(),
               platform: state.platform,
               shell: shell,
+              store: store,
             }
             var data = await api('keys/add', { key: payload })
             setResult({ script: data.script, key: data.key, hasSecret: secret.length > 0 })
@@ -1652,6 +1662,17 @@ window.__ModuleLoader__.load({
               state.keyTool && state.keyTool.available === false
                 ? h('p', { className: 'sh-error' }, '这台机器上没有 ' + state.keyTool.tool + '：' + state.keyTool.hint)
                 : null,
+              h('div', { className: 'sh-field' },
+                h('label', null, '存哪里'),
+                h('select', {
+                  className: 'sh-input',
+                  value: store,
+                  onChange: function (event) { setStore(event.target.value) },
+                }, [
+                  h('option', { key: 'keychain', value: 'keychain' }, '系统钥匙串（推荐）'),
+                  h('option', { key: 'file', value: 'file' }, '私有文件 ~/.agents/secrets/'),
+                  h('option', { key: 'dotfile', value: 'dotfile' }, '直接写进 shell 启动文件（明文）'),
+                ])),
               h('div', { className: 'sh-field' }, h('label', null, 'shell（决定 export 怎么写、加进哪个文件）'),
                 h('select', {
                   className: 'sh-input',
@@ -1661,6 +1682,15 @@ window.__ModuleLoader__.load({
                   return h('option', { key: item.id, value: item.id }, item.label)
                 }))),
             ),
+            kc && kc.ready === false && store === 'keychain'
+              ? h('div', { className: 'sh-note warn' }, h('strong', null, '这台机器上连不上钥匙串：'), ' ', kc.hint)
+              : null,
+            store === 'dotfile'
+              ? h('div', { className: 'sh-note warn' }, '明文会留在 shell 启动文件里；能改就用「私有文件」。')
+              : null,
+            store === 'file'
+              ? h('div', { className: 'sh-note' }, '存到 ~/.agents/secrets/<服务名>，权限 600；不需要钥匙串，沙箱/SSH 里也能用。')
+              : null,
             h('div', { className: 'sh-field' }, h('label', null, '备注'), h('input', {
               className: 'sh-input', placeholder: '微信读书 / 高德 / …', value: form.note,
               onChange: function (event) { update('note', event.target.value) },
@@ -1752,7 +1782,7 @@ window.__ModuleLoader__.load({
                       'div',
                       { key: entry.env, className: 'sh-keyrow' },
                       h('div', null,
-                        h('div', { className: 'sh-keyrow-env' }, entry.env),
+                        h('div', { className: 'sh-keyrow-env' }, entry.env, h('span', { className: 'sh-tag' }, entry.store === 'file' ? '私有文件' : entry.store === 'dotfile' ? 'dotfile' : '钥匙串')),
                         h('div', { className: 'sh-muted' }, entry.service + ' · ' + entry.platform + (entry.note ? ' · ' + entry.note : '')),
                       ),
                       h('button', { type: 'button', className: 'sh-btn', onClick: function () { remove(entry) }, disabled: busy }, '移除'),

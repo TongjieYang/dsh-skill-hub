@@ -44,6 +44,27 @@
 
 ![Key 管理](docs/img/04-keys.png)
 
+**存哪里，三选一**（页面上的「存哪里」下拉）：
+
+| 选项 | 实际动作 | 什么时候用 |
+|---|---|---|
+| 系统钥匙串（默认） | `security add-generic-password`（Win: DPAPI / Linux: secret-tool） | 日常首选：密钥交给系统，dotfile 里只留一条「取值」命令 |
+| 私有文件 | 写 `~/.agents/secrets/<服务名>`，权限 600 | 当前进程连不上钥匙串时（沙箱 / SSH / 容器里的 agent） |
+| 直接写进 dotfile | 把 `export KEY=明文` 追加进 `~/.zshenv` 之类 | 只在这台机器、这个账号不共享时用；明文会留在启动文件里 |
+
+#### 如果 `security` 报 `A Module Directory Service error`
+
+这不是「key 存错了」，是**当前这个进程根本连不上本机钥匙串服务**（常见于沙箱、SSH、容器里的 agent 会话）。
+判据：连 `security list-keychains`（只读 search list，不碰条目）都失败；如果只是条目不存在，报的会是 `errSecItemNotFound (-25300)`。
+
+三个正确做法，按顺序试：
+
+1. **换存储**：页面上把「存哪里」切成**私有文件**，命令里不再碰钥匙串，沙箱里也能用；
+2. **投到终端**：用页面上的「在终端里执行」，让 Terminal.app 去跑（它在你桌面的安全会话里，钥匙串是用户全局的，存一次之后任何连得上 securityd 的进程都能读）；
+3. **SSH 场景**：`launchctl asuser $(id -u) security list-keychains` —— 把命令挂到你自己那个 GUI 会话里再执行。
+
+插件自己也会自检：生成命令前先跑一次 `security list-keychains`，连不上就直接提示你改用「私有文件」，而不是甩给你一条注定失败的命令。
+
 ### 5. 装 skill 全靠复制粘贴，装完还不知道装到哪了
 
 同一个仓库往 20 多个 agent 目录各放一份；同名覆盖后旧版本找不回来。
